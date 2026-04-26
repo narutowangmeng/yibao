@@ -42,6 +42,8 @@ const AGENCIES = [
   { code: 'xuzhou', name: '徐州' },
 ];
 
+const OPERATION_AGENCIES = AGENCIES.filter((agency) => agency.code !== 'headquarters');
+
 const SYSTEMS = [
   {
     id: 'management' as SystemType,
@@ -124,6 +126,9 @@ export default function Login({ onLogin }: LoginProps) {
 
   const handleSystemSelect = (systemId: SystemType) => {
     setSelectedSystem(systemId);
+    if (systemId === 'operation' && selectedAgency === 'headquarters') {
+      setSelectedAgency('nanjing');
+    }
     // 清除URL参数
     window.location.hash = '';
   };
@@ -152,6 +157,7 @@ export default function Login({ onLogin }: LoginProps) {
 
   const currentSystem = SYSTEMS.find(s => s.id === selectedSystem);
   const currentAgency = AGENCIES.find(a => a.code === selectedAgency);
+  const visibleAgencies = selectedSystem === 'operation' ? OPERATION_AGENCIES : AGENCIES;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-gray-200 flex items-center justify-center p-8">
@@ -249,7 +255,7 @@ export default function Login({ onLogin }: LoginProps) {
                       onChange={(e) => setSelectedAgency(e.target.value)}
                       className="bg-transparent text-gray-700 font-medium py-2 pr-8 focus:outline-none cursor-pointer min-w-[200px]"
                     >
-                      {AGENCIES.map((agency) => (
+                      {visibleAgencies.map((agency) => (
                         <option key={agency.code} value={agency.code}>
                           {agency.name}
                         </option>
