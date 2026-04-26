@@ -1,0 +1,28 @@
+The file /home/project/src/pages/Login.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  23→  employer_admin: Briefcase,
+  24→  insured_person: User,
+  25→};
+  26→
+  27→const AGENCIES = [
+  28→  { code: 'headquarters', name: '总局' },
+  29→  { code: 'nanjing', name: '南京' },
+  30→  { code: 'suzhou', name: '苏州' },
+  31→  { code: 'wuxi', name: '无锡' },
+  32→  { code: 'changzhou', name: '常州' },
+  33→  { code: 'zhenjiang', name: '镇江' },
+  34→  { code: 'nantong', name: '南通' },
+  35→  { code: 'taizhou', name: '泰州' },
+  36→  { code: 'yangzhou', name: '扬州' },
+  37→  { code: 'yancheng', name: '盐城' },
+  38→  { code: 'huaian', name: '淮安' },
+  39→  { code: 'suqian', name: '宿迁' },
+  40→  { code: 'lianyungang', name: '连云港' },
+  41→  { code: 'xuzhou', name: '徐州' },
+  42→];
+  43→
+  44→const SYSTEMS = [
+  45→  {
+  46→    id: 'management' as SystemType,
+  47→    name: '管理系统',

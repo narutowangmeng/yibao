@@ -1,0 +1,59 @@
+The file /home/project/src/pages/admin/DepartmentStaffManagement.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   6→  ChevronDown, ChevronRight, Lock, Globe, Database
+   7→} from 'lucide-react';
+   8→import type { UserRole } from '../../types/roles';
+   9→
+  10→// 部门配置 - 各业务司的职能权限
+  11→const DEPARTMENT_CONFIGS: Record<string, {
+  12→  name: string;
+  13→  code: string;
+  14→  allowedRoles: UserRole[];
+  15→  functions: { id: string; label: string; desc: string }[];
+  16→}> = {
+  17→  treatment_director: {
+  18→    name: '待遇保障司',
+  19→    code: 'DYBZS',
+  20→    allowedRoles: ['operator', 'auditor'],
+  21→    functions: [
+  22→      { id: 'enrollment_manage', label: '参保管理', desc: '参保登记、信息变更、关系转移' },
+  23→      { id: 'payment_manage', label: '缴费管理', desc: '缴费核定、催缴管理、到账确认' },
+  24→      { id: 'benefit_policy', label: '待遇政策', desc: '待遇标准制定、待遇调整' },
+  25→      { id: 'insurance_directory', label: '医保目录', desc: '药品目录、诊疗项目、医用耗材' },
+  26→      { id: 'long_term_care', label: '长期护理保险', desc: '失能评估、护理服务管理' },
+  27→      { id: 'remote_medical', label: '异地就医', desc: '异地备案、结算管理' }
+  28→    ]
+  29→  },
+  30→  fund_supervisor: {
+  31→    name: '基金监管司',
+  32→    code: 'JJJGS',
+  33→    allowedRoles: ['operator', 'auditor'],
+  34→    functions: [
+  35→      { id: 'fund_monitoring', label: '基金监管', desc: '基金收支监控、风险预警' },
+  36→      { id: 'flight_inspection', label: '飞行检查', desc: '现场检查、专项检查' },
+  37→      { id: 'smart_supervision', label: '智能监管', desc: '大数据监控、规则库管理' },
+  38→      { id: 'violation_handling', label: '违规查处', desc: '欺诈骗保查处、违规处理' },
+  39→      { id: 'credit_management', label: '信用管理', desc: '定点机构信用评价、黑名单' },
+  40→      { id: 'complaint_management', label: '举报投诉', desc: '举报受理、奖励发放' }
+  41→    ]
+  42→  },
+  43→  medical_service_director: {
+  44→    name: '医药服务管理司',
+  45→    code: 'YYFWGLS',
+  46→    allowedRoles: ['operator', 'auditor'],
+  47→    functions: [
+  48→      { id: 'institution_manage', label: '医疗机构管理', desc: '定点机构准入、协议管理' },
+  49→      { id: 'drug_management', label: '药品管理', desc: '药品目录调整、集采管理' },
+  50→      { id: 'price_management', label: '医疗服务价格', desc: '价格项目制定、价格调整' },
+  51→      { id: 'procurement_manage', label: '招标采购', desc: '药品耗材招标、采购监管' },
+  52→      { id: 'payment_reform', label: '支付方式改革', desc: 'DRG/DIP付费、按病种付费' },
+  53→      { id: 'service_supervision', label: '医疗服务行为监管', desc: '诊疗规范、合理用药' }
+  54→    ]
+  55→  }
+  56→};
+  57→
+  58→// 角色显示名称
+  59→const ROLE_LABELS: Record<string, string> = {
+  60→  operator: '操作员',
+  61→  auditor: '审核员'

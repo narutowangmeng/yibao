@@ -1,0 +1,18 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   1→import React, { useState } from 'react';
+   2→import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+   3→import Sidebar from './components/Layout/Sidebar';
+   4→import { Header } from './components/Layout/Header';
+   5→import Dashboard from './pages/Dashboard';
+   6→import InsuredManagement from './pages/InsuredManagement';
+   7→import Reimbursement from './pages/Reimbursement';
+   8→import Institutions from './pages/Institutions';
+   9→import Supervision from './pages/Supervision';
+  10→import Settings from './pages/Settings';
+  11→
+  12→const pageTitles: Record<string, string> = {
+  13→  '/dashboard': '数据概览',
+  14→  '/insured': '参保管理',
+  15→  '/reimbursement': '报销管理',

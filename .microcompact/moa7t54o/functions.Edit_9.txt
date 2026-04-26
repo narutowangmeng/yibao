@@ -1,0 +1,15 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  54→  '/workbench/auditor': '审核工作台',
+  55→  '/institutions': '医疗机构门户',
+  56→  '/employer': '参保单位门户',
+  57→  '/personal': '个人服务大厅',
+  58→  '/settings': '系统设置',
+  59→  '/dept-staff': '部门人员管理',
+  60→};
+  61→
+  62→function AppContent() {
+  63→  const location = useLocation();
+  64→  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  65→  const [isLoggedIn, setIsLoggedIn] = useState(false);

@@ -1,0 +1,18 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 120→            <Route path="/institutions" element={<InstitutionPortal />} />
+ 121→            <Route path="/employer" element={<EmployerPortal />} />
+ 122→            <Route path="/personal" element={<PersonalService />} />
+ 123→
+ 124→            {/* 业务管理层 - 部门人员管理 */}
+ 125→            <Route path="/dept-staff" element={<DepartmentStaffManagement userRole={currentRole as 'treatment_director' | 'fund_supervisor' | 'medical_service_director'} />} />
+ 126→
+ 127→            {/* 系统管理 - 仅保留系统级配置 */}
+ 128→            <Route path="/settings" element={<Settings />} />
+ 129→          </Routes>
+ 130→        </main>
+ 131→      </div>
+ 132→    </div>
+ 133→  );
+ 134→}

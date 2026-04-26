@@ -1,0 +1,40 @@
+The file /home/project/src/pages/admin/DepartmentStaffManagement.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 540→              </div>
+ 541→            </div>
+ 542→          )}
+ 543→
+ 544→          {activeTab === 'permissions' && (
+ 545→            <div className="space-y-3">
+ 546→              <p className="text-sm text-gray-500 mb-4">选择该人员可执行的本部门业务职能</p>
+ 547→              {deptConfig.functions.map((func) => (
+ 548→                <div
+ 549→                  key={func.id}
+ 550→                  onClick={() => togglePermission(func.id)}
+ 551→                  className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
+ 552→                    formData.permissions.includes(func.id)
+ 553→                      ? 'border-cyan-500 bg-cyan-50'
+ 554→                      : 'border-gray-200 hover:border-cyan-300'
+ 555→                  }`}
+ 556→                >
+ 557→                  <div className="flex items-center gap-3">
+ 558→                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+ 559→                      formData.permissions.includes(func.id) ? 'bg-cyan-500 border-cyan-500' : 'border-gray-300'
+ 560→                    }`}>
+ 561→                      {formData.permissions.includes(func.id) && <CheckCircle className="w-3 h-3 text-white" />}
+ 562→                    </div>
+ 563→                    <div>
+ 564→                      <p className="font-medium text-gray-800">{func.label}</p>
+ 565→                      <p className="text-sm text-gray-500">{func.desc}</p>
+ 566→                    </div>
+ 567→                  </div>
+ 568→                </div>
+ 569→              ))}
+ 570→            </div>
+ 571→          )}
+ 572→
+ 573→          {activeTab === 'scope' && (
+ 574→            <div className="space-y-3">
+ 575→              <p className="text-sm text-gray-500 mb-4">设置该人员可访问的数据范围</p>
+ 576→              {DATA_SCOPE_OPTIONS.map((option) => (

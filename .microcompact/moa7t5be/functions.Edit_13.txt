@@ -1,0 +1,13 @@
+The file /home/project/src/pages/admin/DepartmentStaffManagement.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  68→  { value: 'cross_department_read', label: '跨部门只读', desc: '可查看其他部门数据，仅操作本部门' },
+  69→  { value: 'full_read', label: '全局只读', desc: '可查看全局数据，仅操作本部门' }
+  70→];
+  71→
+  72→
+  73→
+  74→interface StaffMember {
+  75→  id: string;
+  76→  name: string;
+  77→  username: string;

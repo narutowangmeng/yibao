@@ -1,0 +1,13 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 108→  return (
+ 109→    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
+ 110→      <RoleBasedSidebar activeTab={getActiveTab()} userRole={currentRole} />
+ 111→      <div className="ml-64">
+ 112→        <Header title={title} theme={theme} userRole={currentRole} userAgency={currentAgency} onLogout={handleLogout} />
+ 113→        <main className="p-6">
+ 114→          <Routes>
+ 115→            <Route path="/" element={<RoleBasedDashboard userRole={currentRole} />} />
+ 116→            <Route path="/dashboard" element={<RoleBasedDashboard userRole={currentRole} />} />
+ 117→

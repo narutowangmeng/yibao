@@ -1,0 +1,15 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  20→import OperatorWorkbench from './pages/workbench/OperatorWorkbench';
+  21→import AuditorWorkbench from './pages/workbench/AuditorWorkbench';
+  22→import InstitutionPortal from './pages/institution/InstitutionPortal';
+  23→import EmployerPortal from './pages/portal/EmployerPortal';
+  24→import PersonalService from './pages/portal/PersonalService';
+  25→import DepartmentStaffManagement from './pages/admin/DepartmentStaffManagement';
+  26→import type { UserRole } from './types/roles';
+  27→
+  28→const AVAILABLE_ROLES: { code: UserRole; name: string; level: number }[] = [
+  29→  // 第一层：决策管理层
+  30→  { code: 'system_admin', name: '系统管理员', level: 1 },
+  31→  { code: 'bureau_leader', name: '医保局领导', level: 1 },

@@ -1,0 +1,1 @@
+{"results":[{"file":"src/types/roles.ts","matches":[{"line":162,"content":"    description: '负责机构业务管理、医保结算申请',"}]}],"pattern":"业务管理|科室负责人|创建.*账号|分配.*权限|数据访问范围","path":"src","totalMatches":1}

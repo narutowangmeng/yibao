@@ -1,0 +1,16 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  38→          <Routes>
+  39→            <Route path="/" element={<Dashboard />} />
+  40→            <Route path="/dashboard" element={<Dashboard />} />
+  41→            <Route path="/insured" element={<InsuredManagement />} />
+  42→            <Route path="/reimbursement" element={<Reimbursement />} />
+  43→            <Route path="/institutions" element={<Institutions />} />
+  44→            <Route path="/supervision" element={<Supervision />} />
+  45→            <Route path="/settings" element={<Settings />} />
+  46→          </Routes>
+  47→        </main>
+  48→      </div>
+  49→    </div>
+  50→  );

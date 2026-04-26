@@ -1,0 +1,38 @@
+The file /home/project/src/pages/admin/DepartmentStaffManagement.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 690→              <p className="text-gray-500">管辖区域</p>
+ 691→              <p className="font-medium">{staff.region || '未设置'}</p>
+ 692→            </div>
+ 693→          </div>
+ 694→          <div>
+ 695→            <p className="text-gray-500 mb-2">业务权限</p>
+ 696→            <div className="flex flex-wrap gap-2">
+ 697→              {staff.permissions.map(perm => {
+ 698→                const funcInfo = deptConfig.functions.find(f => f.id === perm);
+ 699→                return (
+ 700→                  <span key={perm} className="px-2 py-1 bg-cyan-100 text-cyan-700 rounded text-xs">
+ 701→                    {funcInfo?.label || perm}
+ 702→                  </span>
+ 703→                );
+ 704→              })}
+ 705→            </div>
+ 706→          </div>
+ 707→        </div>
+ 708→        <div className="p-6 border-t border-gray-200 flex justify-end">
+ 709→          <button
+ 710→            onClick={onClose}
+ 711→            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+
+<system-reminder>
+⚠️ REPEATED FILE MODIFICATION WARNING: You have modified "/home/project/src/pages/admin/DepartmentStaffManagement.tsx" 5 times (Write + Edit combined)!
+
+You keep rewriting or editing the same file. This is a strong sign your current approach is not working.
+
+🛑 REQUIRED ACTIONS:
+1. STOP and think: why do you keep modifying the same file?
+2. If the content keeps being wrong, try a fundamentally different approach
+3. If you're making incremental fixes, consolidate them into ONE write instead of many small changes
+
+⏰ 3 more attempt(s) before modifications to this file are AUTOMATICALLY BLOCKED.
+</system-reminder>

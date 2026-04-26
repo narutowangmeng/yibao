@@ -1,0 +1,18 @@
+The file /home/project/src/components/Layout/RoleBasedSidebar.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  44→  { id: 'institution-portal', label: '医疗机构门户', icon: Building2, path: '#/institutions', roles: ['institution_admin'] },
+  45→  { id: 'employer-portal', label: '参保单位门户', icon: Users, path: '#/employer', roles: ['employer_admin'] },
+  46→  { id: 'personal-portal', label: '个人服务大厅', icon: UserCircle, path: '#/personal', roles: ['insured_person'] },
+  47→
+  48→  // 业务管理层 - 部门人员管理
+  49→  { id: 'dept-staff', label: '部门人员管理', icon: UserCog, path: '#/dept-staff', roles: ['treatment_director', 'fund_supervisor', 'medical_service_director'] },
+  50→
+  51→  // 系统管理 - 仅保留系统级配置
+  52→  { id: 'settings', label: '系统设置', icon: Settings, path: '#/settings', roles: ['system_admin'] },
+  53→];
+  54→
+  55→const roleLabels: Record<UserRole, string> = {
+  56→  system_admin: '系统管理员',
+  57→  bureau_leader: '医保局领导',
+  58→  treatment_director: '待遇保障',

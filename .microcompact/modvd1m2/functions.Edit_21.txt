@@ -1,0 +1,14 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  66→function AppContent() {
+  67→  const location = useLocation();
+  68→  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  69→  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  70→  const [currentRole, setCurrentRole] = useState<UserRole>(DEFAULT_ROLE);
+  71→  const [currentAgency, setCurrentAgency] = useState<string>('headquarters');
+  72→
+  73→  const currentPath = location.pathname;
+  74→  const title = pageTitles[currentPath] || '数据概览';
+  75→
+  76→  const getActiveTab = () => {

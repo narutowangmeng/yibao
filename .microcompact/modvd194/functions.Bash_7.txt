@@ -1,0 +1,1 @@
+{"exitCode":0,"output":"\n> medical-insurance-system@1.0.0 dev /home/project\n> webpack serve -- --port 3015\n\n<i> [webpack-dev-server] Project is running at:\n<i> [webpack-dev-server] Loopback: http://localhost:3015/\n","outputLines":7,"stderr":"","command":"pnpm run dev","timedOut":false}

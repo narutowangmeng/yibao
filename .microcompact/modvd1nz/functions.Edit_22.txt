@@ -1,0 +1,18 @@
+The file /home/project/src/App.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  77→    const path = currentPath.replace('/', '');
+  78→    return path || 'dashboard';
+  79→  };
+  80→
+  81→  const handleLogin = (role: UserRole, agency?: string) => {
+  82→    setCurrentRole(role);
+  83→    if (agency) {
+  84→      setCurrentAgency(agency);
+  85→    }
+  86→    setIsLoggedIn(true);
+  87→    // 根据角色跳转到对应首页
+  88→    let defaultPath = '#/dashboard';
+  89→    if (role === 'institution_admin') defaultPath = '#/institutions';
+  90→    else if (role === 'employer_admin') defaultPath = '#/employer';
+  91→    else if (role === 'insured_person') defaultPath = '#/personal';
