@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Users, Plus, Search, Edit2, Trash2, CheckCircle, XCircle,
   Eye, UserPlus, Briefcase, Shield, Phone, Mail
 } from 'lucide-react';
+import type { UserRole } from '../../types/roles';
+import { canDoManagementAction, getAgencyLevel } from '../../config/managementPermissions';
 
 // 角色显示
 const ROLE_LABELS: Record<string, string> = {
@@ -114,7 +116,12 @@ const generateMockStaff = (): StaffMember[] => {
 
 const initialStaff = generateMockStaff();
 
-export default function AgencyManagement() {
+interface AgencyManagementProps {
+  userRole: UserRole;
+  userAgency: string;
+}
+
+export default function AgencyManagement({ userRole, userAgency }: AgencyManagementProps) {
   const [agencies, setAgencies] = useState<Agency[]>(initialAgencies);
   const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
   const [selectedAgency, setSelectedAgency] = useState<string>('nanjing');
@@ -126,9 +133,34 @@ export default function AgencyManagement() {
   const [editingAgency, setEditingAgency] = useState<Agency | null>(null);
   const [showDetail, setShowDetail] = useState<StaffMember | null>(null);
 
-  const currentAgency = agencies.find(a => a.id === selectedAgency);
+  const agencyLevel = getAgencyLevel(userAgency);
+  const isProvince = agencyLevel === 'province';
+  const canCreateAgency = canDoManagementAction(userRole, userAgency, 'agency-management', 'create');
+  const canEditAgency = canDoManagementAction(userRole, userAgency, 'agency-management', 'edit');
+  const canDeleteAgency = canDoManagementAction(userRole, userAgency, 'agency-management', 'delete');
 
-  const filteredStaff = staff.filter(member => {
+  const visibleAgencies = useMemo(
+    () => (isProvince ? agencies : agencies.filter((agency) => agency.id === userAgency)),
+    [agencies, isProvince, userAgency],
+  );
+  const visibleStaffPool = useMemo(
+    () => (isProvince ? staff : staff.filter((member) => member.agencyId === userAgency)),
+    [isProvince, staff, userAgency],
+  );
+
+  useEffect(() => {
+    if (isProvince) {
+      if (!visibleAgencies.find((agency) => agency.id === selectedAgency)) {
+        setSelectedAgency(visibleAgencies[0]?.id || '');
+      }
+      return;
+    }
+    setSelectedAgency(userAgency);
+  }, [isProvince, selectedAgency, userAgency, visibleAgencies]);
+
+  const currentAgency = visibleAgencies.find(a => a.id === selectedAgency) || visibleAgencies[0];
+
+  const filteredStaff = visibleStaffPool.filter(member => {
     const matchesAgency = member.agencyId === selectedAgency;
     const matchesSearch = member.name.includes(searchTerm) ||
                          member.username.includes(searchTerm);
@@ -223,7 +255,13 @@ export default function AgencyManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">机构管理</h2>
-          <p className="text-sm text-gray-500 mt-1">管理各机构经办人员和审核人员</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {isProvince ? '当前为省局视角，可统筹查看13个设区市机构与人员。' : '当前为地市视角，仅查看和维护本市机构及人员。'}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <span className="rounded-full bg-cyan-100 px-3 py-1 text-cyan-700">{isProvince ? '省局视角' : '地市视角'}</span>
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">{isProvince ? `${visibleAgencies.length}个设区市` : '本市机构'}</span>
         </div>
       </div>
 
@@ -236,15 +274,17 @@ export default function AgencyManagement() {
                 <Building2 className="w-5 h-5" />
                 <span className="font-medium">机构列表</span>
               </div>
-              <button
-                onClick={handleAddAgency}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <Plus className="w-4 h-4 text-cyan-600" />
-              </button>
+              {canCreateAgency && (
+                <button
+                  onClick={handleAddAgency}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <Plus className="w-4 h-4 text-cyan-600" />
+                </button>
+              )}
             </div>
             <div className="p-2 max-h-[600px] overflow-y-auto">
-              {agencies.map((agency) => (
+              {visibleAgencies.map((agency) => (
                 <motion.div
                   key={agency.id}
                   className={`group flex items-center p-3 rounded-lg cursor-pointer transition-colors mb-1 ${
@@ -266,20 +306,26 @@ export default function AgencyManagement() {
                       {staff.filter(s => s.agencyId === agency.id).length}人
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleEditAgency(agency); }}
-                      className="p-1 hover:bg-gray-200 rounded"
-                    >
-                      <Edit2 className="w-3 h-3 text-gray-500" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDeleteAgency(agency.id); }}
-                      className="p-1 hover:bg-red-100 rounded"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-500" />
-                    </button>
-                  </div>
+                  {(canEditAgency || canDeleteAgency) && (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {canEditAgency && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditAgency(agency); }}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          <Edit2 className="w-3 h-3 text-gray-500" />
+                        </button>
+                      )}
+                      {canDeleteAgency && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteAgency(agency.id); }}
+                          className="p-1 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 className="w-3 h-3 text-red-500" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -301,13 +347,15 @@ export default function AgencyManagement() {
                     <p className="text-sm text-gray-500">机构编码: {currentAgency?.code}</p>
                   </div>
                 </div>
-                <button
-                  onClick={handleAddStaff}
-                  className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  添加人员
-                </button>
+                {canCreateAgency && (
+                  <button
+                    onClick={handleAddStaff}
+                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    添加人员
+                  </button>
+                )}
               </div>
 
               {/* 统计 */}

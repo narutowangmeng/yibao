@@ -4,7 +4,7 @@ import { Shield, User, Lock, Eye, EyeOff, ChevronRight, Building2, Users, Person
 import type { UserRole } from '../types/roles';
 
 interface LoginProps {
-  onLogin: (role: UserRole, agency?: string) => void;
+  onLogin: (role: UserRole, agency?: string, operatorIdentity?: '经办' | '审核') => void;
 }
 
 type SystemType = 'management' | 'operation' | 'portal';
@@ -114,13 +114,18 @@ export default function Login({ onLogin }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSystem, setSelectedSystem] = useState<SystemType | null>(null);
   const [selectedAgency, setSelectedAgency] = useState<string>('headquarters');
+  const [selectedOperatorIdentity, setSelectedOperatorIdentity] = useState<'经办' | '审核'>('经办');
 
   // 从URL参数读取系统类型
   React.useEffect(() => {
     const hash = window.location.hash;
     const match = hash.match(/\?system=(management|operation|portal)/);
     if (match) {
-      setSelectedSystem(match[1] as SystemType);
+      const system = match[1] as SystemType;
+      setSelectedSystem(system);
+      if (system === 'operation') {
+        setSelectedAgency((prev) => (prev === 'headquarters' ? 'nanjing' : prev));
+      }
     }
   }, []);
 
@@ -136,13 +141,19 @@ export default function Login({ onLogin }: LoginProps) {
   const handleBack = () => {
     setSelectedSystem(null);
     setSelectedAgency('headquarters');
+    setSelectedOperatorIdentity('经办');
   };
 
   const handleRoleLogin = (role: UserRole) => {
+    if (selectedSystem === 'management' && role === 'bureau_leader' && selectedAgency !== 'headquarters') {
+      window.alert('地市账号无权限进入报表中心');
+      return;
+    }
+
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onLogin(role, selectedAgency);
+      onLogin(role, selectedAgency, selectedSystem === 'operation' ? selectedOperatorIdentity : undefined);
     }, 500);
   };
 
@@ -151,7 +162,7 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onLogin('bureau_leader', selectedAgency);
+      onLogin('bureau_leader', selectedAgency, selectedSystem === 'operation' ? selectedOperatorIdentity : undefined);
     }, 1000);
   };
 
@@ -248,19 +259,43 @@ export default function Login({ onLogin }: LoginProps) {
                 <p className="text-lg text-gray-500 mb-6">{currentSystem?.subtitle}</p>
 
                 {currentSystem?.needAgency && (
-                  <div className="inline-flex items-center gap-3 bg-gray-50 rounded-2xl p-2 pr-4">
-                    <MapPin className="w-5 h-5 text-gray-400 ml-3" />
-                    <select
-                      value={selectedAgency}
-                      onChange={(e) => setSelectedAgency(e.target.value)}
-                      className="bg-transparent text-gray-700 font-medium py-2 pr-8 focus:outline-none cursor-pointer min-w-[200px]"
-                    >
-                      {visibleAgencies.map((agency) => (
-                        <option key={agency.code} value={agency.code}>
-                          {agency.name}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="inline-flex items-center gap-3 rounded-2xl bg-gray-50 p-2 pr-4">
+                      <MapPin className="ml-3 h-5 w-5 text-gray-400" />
+                      <select
+                        value={selectedAgency}
+                        onChange={(e) => setSelectedAgency(e.target.value)}
+                        className="min-w-[200px] cursor-pointer bg-transparent py-2 pr-8 font-medium text-gray-700 focus:outline-none"
+                      >
+                        {visibleAgencies.map((agency) => (
+                          <option key={agency.code} value={agency.code}>
+                            {agency.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {selectedSystem === 'operation' && (
+                      <div className="inline-flex items-center gap-2 rounded-2xl bg-gray-50 p-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOperatorIdentity('经办')}
+                          className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                            selectedOperatorIdentity === '经办' ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          经办人员
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOperatorIdentity('审核')}
+                          className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                            selectedOperatorIdentity === '审核' ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          审核人员
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -8,6 +8,7 @@ interface HeaderProps {
   theme: 'light' | 'dark';
   userRole?: UserRole;
   userAgency?: string;
+  userOperatorIdentity?: '经办' | '审核';
   onLogout?: () => void;
 }
 
@@ -53,7 +54,26 @@ const AGENCY_NAMES: Record<string, string> = {
   xuzhou: '徐州',
 };
 
-export const Header: React.FC<HeaderProps> = ({ title, theme, userRole, userAgency, onLogout }) => {
+const OPERATION_ROLES: UserRole[] = [
+  'operator_enrollment',
+  'operator_payment',
+  'operator_reimbursement',
+  'operator_claims',
+  'auditor_audit',
+  'auditor_settlement',
+  'auditor_inspection',
+  'employer_management',
+  'operation_admin',
+];
+
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  theme,
+  userRole,
+  userAgency,
+  userOperatorIdentity,
+  onLogout,
+}) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
@@ -63,16 +83,19 @@ export const Header: React.FC<HeaderProps> = ({ title, theme, userRole, userAgen
   const borderColor = isDark ? 'border-slate-700' : 'border-slate-200';
   const inputBg = isDark ? 'bg-slate-800' : 'bg-slate-50';
 
+  const agencyName = userAgency && AGENCY_NAMES[userAgency] ? AGENCY_NAMES[userAgency] : '省局';
+  const roleName = userRole && ROLE_NAMES[userRole] ? ROLE_NAMES[userRole] : '管理员';
+
   const displayName =
     userRole && ['institution_admin', 'employer_admin', 'insured_person'].includes(userRole)
-      ? (userRole === 'institution_admin'
+      ? userRole === 'institution_admin'
         ? '南京市第一医院'
         : userRole === 'employer_admin'
           ? '某某科技有限公司'
-          : '张三')
-      : `${userAgency && AGENCY_NAMES[userAgency] ? AGENCY_NAMES[userAgency] : '省局'} · ${
-          userRole && ROLE_NAMES[userRole] ? ROLE_NAMES[userRole] : '管理员'
-        }`;
+          : '张三'
+      : userRole && OPERATION_ROLES.includes(userRole)
+        ? `${agencyName}${userOperatorIdentity || '经办'}${roleName}`
+        : `${agencyName} · ${roleName}`;
 
   return (
     <header className={`sticky top-0 z-50 flex h-16 items-center justify-between border-b px-6 ${bgColor} ${borderColor}`}>

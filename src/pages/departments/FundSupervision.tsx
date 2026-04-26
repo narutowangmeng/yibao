@@ -17,6 +17,8 @@ import DataModelManagement from './fund/DataModelManagement';
 import ValueSetManagement from './fund/ValueSetManagement';
 import RuleConclusionManagement from './fund/RuleConclusionManagement';
 import RuleEngine from '../admin/RuleEngine';
+import type { UserRole } from '../../types/roles';
+import { canDoManagementAction, getAgencyLevel } from '../../config/managementPermissions';
 
 const modules = [
   {
@@ -157,11 +159,31 @@ const behaviorPatterns = [
   { id: 'P003', name: '药品套购模式', description: '特定药品多次大量购买', frequency: '中', risk: 'medium' },
 ];
 
-export default function FundSupervision() {
+interface FundSupervisionProps {
+  userRole: UserRole;
+  userAgency: string;
+}
+
+export default function FundSupervision({ userRole, userAgency }: FundSupervisionProps) {
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [fraudTab, setFraudTab] = useState('model');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
+  const isProvince = getAgencyLevel(userAgency) === 'province';
+  const canEditFundConfig = canDoManagementAction(userRole, userAgency, 'fund-supervision', 'edit');
+  const visibleModules = isProvince
+    ? modules
+    : modules.filter((module) => !['rule-engine', 'datamodel', 'valueset', 'ruleconclusion', 'fraudmodel'].includes(module.id));
+  const scopedStats = isProvince
+    ? stats
+    : [
+        { label: '本市基金收入', value: '628亿', change: '+7.2%', trend: 'up' },
+        { label: '本市基金支出', value: '511亿', change: '+5.4%', trend: 'up' },
+        { label: '本市风险预警', value: '6条', change: '-12%', trend: 'down' },
+        { label: '本市追回金额', value: '0.86亿', change: '+9.3%', trend: 'up' },
+      ];
+  const scopedRiskTypeData = isProvince ? riskTypeData : riskTypeData.slice(0, 3);
+  const scopedMonthlyData = isProvince ? monthlyData : monthlyData.slice(-4);
 
   const renderModuleContent = () => {
     switch (activeModule) {
@@ -222,9 +244,11 @@ export default function FundSupervision() {
                 <Brain className="w-5 h-5 text-cyan-600" />
                 模型配置
               </h3>
-              <button className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm">
-                <Plus className="w-4 h-4" />新增模型
-              </button>
+              {canEditFundConfig && (
+                <button className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm">
+                  <Plus className="w-4 h-4" />新增模型
+                </button>
+              )}
             </div>
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -251,11 +275,15 @@ export default function FundSupervision() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-2 justify-end">
-                        <button className="p-1.5 text-gray-400 hover:text-cyan-600"><Edit className="w-4 h-4" /></button>
-                        {model.status === 'active' ? (
-                          <button className="p-1.5 text-gray-400 hover:text-yellow-600"><Pause className="w-4 h-4" /></button>
-                        ) : (
-                          <button className="p-1.5 text-gray-400 hover:text-green-600"><Play className="w-4 h-4" /></button>
+                        {canEditFundConfig && (
+                          <>
+                            <button className="p-1.5 text-gray-400 hover:text-cyan-600"><Edit className="w-4 h-4" /></button>
+                            {model.status === 'active' ? (
+                              <button className="p-1.5 text-gray-400 hover:text-yellow-600"><Pause className="w-4 h-4" /></button>
+                            ) : (
+                              <button className="p-1.5 text-gray-400 hover:text-green-600"><Play className="w-4 h-4" /></button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
@@ -526,7 +554,7 @@ export default function FundSupervision() {
   );
 
   if (activeModule) {
-    const moduleName = modules.find(m => m.id === activeModule)?.name || '';
+    const moduleName = visibleModules.find(m => m.id === activeModule)?.name || '';
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -560,15 +588,18 @@ export default function FundSupervision() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">基金监管司</h1>
           <p className="text-gray-500 mt-1">负责医保基金监管、飞行检查、智能监管、违规查处等工作</p>
+          <p className="mt-2 text-sm text-cyan-700">
+            {isProvince ? '当前为省局视角，可配置全省规则引擎、数据模型和值集字典。' : '当前为地市视角，重点处置本市预警、案件和投诉，不维护全省主规则。'}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full">二级部门</span>
-          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">38人</span>
+          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full">{isProvince ? '省局视角' : '地市视角'}</span>
+          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">{isProvince ? '38人' : '14人'}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
+        {scopedStats.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
@@ -596,14 +627,14 @@ export default function FundSupervision() {
           <ResponsiveContainer width="100%" height={200}>
             <RePieChart>
               <Pie
-                data={riskTypeData}
+                data={scopedRiskTypeData}
                 cx="50%"
                 cy="50%"
                 innerRadius={50}
                 outerRadius={80}
                 dataKey="value"
               >
-                {riskTypeData.map((entry, index) => (
+                {scopedRiskTypeData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -618,7 +649,7 @@ export default function FundSupervision() {
             风险趋势
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <ReBarChart data={monthlyData}>
+                <ReBarChart data={scopedMonthlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
@@ -631,7 +662,7 @@ export default function FundSupervision() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {modules.map((module, index) => {
+        {visibleModules.map((module, index) => {
           const Icon = module.icon;
           return (
             <motion.div

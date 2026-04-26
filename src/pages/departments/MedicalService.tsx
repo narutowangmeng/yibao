@@ -18,6 +18,8 @@ import MaterialDirectoryQuery from './medical/MaterialDirectoryQuery';
 import SurgeryDirectoryQuery from './medical/SurgeryDirectoryQuery';
 import DaySurgeryDirectory from './medical/DaySurgeryDirectory';
 import DiseaseDiagnosisQuery from './medical/DiseaseDiagnosisQuery';
+import type { UserRole } from '../../types/roles';
+import { getAgencyLevel } from '../../config/managementPermissions';
 
 const modules = [
   {
@@ -133,8 +135,26 @@ const priceData = [
   { name: '其他', value: 890 }
 ];
 
-export default function MedicalService() {
+interface MedicalServiceProps {
+  userRole: UserRole;
+  userAgency: string;
+}
+
+export default function MedicalService({ userAgency }: MedicalServiceProps) {
   const [activeModule, setActiveModule] = useState<string | null>(null);
+  const isProvince = getAgencyLevel(userAgency) === 'province';
+  const visibleModules = isProvince
+    ? modules
+    : modules.filter((module) => !['directory', 'drug', 'price', 'payment'].includes(module.id));
+  const scopedStats = isProvince
+    ? stats
+    : [
+        { label: '本市定点机构', value: '186家', change: '+6家', trend: 'up' },
+        { label: '本市目录执行项', value: '1,128项', change: '+34项', trend: 'up' },
+        { label: '本市集采金额', value: '62亿', change: '+8.5%', trend: 'up' },
+        { label: '本市行为预警', value: '19条', change: '-2条', trend: 'up' },
+      ];
+  const scopedPriceData = isProvince ? priceData : priceData.slice(0, 4);
 
   const renderModuleContent = () => {
     switch (activeModule) {
@@ -168,7 +188,7 @@ export default function MedicalService() {
   };
 
   if (activeModule) {
-    const moduleName = modules.find(m => m.id === activeModule)?.name || '';
+    const moduleName = visibleModules.find(m => m.id === activeModule)?.name || '';
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -202,15 +222,18 @@ export default function MedicalService() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">医药服务管理司</h1>
           <p className="text-gray-500 mt-1">负责医疗机构管理、药品目录、价格管理、招标采购、支付方式改革等工作</p>
+          <p className="mt-2 text-sm text-cyan-700">
+            {isProvince ? '当前为省局视角，可维护主目录、价格基准和支付改革规则。' : '当前为地市视角，重点查看本市执行情况和机构落地数据。'}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">二级部门</span>
-          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">44人</span>
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">{isProvince ? '省局视角' : '地市视角'}</span>
+          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">{isProvince ? '44人' : '17人'}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
+        {scopedStats.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
@@ -236,7 +259,7 @@ export default function MedicalService() {
             医疗费用构成
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <ReBarChart data={priceData} layout="vertical">
+            <ReBarChart data={scopedPriceData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 12 }} />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={80} />
@@ -269,7 +292,7 @@ export default function MedicalService() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {modules.map((module, index) => {
+        {visibleModules.map((module, index) => {
           const Icon = module.icon;
           return (
             <motion.div

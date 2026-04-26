@@ -5,6 +5,8 @@ import {
   Eye, UserPlus, Briefcase, Shield, Phone, Mail, FolderTree, UserCheck,
   ChevronRight, Settings, Lock, Key
 } from 'lucide-react';
+import type { UserRole } from '../../types/roles';
+import { canDoManagementAction, getAgencyLevel } from '../../config/managementPermissions';
 
 // 角色定义 - 系统管理员与经办人员同级，各业务科室有自己的审核岗
 const ROLES = [
@@ -62,7 +64,12 @@ const initialStaff: StaffMember[] = [
   { id: '13', name: '系统管理员', username: 'admin', email: 'admin@nhis.gov.cn', phone: '137****1111', role: 'operation_admin', departmentId: 'd7', status: 'active', createdAt: '2024-01-01', lastLogin: '2024-01-20 08:00' },
 ];
 
-export default function OperationAdminManagement() {
+interface OperationAdminManagementProps {
+  userRole: UserRole;
+  userAgency: string;
+}
+
+export default function OperationAdminManagement({ userRole, userAgency }: OperationAdminManagementProps) {
   const [departments, setDepartments] = useState<Department[]>(initialDepartments);
   const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
   const [activeTab, setActiveTab] = useState<'staff' | 'department'>('staff');
@@ -75,8 +82,15 @@ export default function OperationAdminManagement() {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const isProvince = getAgencyLevel(userAgency) === 'province';
+  const canCreate = canDoManagementAction(userRole, userAgency, 'operation-admin', 'create');
+  const canEdit = canDoManagementAction(userRole, userAgency, 'operation-admin', 'edit');
+  const canDelete = canDoManagementAction(userRole, userAgency, 'operation-admin', 'delete');
+  const visibleDepartmentIds = isProvince ? departments.map((dept) => dept.id) : ['d1', 'd2', 'd3', 'd4'];
+  const visibleDepartments = departments.filter((dept) => visibleDepartmentIds.includes(dept.id));
+  const visibleStaff = staff.filter((member) => visibleDepartmentIds.includes(member.departmentId));
 
-  const filteredStaff = staff.filter(member => {
+  const filteredStaff = visibleStaff.filter(member => {
     const matchesDept = !selectedDepartment || member.departmentId === selectedDepartment;
     const matchesSearch = member.name.includes(searchTerm) || member.username.includes(searchTerm);
     const matchesRole = !filterRole || member.role === filterRole;
@@ -156,7 +170,9 @@ export default function OperationAdminManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">系统管理</h2>
-          <p className="text-sm text-gray-500 mt-1">管理机构人员、科室及权限配置</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {isProvince ? '当前为省局视角，可维护全省模板配置' : '当前为地市视角，仅维护本市系统账号与科室配置'}
+          </p>
         </div>
         <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
           <button
@@ -186,9 +202,11 @@ export default function OperationAdminManagement() {
                   <FolderTree className="w-5 h-5" />
                   <span className="font-medium">科室</span>
                 </div>
-                <button onClick={handleAddDept} className="p-1 hover:bg-gray-100 rounded">
-                  <Plus className="w-4 h-4 text-cyan-600" />
-                </button>
+                {canCreate && (
+                  <button onClick={handleAddDept} className="p-1 hover:bg-gray-100 rounded">
+                    <Plus className="w-4 h-4 text-cyan-600" />
+                  </button>
+                )}
               </div>
               <div className="p-2">
                 <div
@@ -196,9 +214,9 @@ export default function OperationAdminManagement() {
                   className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors mb-1 ${selectedDepartment === '' ? 'bg-cyan-50 border border-cyan-200' : 'hover:bg-gray-50 border border-transparent'}`}
                 >
                   <span className="font-medium">全部人员</span>
-                  <span className="text-xs text-gray-400">{staff.length}人</span>
+                  <span className="text-xs text-gray-400">{visibleStaff.length}人</span>
                 </div>
-                {departments.map((dept) => (
+                {visibleDepartments.map((dept) => (
                   <motion.div
                     key={dept.id}
                     onClick={() => setSelectedDepartment(dept.id)}
@@ -208,7 +226,7 @@ export default function OperationAdminManagement() {
                       <Building2 className="w-4 h-4 text-cyan-600" />
                       <span className="font-medium">{dept.name}</span>
                     </div>
-                    <span className="text-xs text-gray-400">{staff.filter(s => s.departmentId === dept.id).length}人</span>
+                    <span className="text-xs text-gray-400">{visibleStaff.filter(s => s.departmentId === dept.id).length}人</span>
                   </motion.div>
                 ))}
               </div>
@@ -224,13 +242,15 @@ export default function OperationAdminManagement() {
                   <h3 className="text-lg font-bold text-gray-800">
                     {selectedDepartment ? getDeptName(selectedDepartment) : '全部人员'}
                   </h3>
-                  <button
-                    onClick={handleAddStaff}
-                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    添加人员
-                  </button>
+                  {canCreate && (
+                    <button
+                      onClick={handleAddStaff}
+                      className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      添加人员
+                    </button>
+                  )}
                 </div>
                 <div className="grid grid-cols-5 gap-4">
                   {ROLES.map(role => (
@@ -318,12 +338,16 @@ export default function OperationAdminManagement() {
                               <button onClick={() => setShowPermissionModal(true)} className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg">
                                 <Key className="w-4 h-4" />
                               </button>
-                              <button onClick={() => handleEditStaff(member)} className="p-2 text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg">
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button onClick={() => handleDeleteStaff(member.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              {canEdit && (
+                                <button onClick={() => handleEditStaff(member)} className="p-2 text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg">
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button onClick={() => handleDeleteStaff(member.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </motion.tr>
@@ -346,16 +370,18 @@ export default function OperationAdminManagement() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b flex items-center justify-between">
             <h3 className="text-lg font-bold text-gray-800">科室管理</h3>
-            <button
-              onClick={handleAddDept}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              添加科室
-            </button>
+            {canCreate && (
+              <button
+                onClick={handleAddDept}
+                className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                添加科室
+              </button>
+            )}
           </div>
           <div className="p-6 grid grid-cols-2 gap-6">
-            {departments.map((dept) => (
+            {visibleDepartments.map((dept) => (
               <motion.div
                 key={dept.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -372,20 +398,26 @@ export default function OperationAdminManagement() {
                       <p className="text-sm text-gray-500">{dept.code}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => handleEditDept(dept)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDeleteDept(dept.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {(canEdit || canDelete) && (
+                    <div className="flex items-center gap-1">
+                      {canEdit && (
+                        <button onClick={() => handleEditDept(dept)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button onClick={() => handleDeleteDept(dept.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <p className="text-gray-600 text-sm mb-4">{dept.description}</p>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>{staff.filter(s => s.departmentId === dept.id).length} 人</span>
+                    <span>{visibleStaff.filter(s => s.departmentId === dept.id).length} 人</span>
                   </div>
                 </div>
               </motion.div>

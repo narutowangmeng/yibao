@@ -19,6 +19,8 @@ import InsuranceTypeManagement from './treatment/InsuranceTypeManagement';
 import LongTermCare from './treatment/LongTermCare';
 import RemoteMedical from './treatment/RemoteMedical';
 import DataDictionary from '../admin/DataDictionary';
+import type { UserRole } from '../../types/roles';
+import { getAgencyLevel } from '../../config/managementPermissions';
 
 const modules = [
   {
@@ -85,13 +87,29 @@ const activities = [
   { time: '昨天', title: '省内异地就医备案免材料事项扩展至 13 个设区市', type: '异地' },
 ];
 
-export default function TreatmentDepartment() {
+interface TreatmentDepartmentProps {
+  userRole: UserRole;
+  userAgency: string;
+}
+
+export default function TreatmentDepartment({ userAgency }: TreatmentDepartmentProps) {
   const [activeModule, setActiveModule] = useState<string | null>(null);
+  const isProvince = getAgencyLevel(userAgency) === 'province';
+  const visibleModules = isProvince ? modules : modules.filter((module) => module.id !== 'dictionary');
+  const scopedStats = isProvince
+    ? stats
+    : [
+        { label: '本市待遇政策文件', value: '12项', change: '+1项', trend: 'up' },
+        { label: '本市筹资参数标准', value: '4项', change: '+0项', trend: 'up' },
+        { label: '本市长护险服务机构', value: '68家', change: '+3家', trend: 'up' },
+        { label: '本市异地直接结算率', value: '98.1%', change: '+0.3%', trend: 'up' },
+      ];
+  const scopedActivities = isProvince ? activities : activities.slice(1, 4);
 
   const renderModuleContent = () => {
     switch (activeModule) {
       case 'insurance-type':
-        return <InsuranceTypeManagement />;
+        return <InsuranceTypeManagement userAgency={userAgency} />;
       case 'funding':
         return <PaymentManagement />;
       case 'benefit':
@@ -108,7 +126,7 @@ export default function TreatmentDepartment() {
   };
 
   if (activeModule) {
-    const moduleName = modules.find((m) => m.id === activeModule)?.name || '';
+    const moduleName = visibleModules.find((m) => m.id === activeModule)?.name || '';
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -144,15 +162,18 @@ export default function TreatmentDepartment() {
           <p className="text-gray-500 mt-1">
             负责江苏省医疗保障待遇政策、筹资政策、长期护理保险和异地就医等业务管理
           </p>
+          <p className="mt-2 text-sm text-cyan-700">
+            {isProvince ? '当前为省局视角，可维护全省主政策、主参数和基础字典。' : '当前为地市视角，重点查看本市执行情况，不维护全省主字典。'}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span className="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full">二级部门</span>
-          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">45人</span>
+          <span className="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full">{isProvince ? '省局视角' : '地市视角'}</span>
+          <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">{isProvince ? '45人' : '18人'}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
+        {scopedStats.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
@@ -172,7 +193,7 @@ export default function TreatmentDepartment() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {modules.map((module, index) => {
+        {visibleModules.map((module, index) => {
           const Icon = module.icon;
           return (
             <motion.div
@@ -257,7 +278,7 @@ export default function TreatmentDepartment() {
           近期动态
         </h3>
         <div className="space-y-3">
-          {activities.map((item, idx) => (
+          {scopedActivities.map((item, idx) => (
             <div key={idx} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-500 w-12">{item.time}</span>
               <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-xs rounded">{item.type}</span>

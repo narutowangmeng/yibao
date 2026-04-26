@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import RoleBasedSidebar from './components/Layout/RoleBasedSidebar';
 import { Header } from './components/Layout/Header';
@@ -34,6 +34,7 @@ import ClaimsPaymentOrdersPage from './pages/workbench/claims/ClaimsPaymentOrder
 import ClaimsReconciliationPage from './pages/workbench/claims/ClaimsReconciliationPage';
 import ClaimsExceptionsPage from './pages/workbench/claims/ClaimsExceptionsPage';
 import type { UserRole } from './types/roles';
+import { canAccessManagementPage, type ManagementPageKey } from './config/managementPermissions';
 
 type SystemType = 'management' | 'operation' | 'portal';
 
@@ -76,12 +77,36 @@ function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentRole, setCurrentRole] = useState<UserRole>(DEFAULT_ROLE);
   const [currentAgency, setCurrentAgency] = useState<string>('headquarters');
-  const canAccessReportCenter = currentRole === 'bureau_leader';
-
+  const [currentOperatorIdentity, setCurrentOperatorIdentity] = useState<'经办' | '审核'>('经办');
   const currentPath = location.pathname;
   const title = currentPath.startsWith('/reports/')
     ? '报表详情'
     : (pageTitles[currentPath] || '数据概览');
+
+  const canAccessPage = (pageKey: ManagementPageKey) => canAccessManagementPage(currentRole, currentAgency, pageKey);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    const guardedRoutes: Array<{ prefix: string; pageKey: ManagementPageKey }> = [
+      { prefix: '/reports', pageKey: 'reports' },
+      { prefix: '/treatment', pageKey: 'treatment' },
+      { prefix: '/fund-supervision', pageKey: 'fund-supervision' },
+      { prefix: '/medical-service', pageKey: 'medical-service' },
+      { prefix: '/dept-staff', pageKey: 'dept-staff' },
+      { prefix: '/agency-management', pageKey: 'agency-management' },
+      { prefix: '/enterprise-management', pageKey: 'enterprise-management' },
+      { prefix: '/operation-admin', pageKey: 'operation-admin' },
+      { prefix: '/settings', pageKey: 'settings' },
+    ];
+
+    const blockedRoute = guardedRoutes.find((route) => currentPath.startsWith(route.prefix) && !canAccessPage(route.pageKey));
+    if (blockedRoute) {
+      window.location.hash = '#/dashboard';
+    }
+  }, [canAccessPage, currentAgency, currentPath, currentRole, isLoggedIn]);
 
   const getActiveTab = () => {
     if (currentPath.startsWith('/reports')) {
@@ -91,15 +116,15 @@ function AppContent() {
     return path || 'dashboard';
   };
 
-  const handleLogin = (role: UserRole, agency?: string) => {
+  const handleLogin = (role: UserRole, agency?: string, operatorIdentity?: '经办' | '审核') => {
+    const nextAgency = agency || currentAgency;
     setCurrentRole(role);
-    if (agency) {
-      setCurrentAgency(agency);
-    }
+    setCurrentAgency(nextAgency);
+    setCurrentOperatorIdentity(operatorIdentity || '经办');
     setIsLoggedIn(true);
 
     let defaultPath = '#/dashboard';
-    if (role === 'bureau_leader') defaultPath = '#/reports';
+    if (role === 'bureau_leader' && nextAgency === 'headquarters') defaultPath = '#/reports';
     if (role === 'institution_admin') defaultPath = '#/institutions';
     else if (role === 'employer_admin') defaultPath = '#/employer';
     else if (role === 'insured_person') defaultPath = '#/personal';
@@ -114,7 +139,7 @@ function AppContent() {
     else if (role === 'employer_management') defaultPath = '#/workbench/employer-management';
     else if (role === 'operation_admin') defaultPath = '#/workbench/operation-admin';
 
-    window.location.hash = defaultPath.replace('#/', '');
+    window.location.hash = defaultPath;
   };
 
   const handleLogout = () => {
@@ -142,6 +167,7 @@ function AppContent() {
     const systemType = roleSystemMap[currentRole] || 'management';
     setIsLoggedIn(false);
     setCurrentRole(DEFAULT_ROLE);
+    setCurrentOperatorIdentity('经办');
     window.location.hash = `?system=${systemType}`;
   };
 
@@ -153,13 +179,14 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
-      {!isWorkbenchPage && <RoleBasedSidebar activeTab={getActiveTab()} userRole={currentRole} />}
+      {!isWorkbenchPage && <RoleBasedSidebar activeTab={getActiveTab()} userRole={currentRole} userAgency={currentAgency} />}
       <div className={isWorkbenchPage ? '' : 'ml-64'}>
         <Header
           title={title}
           theme={theme}
           userRole={currentRole}
           userAgency={currentAgency}
+          userOperatorIdentity={currentOperatorIdentity}
           onLogout={handleLogout}
         />
         <main className="p-6">
@@ -168,17 +195,26 @@ function AppContent() {
             <Route path="/dashboard" element={<RoleBasedDashboard userRole={currentRole} />} />
             <Route
               path="/reports"
-              element={canAccessReportCenter ? <StatisticalReports /> : <Navigate to="/dashboard" replace />}
+              element={canAccessPage('reports') ? <StatisticalReports /> : <Navigate to="/dashboard" replace />}
             />
             <Route
               path="/reports/:groupId/:reportId"
-              element={canAccessReportCenter ? <ReportDetailPage /> : <Navigate to="/dashboard" replace />}
+              element={canAccessPage('reports') ? <ReportDetailPage /> : <Navigate to="/dashboard" replace />}
             />
 
-            <Route path="/treatment" element={<TreatmentDepartment />} />
-            <Route path="/fund-supervision" element={<FundSupervision />} />
-            <Route path="/fund-supervision/rule-engine" element={<RuleEngine />} />
-            <Route path="/medical-service" element={<MedicalService />} />
+            <Route
+              path="/treatment"
+              element={canAccessPage('treatment') ? <TreatmentDepartment userRole={currentRole} userAgency={currentAgency} /> : <Navigate to="/dashboard" replace />}
+            />
+            <Route
+              path="/fund-supervision"
+              element={canAccessPage('fund-supervision') ? <FundSupervision userRole={currentRole} userAgency={currentAgency} /> : <Navigate to="/dashboard" replace />}
+            />
+            <Route path="/fund-supervision/rule-engine" element={canAccessPage('fund-supervision') ? <RuleEngine /> : <Navigate to="/dashboard" replace />} />
+            <Route
+              path="/medical-service"
+              element={canAccessPage('medical-service') ? <MedicalService userRole={currentRole} userAgency={currentAgency} /> : <Navigate to="/dashboard" replace />}
+            />
 
             <Route path="/workbench/enrollment" element={<EnrollmentWorkbench />} />
             <Route path="/workbench/payment-calc" element={<PaymentCalcWorkbench />} />
@@ -204,15 +240,25 @@ function AppContent() {
             <Route
               path="/dept-staff"
               element={
-                <DepartmentStaffManagement
-                  userRole={currentRole as 'treatment_director' | 'fund_supervisor' | 'medical_service_director'}
-                />
+                canAccessPage('dept-staff') ? (
+                  <DepartmentStaffManagement
+                    userRole={currentRole as 'treatment_director' | 'fund_supervisor' | 'medical_service_director'}
+                  />
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
               }
             />
-            <Route path="/agency-management" element={<AgencyManagement />} />
-            <Route path="/enterprise-management" element={<EnterpriseManagement />} />
-            <Route path="/operation-admin" element={<OperationAdminManagement />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route
+              path="/agency-management"
+              element={canAccessPage('agency-management') ? <AgencyManagement userRole={currentRole} userAgency={currentAgency} /> : <Navigate to="/dashboard" replace />}
+            />
+            <Route path="/enterprise-management" element={canAccessPage('enterprise-management') ? <EnterpriseManagement /> : <Navigate to="/dashboard" replace />} />
+            <Route
+              path="/operation-admin"
+              element={canAccessPage('operation-admin') ? <OperationAdminManagement userRole={currentRole} userAgency={currentAgency} /> : <Navigate to="/dashboard" replace />}
+            />
+            <Route path="/settings" element={canAccessPage('settings') ? <Settings /> : <Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
       </div>
