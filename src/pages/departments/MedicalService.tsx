@@ -159,29 +159,29 @@ export default function MedicalService({ userAgency }: MedicalServiceProps) {
   const renderModuleContent = () => {
     switch (activeModule) {
       case 'institution':
-        return <InstitutionManagement />;
+        return <InstitutionManagement userAgency={userAgency} />;
       case 'directory':
-        return <InsuranceDirectory />;
+        return <InsuranceDirectory userAgency={userAgency} />;
       case 'drug':
-        return <DrugManagement />;
+        return <DrugManagement userAgency={userAgency} />;
       case 'price':
-        return <PriceManagement />;
+        return <PriceManagement userAgency={userAgency} />;
       case 'payment':
-        return <PaymentReform />;
+        return <PaymentReform userAgency={userAgency} />;
       case 'behavior':
-        return <ServiceSupervision />;
+        return <ServiceSupervision userAgency={userAgency} />;
       case 'drug_directory':
         return <DrugDirectoryQuery />;
       case 'service_directory':
         return <ServiceDirectoryQuery />;
       case 'material_directory':
-        return <MaterialDirectoryQuery onBack={() => setActiveModule(null)} />;
+        return <MaterialDirectoryQuery userAgency={userAgency} onBack={() => setActiveModule(null)} />;
       case 'surgery_directory':
-        return <SurgeryDirectoryQuery />;
+        return <SurgeryDirectoryQuery userAgency={userAgency} />;
       case 'day_surgery':
-        return <DaySurgeryDirectory />;
+        return <DaySurgeryDirectory userAgency={userAgency} />;
       case 'disease_diagnosis':
-        return <DiseaseDiagnosisQuery onBack={() => setActiveModule(null)} />;
+        return <DiseaseDiagnosisQuery userAgency={userAgency} onBack={() => setActiveModule(null)} />;
       default:
         return null;
     }

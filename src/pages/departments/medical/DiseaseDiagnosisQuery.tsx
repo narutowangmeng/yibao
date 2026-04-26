@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, Eye, X, ArrowLeft } from 'lucide-react';
+import { getAgencyLevel } from '../../../config/managementPermissions';
 
 interface Disease {
   id: string;
@@ -8,6 +9,11 @@ interface Disease {
   name: string;
   category: string;
   description: string;
+}
+
+interface DiseaseDiagnosisQueryProps {
+  userAgency: string;
+  onBack?: () => void;
 }
 
 const categories = ['传染病', '内分泌疾病', '心血管疾病', '恶性肿瘤', '呼吸系统疾病', '神经系统疾病'];
@@ -32,22 +38,23 @@ const mockDiseases: Disease[] = [
   ['N18.900', '慢性肾脏病', '内分泌疾病', '肾功能持续下降超过三个月。'],
   ['K35.900', '急性阑尾炎', '传染病', '阑尾急性炎症性疾病，常需手术处理。'],
   ['M17.900', '膝骨关节炎', '神经系统疾病', '膝关节退行性改变引起疼痛和功能障碍。'],
-  ['I63.900', '脑梗死', '神经系统疾病', '脑血管闭塞导致局部脑组织缺血坏死。']
+  ['I63.900', '脑梗死', '神经系统疾病', '脑血管闭塞导致局部脑组织缺血坏死。'],
 ].map(([code, name, category, description], index) => ({
   id: String(index + 1),
   code,
   name,
   category,
-  description
+  description,
 }));
 
-export default function DiseaseDiagnosisQuery({ onBack }: { onBack?: () => void }) {
+export default function DiseaseDiagnosisQuery({ userAgency, onBack }: DiseaseDiagnosisQueryProps) {
   const [diseases, setDiseases] = useState<Disease[]>(mockDiseases);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const [showModal, setShowModal] = useState(false);
   const [editingDisease, setEditingDisease] = useState<Disease | null>(null);
   const [showDetail, setShowDetail] = useState<Disease | null>(null);
+  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const filteredDiseases = diseases.filter((d) => {
     const matchesSearch = d.name.includes(searchTerm) || d.code.includes(searchTerm);
@@ -55,12 +62,21 @@ export default function DiseaseDiagnosisQuery({ onBack }: { onBack?: () => void 
     return matchesSearch && matchesCategory;
   });
 
-  const handleAdd = () => { setEditingDisease(null); setShowModal(true); };
-  const handleEdit = (disease: Disease) => { setEditingDisease(disease); setShowModal(true); };
+  const handleAdd = () => {
+    setEditingDisease(null);
+    setShowModal(true);
+  };
+  const handleEdit = (disease: Disease) => {
+    setEditingDisease(disease);
+    setShowModal(true);
+  };
   const handleDelete = (id: string) => setDiseases(diseases.filter((d) => d.id !== id));
   const handleSave = (data: Partial<Disease>) => {
-    if (editingDisease) setDiseases(diseases.map((d) => (d.id === editingDisease.id ? { ...d, ...data } : d)));
-    else setDiseases([...diseases, { ...data, id: String(diseases.length + 1) } as Disease]);
+    if (editingDisease) {
+      setDiseases(diseases.map((d) => (d.id === editingDisease.id ? { ...d, ...data } : d)));
+    } else {
+      setDiseases([...diseases, { ...data, id: String(diseases.length + 1) } as Disease]);
+    }
     setShowModal(false);
   };
 
@@ -68,19 +84,39 @@ export default function DiseaseDiagnosisQuery({ onBack }: { onBack?: () => void 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {onBack && <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-800"><ArrowLeft className="w-4 h-4" /> 返回</button>}
+          {onBack && (
+            <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+              <ArrowLeft className="w-4 h-4" />
+              返回
+            </button>
+          )}
           <h2 className="text-xl font-bold">疾病与诊断目录管理</h2>
         </div>
-        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"><Plus className="w-4 h-4" /> 新增疾病</button>
+        {isProvince ? (
+          <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            <Plus className="w-4 h-4" />
+            新增疾病
+          </button>
+        ) : (
+          <div className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">地市账号仅可查询和查看疾病诊断目录，不可新增、编辑或删除</div>
+        )}
       </div>
       <div className="flex flex-wrap gap-4 bg-white p-4 rounded-lg shadow-sm">
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input type="text" placeholder="搜索疾病名称或编码" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
+          <input
+            type="text"
+            placeholder="搜索疾病名称或编码"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
         </div>
         <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
           <option value="全部">全部</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
       </div>
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -99,13 +135,25 @@ export default function DiseaseDiagnosisQuery({ onBack }: { onBack?: () => void 
               <motion.tr key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hover:bg-gray-50">
                 <td className="px-4 py-3 text-sm font-medium text-blue-600">{d.code}</td>
                 <td className="px-4 py-3 text-sm">{d.name}</td>
-                <td className="px-4 py-3 text-sm"><span className="px-2 py-1 bg-gray-100 rounded text-xs">{d.category}</span></td>
+                <td className="px-4 py-3 text-sm">
+                  <span className="px-2 py-1 bg-gray-100 rounded text-xs">{d.category}</span>
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-500">{d.description}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => setShowDetail(d)} className="p-2 text-gray-500 hover:text-blue-600"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => handleEdit(d)} className="p-2 text-gray-500 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(d.id)} className="p-2 text-gray-500 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => setShowDetail(d)} className="p-2 text-gray-500 hover:text-blue-600">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    {isProvince && (
+                      <>
+                        <button onClick={() => handleEdit(d)} className="p-2 text-gray-500 hover:text-blue-600">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(d.id)} className="p-2 text-gray-500 hover:text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </motion.tr>
@@ -113,15 +161,29 @@ export default function DiseaseDiagnosisQuery({ onBack }: { onBack?: () => void 
           </tbody>
         </table>
       </div>
-      <AnimatePresence>{showModal && <DiseaseModal editing={editingDisease} onClose={() => setShowModal(false)} onSave={handleSave} />}</AnimatePresence>
-      <AnimatePresence>{showDetail && <DetailModal disease={showDetail} onClose={() => setShowDetail(null)} />}</AnimatePresence>
+      <AnimatePresence>
+        {isProvince && showModal && <DiseaseModal editing={editingDisease} onClose={() => setShowModal(false)} onSave={handleSave} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showDetail && <DetailModal disease={showDetail} onClose={() => setShowDetail(null)} />}
+      </AnimatePresence>
     </div>
   );
 }
 
 function DiseaseModal({ editing, onClose, onSave }: { editing: Disease | null; onClose: () => void; onSave: (data: Partial<Disease>) => void }) {
-  const [formData, setFormData] = useState({ code: editing?.code || '', name: editing?.name || '', category: editing?.category || categories[0], description: editing?.description || '' });
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave(formData); };
+  const [formData, setFormData] = useState({
+    code: editing?.code || '',
+    name: editing?.name || '',
+    category: editing?.category || categories[0],
+    description: editing?.description || '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
@@ -130,7 +192,9 @@ function DiseaseModal({ editing, onClose, onSave }: { editing: Disease | null; o
           <input type="text" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required />
           <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required />
           <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
           <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" rows={3} />
           <div className="flex justify-end gap-3 pt-4">
@@ -149,7 +213,9 @@ function DetailModal({ disease, onClose }: { disease: Disease; onClose: () => vo
       <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">疾病详情</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+            <X className="w-5 h-5" />
+          </button>
         </div>
         <div className="space-y-3">
           <div><p className="text-gray-500 text-sm">ICD编码</p><p className="font-medium text-blue-600">{disease.code}</p></div>

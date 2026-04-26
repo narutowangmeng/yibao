@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import insuranceKnowledgeBase from '../../data/insuranceKnowledgeBase.json';
+import { getAgencyLevel } from '../../config/managementPermissions';
 
 interface KnowledgeRuleCondition {
   conditionId: string;
@@ -110,7 +111,7 @@ function makeEmptyRule(): KnowledgeRule {
   };
 }
 
-export default function RuleEngine() {
+export default function RuleEngine({ userAgency }: { userAgency: string }) {
   const [rules, setRules] = useState<KnowledgeRule[]>(initialRules);
   const [keyword, setKeyword] = useState('');
   const [domainFilter, setDomainFilter] = useState<'all' | 'drug' | 'service'>('all');
@@ -119,10 +120,12 @@ export default function RuleEngine() {
   const [showEditor, setShowEditor] = useState(false);
   const [editingRule, setEditingRule] = useState<KnowledgeRule | null>(null);
   const [draftRule, setDraftRule] = useState<KnowledgeRule>(makeEmptyRule());
+  const isProvince = getAgencyLevel(userAgency) === 'province';
 
-  const typeOptions = useMemo(() => (
-    ['全部类型', ...Array.from(new Set(rules.map((rule) => rule.type).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-CN'))]
-  ), [rules]);
+  const typeOptions = useMemo(
+    () => ['全部类型', ...Array.from(new Set(rules.map((rule) => rule.type).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-CN'))],
+    [rules]
+  );
 
   const filteredRules = useMemo(() => {
     const search = keyword.trim();
@@ -149,7 +152,7 @@ export default function RuleEngine() {
     if (!selectedRule && filteredRules.length === 0) {
       setSelectedRuleId('');
     }
-  }, [selectedRule, selectedRuleId, filteredRules]);
+  }, [filteredRules, selectedRule, selectedRuleId]);
 
   const summary = useMemo(() => {
     const drugCount = rules.filter((rule) => rule.domain === 'drug').length;
@@ -160,12 +163,14 @@ export default function RuleEngine() {
   }, [rules]);
 
   const openAddEditor = () => {
+    if (!isProvince) return;
     setEditingRule(null);
     setDraftRule(makeEmptyRule());
     setShowEditor(true);
   };
 
   const openEditEditor = (rule: KnowledgeRule) => {
+    if (!isProvince) return;
     setEditingRule(rule);
     setDraftRule({
       ...rule,
@@ -176,12 +181,10 @@ export default function RuleEngine() {
   };
 
   const saveRule = () => {
+    if (!isProvince) return;
     const normalizedName = draftRule.name.trim();
     const normalizedType = draftRule.type.trim();
-
-    if (!normalizedName || !normalizedType) {
-      return;
-    }
+    if (!normalizedName || !normalizedType) return;
 
     const normalizedRule: KnowledgeRule = {
       ...draftRule,
@@ -207,16 +210,15 @@ export default function RuleEngine() {
 
     if (editingRule) {
       setRules((current) => current.map((rule) => (rule.id === editingRule.id ? normalizedRule : rule)));
-      setSelectedRuleId(normalizedRule.id);
     } else {
       setRules((current) => [normalizedRule, ...current]);
-      setSelectedRuleId(normalizedRule.id);
     }
-
+    setSelectedRuleId(normalizedRule.id);
     setShowEditor(false);
   };
 
   const deleteRule = (id: string) => {
+    if (!isProvince) return;
     setRules((current) => current.filter((rule) => rule.id !== id));
     if (selectedRuleId === id) {
       setSelectedRuleId('');
@@ -224,11 +226,14 @@ export default function RuleEngine() {
   };
 
   const toggleStatus = (id: string) => {
-    setRules((current) => current.map((rule) => (
-      rule.id === id
-        ? { ...rule, status: rule.status === '1' ? '0' : '1' }
-        : rule
-    )));
+    if (!isProvince) return;
+    setRules((current) =>
+      current.map((rule) => (
+        rule.id === id
+          ? { ...rule, status: rule.status === '1' ? '0' : '1' }
+          : rule
+      ))
+    );
   };
 
   const updateCondition = (index: number, field: keyof KnowledgeRuleCondition, value: string) => {
@@ -292,16 +297,23 @@ export default function RuleEngine() {
             </div>
             <h2 className="mt-4 text-3xl font-bold text-gray-900">规则引擎</h2>
             <p className="mt-2 max-w-3xl text-sm leading-7 text-gray-600">
-              统一纳入基金监管模块，支持真实规则数据的新增、编辑、删除、启停和明细维护，不再只是查看页面。
+              统一承载药品规则、诊疗项目规则及条件结论维护。
+              {isProvince ? ' 省级账号可新增、编辑、删除和启停规则。' : ' 地市账号仅可查询和查看明细，不可维护规则。'}
             </p>
           </div>
-          <button
-            onClick={openAddEditor}
-            className="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700"
-          >
-            <Plus className="h-4 w-4" />
-            新增规则
-          </button>
+          {isProvince ? (
+            <button
+              onClick={openAddEditor}
+              className="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700"
+            >
+              <Plus className="h-4 w-4" />
+              新增规则
+            </button>
+          ) : (
+            <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              地市账号仅可查看规则引擎，不可新增、编辑、删除或启停
+            </div>
+          )}
         </div>
       </div>
 
@@ -384,10 +396,7 @@ export default function RuleEngine() {
                     isSelected ? 'border-red-300 bg-red-50/60' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-slate-50'
                   }`}
                 >
-                  <button
-                    onClick={() => setSelectedRuleId(rule.id)}
-                    className="w-full text-left"
-                  >
+                  <button onClick={() => setSelectedRuleId(rule.id)} className="w-full text-left">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
                         <div className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl ${meta.card}`}>
@@ -413,26 +422,28 @@ export default function RuleEngine() {
                       </span>
                     </div>
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toggleStatus(rule.id)}
-                        className="rounded-xl px-3 py-2 text-xs text-gray-600 transition hover:bg-slate-100"
-                      >
-                        {rule.status === '1' ? '停用' : '启用'}
-                      </button>
-                      <button
-                        onClick={() => openEditEditor(rule)}
-                        className="rounded-xl p-2 text-gray-500 transition hover:bg-slate-100 hover:text-gray-900"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteRule(rule.id)}
-                        className="rounded-xl p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                    {isProvince && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleStatus(rule.id)}
+                          className="rounded-xl px-3 py-2 text-xs text-gray-600 transition hover:bg-slate-100"
+                        >
+                          {rule.status === '1' ? '停用' : '启用'}
+                        </button>
+                        <button
+                          onClick={() => openEditEditor(rule)}
+                          className="rounded-xl p-2 text-gray-500 transition hover:bg-slate-100 hover:text-gray-900"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteRule(rule.id)}
+                          className="rounded-xl p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -447,7 +458,7 @@ export default function RuleEngine() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <h3 className="text-2xl font-semibold text-gray-900">{selectedRule.name}</h3>
-                    <p className="mt-2 text-sm text-gray-500">{selectedRule.id} · {selectedRule.type || '未分类'}</p>
+                    <p className="mt-2 text-sm text-gray-500">{selectedRule.id} / {selectedRule.type || '未分类'}</p>
                     <p className="mt-3 text-sm leading-7 text-gray-600">{selectedRule.note || '暂无规则说明'}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -480,7 +491,7 @@ export default function RuleEngine() {
                       <Activity className="h-4 w-4" />
                       <span className="text-sm font-medium">来源</span>
                     </div>
-                    <p className="mt-2 text-sm text-gray-700">{selectedRule.source}</p>
+                    <p className="mt-2 text-sm text-gray-700">{selectedRule.source || '-'}</p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3">
                     <div className="flex items-center gap-2 text-slate-700">
@@ -531,11 +542,9 @@ export default function RuleEngine() {
                 <div className="space-y-3">
                   {selectedRule.conclusions.map((conclusion, index) => (
                     <div key={`${selectedRule.id}-conclusion-${index}`} className="rounded-2xl border border-gray-200 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="rounded-full bg-red-50 px-3 py-1 text-xs text-red-700">
-                          {conclusion.resultType || '提示'}
-                        </span>
-                      </div>
+                      <span className="rounded-full bg-red-50 px-3 py-1 text-xs text-red-700">
+                        {conclusion.resultType || '提示'}
+                      </span>
                       <p className="mt-3 text-sm leading-7 text-gray-700">{conclusion.resultTip || '暂无结论描述'}</p>
                     </div>
                   ))}
@@ -551,7 +560,7 @@ export default function RuleEngine() {
       </div>
 
       <AnimatePresence>
-        {showEditor && (
+        {isProvince && showEditor && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -568,10 +577,8 @@ export default function RuleEngine() {
             >
               <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5">
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-900">
-                    {editingRule ? '编辑规则' : '新增规则'}
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">支持规则定义、条件和结论的完整维护。</p>
+                  <h3 className="text-2xl font-semibold text-gray-900">{editingRule ? '编辑规则' : '新增规则'}</h3>
+                  <p className="mt-1 text-sm text-gray-500">支持规则定义、规则条件和规则结论维护</p>
                 </div>
                 <button
                   onClick={() => setShowEditor(false)}

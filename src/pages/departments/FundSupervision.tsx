@@ -192,7 +192,7 @@ export default function FundSupervision({ userRole, userAgency }: FundSupervisio
       case 'inspection':
         return <FlightInspection />;
       case 'ai':
-        return <SmartSupervision />;
+        return <SmartSupervision userAgency={userAgency} />;
       case 'violation':
         return <ViolationHandling />;
       case 'credit':
@@ -200,13 +200,13 @@ export default function FundSupervision({ userRole, userAgency }: FundSupervisio
       case 'complaint':
         return <ComplaintManagement />;
       case 'datamodel':
-        return <DataModelManagement />;
+        return <DataModelManagement userAgency={userAgency} />;
       case 'valueset':
-        return <ValueSetManagement />;
+        return <ValueSetManagement userAgency={userAgency} />;
       case 'ruleconclusion':
-        return <RuleConclusionManagement />;
+        return <RuleConclusionManagement userAgency={userAgency} />;
       case 'rule-engine':
-        return <RuleEngine />;
+        return <RuleEngine userAgency={userAgency} />;
       case 'fraudmodel':
         return renderFraudModelContent();
       default:

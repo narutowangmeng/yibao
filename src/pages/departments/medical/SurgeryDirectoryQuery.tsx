@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react';
+import { getAgencyLevel } from '../../../config/managementPermissions';
 
 interface SurgeryItem {
   id: string;
@@ -10,6 +11,10 @@ interface SurgeryItem {
   level: '一级' | '二级' | '三级' | '四级';
   price: number;
   status: 'active' | 'inactive';
+}
+
+interface SurgeryDirectoryQueryProps {
+  userAgency: string;
 }
 
 const categories = ['全部', '腹部手术', '骨科手术', '眼科手术', '心胸外科', '神经外科'];
@@ -35,7 +40,7 @@ const mockData: SurgeryItem[] = [
   ['SUR017', '脑膜瘤切除术', '神经外科', '四级', 32800],
   ['SUR018', '脑室腹腔分流术', '神经外科', '三级', 12600],
   ['SUR019', '经皮椎体成形术', '骨科手术', '三级', 10800],
-  ['SUR020', '甲状腺部分切除术', '腹部手术', '三级', 7600]
+  ['SUR020', '甲状腺部分切除术', '腹部手术', '三级', 7600],
 ].map(([code, name, category, level, price], index) => ({
   id: String(index + 1),
   code,
@@ -43,10 +48,10 @@ const mockData: SurgeryItem[] = [
   category,
   level: level as SurgeryItem['level'],
   price,
-  status: 'active' as const
+  status: 'active' as const,
 }));
 
-export default function SurgeryDirectoryQuery() {
+export default function SurgeryDirectoryQuery({ userAgency }: SurgeryDirectoryQueryProps) {
   const [data, setData] = useState<SurgeryItem[]>(mockData);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('全部');
@@ -55,6 +60,7 @@ export default function SurgeryDirectoryQuery() {
   const [editingItem, setEditingItem] = useState<SurgeryItem | null>(null);
   const [showDetail, setShowDetail] = useState<SurgeryItem | null>(null);
   const [formData, setFormData] = useState({ code: '', name: '', category: '腹部手术', level: '二级' as const, price: 0 });
+  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const filteredData = data.filter((item) => {
     const matchesSearch = item.name.includes(searchTerm) || item.code.includes(searchTerm);
@@ -78,8 +84,11 @@ export default function SurgeryDirectoryQuery() {
   const handleDelete = (id: string) => setData(data.filter((item) => item.id !== id));
 
   const handleSave = () => {
-    if (editingItem) setData(data.map((item) => (item.id === editingItem.id ? { ...item, ...formData } : item)));
-    else setData([...data, { ...formData, id: String(Date.now()), status: 'active' }]);
+    if (editingItem) {
+      setData(data.map((item) => (item.id === editingItem.id ? { ...item, ...formData } : item)));
+    } else {
+      setData([...data, { ...formData, id: String(Date.now()), status: 'active' }]);
+    }
     setShowModal(false);
   };
 
@@ -87,7 +96,14 @@ export default function SurgeryDirectoryQuery() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">手术操作目录管理</h2>
-        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg"><Plus className="w-4 h-4" /> 新增手术</button>
+        {isProvince ? (
+          <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg">
+            <Plus className="w-4 h-4" />
+            新增手术
+          </button>
+        ) : (
+          <div className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">地市账号仅可查询和查看手术目录，不可新增、编辑或删除</div>
+        )}
       </div>
       <div className="flex flex-wrap gap-4 bg-white p-4 rounded-lg shadow-sm">
         <div className="flex-1 min-w-[200px] relative">
@@ -95,10 +111,14 @@ export default function SurgeryDirectoryQuery() {
           <input type="text" placeholder="搜索编码、名称" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg" />
         </div>
         <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="px-4 py-2 border rounded-lg">
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
         <select value={selectedLevel} onChange={(e) => setSelectedLevel(e.target.value)} className="px-4 py-2 border rounded-lg">
-          {levels.map((l) => <option key={l} value={l}>{l}</option>)}
+          {levels.map((l) => (
+            <option key={l} value={l}>{l}</option>
+          ))}
         </select>
       </div>
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -119,13 +139,27 @@ export default function SurgeryDirectoryQuery() {
                 <td className="px-4 py-3 text-sm">{item.code}</td>
                 <td className="px-4 py-3 font-medium">{item.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{item.category}</td>
-                <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${item.level === '四级' ? 'bg-red-100 text-red-700' : item.level === '三级' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>{item.level}</span></td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-1 rounded-full text-xs ${item.level === '四级' ? 'bg-red-100 text-red-700' : item.level === '三级' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {item.level}
+                  </span>
+                </td>
                 <td className="px-4 py-3 text-sm">￥{item.price}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => setShowDetail(item)} className="p-2 text-gray-500 hover:text-blue-600"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => handleEdit(item)} className="p-2 text-gray-500 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 text-gray-500 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => setShowDetail(item)} className="p-2 text-gray-500 hover:text-blue-600">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    {isProvince && (
+                      <>
+                        <button onClick={() => handleEdit(item)} className="p-2 text-gray-500 hover:text-blue-600">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} className="p-2 text-gray-500 hover:text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </motion.tr>
@@ -134,7 +168,7 @@ export default function SurgeryDirectoryQuery() {
         </table>
       </div>
       <AnimatePresence>
-        {showModal && (
+        {isProvince && showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-bold mb-4">{editingItem ? '编辑手术' : '新增手术'}</h3>
@@ -142,10 +176,14 @@ export default function SurgeryDirectoryQuery() {
                 <input type="text" placeholder="手术编码" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                 <input type="text" placeholder="手术名称" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                 <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
-                  {categories.filter((c) => c !== '全部').map((c) => <option key={c} value={c}>{c}</option>)}
+                  {categories.filter((c) => c !== '全部').map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
                 <select value={formData.level} onChange={(e) => setFormData({ ...formData, level: e.target.value as any })} className="w-full px-3 py-2 border rounded-lg">
-                  {levels.filter((l) => l !== '全部').map((l) => <option key={l} value={l}>{l}</option>)}
+                  {levels.filter((l) => l !== '全部').map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
                 </select>
                 <input type="number" placeholder="价格" value={formData.price} onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg" />
               </div>

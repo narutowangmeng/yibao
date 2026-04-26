@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, FileCheck, Award, LogOut, Plus, Search, Stethoscope, Pill, Edit2, Trash2 } from 'lucide-react';
+import { getAgencyLevel } from '../../../config/managementPermissions';
 
 const tabs = [
   { id: 'access', label: '机构准入', icon: Building2 },
@@ -48,13 +49,14 @@ interface Pharmacist {
   status: string;
 }
 
-export default function InstitutionManagement() {
+export default function InstitutionManagement({ userAgency }: { userAgency: string }) {
   const [activeTab, setActiveTab] = useState('access');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [modalType, setModalType] = useState<'institution' | 'physician' | 'pharmacist'>('institution');
+  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const [institutions, setInstitutions] = useState<Institution[]>([
     { id: 'INST-001', name: '江苏省人民医院', type: '综合医院', level: '三级甲等', category: 'A类', region: '南京', beds: 3200, physicians: 1180, pharmacists: 215, creditScore: 98 },

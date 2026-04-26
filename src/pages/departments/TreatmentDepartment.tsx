@@ -111,15 +111,15 @@ export default function TreatmentDepartment({ userAgency }: TreatmentDepartmentP
       case 'insurance-type':
         return <InsuranceTypeManagement userAgency={userAgency} />;
       case 'funding':
-        return <PaymentManagement />;
+        return <PaymentManagement userAgency={userAgency} />;
       case 'benefit':
-        return <BenefitPolicy />;
+        return <BenefitPolicy userAgency={userAgency} />;
       case 'longterm':
-        return <LongTermCare />;
+        return <LongTermCare userAgency={userAgency} />;
       case 'remote':
-        return <RemoteMedical />;
+        return <RemoteMedical userAgency={userAgency} />;
       case 'dictionary':
-        return <DataDictionary />;
+        return <DataDictionary userAgency={userAgency} />;
       default:
         return null;
     }

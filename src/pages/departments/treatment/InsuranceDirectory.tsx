@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Pill, Stethoscope, Package, X, Edit2, Trash2 } from 'lucide-react';
+import { Search, Plus, Pill, Stethoscope, Package, X, Edit2, Trash2, Eye } from 'lucide-react';
+import { getAgencyLevel } from '../../../config/managementPermissions';
 
 interface DirectoryItem {
   id: string;
@@ -10,6 +11,10 @@ interface DirectoryItem {
   type: '甲类' | '乙类';
   price: number;
   status: '正常' | '调整中' | '停用';
+}
+
+interface InsuranceDirectoryProps {
+  userAgency: string;
 }
 
 const drugNames = [
@@ -28,11 +33,11 @@ const drugNames = [
   ['YB013', '连花清瘟胶囊', '中成药', '甲类', 22.8, '正常'],
   ['YB014', '血塞通软胶囊', '中成药', '乙类', 36.2, '正常'],
   ['YB015', '复方丹参滴丸', '中成药', '甲类', 29.5, '正常'],
-  ['YB016', '注射用头孢哌酮钠舒巴坦钠', '抗感染药', '乙类', 84.7, '调整中'],
+  ['YB016', '注射用头孢哌酮舒巴坦钠', '抗感染药', '乙类', 84.7, '调整中'],
   ['YB017', '恩替卡韦分散片', '抗病毒药', '甲类', 45.9, '正常'],
   ['YB018', '替格瑞洛片', '西药', '乙类', 96.4, '正常'],
   ['YB019', '人血白蛋白注射液', '血液制品', '乙类', 428, '正常'],
-  ['YB020', '乌灵胶囊', '中成药', '乙类', 41.6, '停用']
+  ['YB020', '乌灵胶囊', '中成药', '乙类', 41.6, '停用'],
 ] as const;
 
 const serviceNames = [
@@ -55,7 +60,7 @@ const serviceNames = [
   ['ZL017', '高压氧治疗', '治疗费', '乙类', 180, '调整中'],
   ['ZL018', '康复训练评定', '康复费', '甲类', 90, '正常'],
   ['ZL019', '针灸治疗', '中医治疗', '甲类', 46, '正常'],
-  ['ZL020', '中医推拿治疗', '中医治疗', '甲类', 58, '正常']
+  ['ZL020', '中医推拿治疗', '中医治疗', '甲类', 58, '正常'],
 ] as const;
 
 const materialNames = [
@@ -78,7 +83,7 @@ const materialNames = [
   ['HC017', '负压引流装置', '治疗耗材', '甲类', 72, '正常'],
   ['HC018', '电刀负极板', '手术耗材', '甲类', 24, '正常'],
   ['HC019', '医用胶片替代打印耗材', '检查耗材', '乙类', 12, '停用'],
-  ['HC020', '心脏起搏器电极导线', '高值耗材', '乙类', 5600, '正常']
+  ['HC020', '心脏起搏器电极导线', '高值耗材', '乙类', 5600, '正常'],
 ] as const;
 
 const createItems = (source: readonly (readonly [string, string, string, '甲类' | '乙类', number, '正常' | '调整中' | '停用'])[]) =>
@@ -89,22 +94,22 @@ const createItems = (source: readonly (readonly [string, string, string, '甲类
     category,
     type,
     price,
-    status
+    status,
   }));
 
 const initialData: Record<string, DirectoryItem[]> = {
   drugs: createItems(drugNames),
   services: createItems(serviceNames),
-  materials: createItems(materialNames)
+  materials: createItems(materialNames),
 };
 
 const tabs = [
   { id: 'drugs', label: '药品目录', icon: Pill },
   { id: 'services', label: '诊疗项目', icon: Stethoscope },
-  { id: 'materials', label: '医用耗材', icon: Package }
+  { id: 'materials', label: '医用耗材', icon: Package },
 ];
 
-export default function InsuranceDirectory() {
+export default function InsuranceDirectory({ userAgency }: InsuranceDirectoryProps) {
   const [activeTab, setActiveTab] = useState('drugs');
   const [data, setData] = useState(initialData);
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,7 +117,9 @@ export default function InsuranceDirectory() {
   const [filterStatus, setFilterStatus] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<DirectoryItem | null>(null);
+  const [viewingItem, setViewingItem] = useState<DirectoryItem | null>(null);
   const [formData, setFormData] = useState<Partial<DirectoryItem>>({});
+  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const currentData = data[activeTab] || [];
   const filteredData = currentData.filter((item) => {
@@ -143,7 +150,7 @@ export default function InsuranceDirectory() {
     if (editingItem) {
       setData((prev) => ({
         ...prev,
-        [activeTab]: prev[activeTab].map((item) => (item.id === editingItem.id ? { ...item, ...formData } as DirectoryItem : item))
+        [activeTab]: prev[activeTab].map((item) => (item.id === editingItem.id ? ({ ...item, ...formData } as DirectoryItem) : item)),
       }));
     } else {
       const newItem: DirectoryItem = {
@@ -153,7 +160,7 @@ export default function InsuranceDirectory() {
         category: formData.category || '',
         type: (formData.type as '甲类' | '乙类') || '甲类',
         price: Number(formData.price) || 0,
-        status: (formData.status as '正常' | '调整中' | '停用') || '正常'
+        status: (formData.status as '正常' | '调整中' | '停用') || '正常',
       };
       setData((prev) => ({ ...prev, [activeTab]: [...prev[activeTab], newItem] }));
     }
@@ -164,10 +171,14 @@ export default function InsuranceDirectory() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-800">医保目录管理</h2>
-        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
-          <Plus className="w-4 h-4" />
-          新增项目
-        </button>
+        {isProvince ? (
+          <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
+            <Plus className="w-4 h-4" />
+            新增项目
+          </button>
+        ) : (
+          <div className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">地市账号仅可查看目录数据，不可新增、编辑或删除全省目录</div>
+        )}
       </div>
 
       <div className="flex gap-2 border-b border-gray-200">
@@ -244,8 +255,19 @@ export default function InsuranceDirectory() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button onClick={() => handleEdit(item)} className="p-1 hover:bg-gray-200 rounded"><Edit2 className="w-4 h-4 text-gray-500" /></button>
-                    <button onClick={() => handleDelete(item.id)} className="p-1 hover:bg-gray-200 rounded"><Trash2 className="w-4 h-4 text-red-500" /></button>
+                    <button onClick={() => setViewingItem(item)} className="p-1 hover:bg-gray-200 rounded">
+                      <Eye className="w-4 h-4 text-cyan-600" />
+                    </button>
+                    {isProvince && (
+                      <>
+                        <button onClick={() => handleEdit(item)} className="p-1 hover:bg-gray-200 rounded">
+                          <Edit2 className="w-4 h-4 text-gray-500" />
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} className="p-1 hover:bg-gray-200 rounded">
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -256,7 +278,28 @@ export default function InsuranceDirectory() {
       </div>
 
       <AnimatePresence>
-        {showModal && (
+        {viewingItem && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-96">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold">目录详情</h3>
+                <button onClick={() => setViewingItem(null)}><X className="w-5 h-5" /></button>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p><span className="text-gray-500">编码:</span> {viewingItem.code}</p>
+                <p><span className="text-gray-500">名称:</span> {viewingItem.name}</p>
+                <p><span className="text-gray-500">分类:</span> {viewingItem.category}</p>
+                <p><span className="text-gray-500">类型:</span> {viewingItem.type}</p>
+                <p><span className="text-gray-500">价格:</span> ￥{viewingItem.price}</p>
+                <p><span className="text-gray-500">状态:</span> {viewingItem.status}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isProvince && showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-96">
               <div className="flex justify-between items-center mb-4">

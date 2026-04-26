@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react';
+import { getAgencyLevel } from '../../../config/managementPermissions';
 
 interface Material {
   id: string;
@@ -11,6 +12,11 @@ interface Material {
   unit: string;
   price: number;
   status: 'active' | 'inactive';
+}
+
+interface MaterialDirectoryQueryProps {
+  userAgency: string;
+  onBack?: () => void;
 }
 
 const categories = ['基础耗材', '手术耗材', '检查耗材', '治疗耗材', '高值耗材'];
@@ -35,7 +41,7 @@ const mockMaterials: Material[] = [
   ['HC017', '人工晶体', '高值耗材', '折叠型', '枚', 1860, 'active'],
   ['HC018', '椎间融合器', '高值耗材', 'PEEK', '枚', 4680, 'active'],
   ['HC019', '骨科锁定钢板', '高值耗材', '股骨型', '块', 3280, 'inactive'],
-  ['HC020', '心脏起搏器电极导线', '高值耗材', '双极', '根', 5600, 'active']
+  ['HC020', '心脏起搏器电极导线', '高值耗材', '双极', '根', 5600, 'active'],
 ].map(([code, name, category, spec, unit, price, status], index) => ({
   id: String(index + 1),
   code,
@@ -44,15 +50,16 @@ const mockMaterials: Material[] = [
   spec,
   unit,
   price,
-  status: status as 'active' | 'inactive'
+  status: status as 'active' | 'inactive',
 }));
 
-export default function MaterialDirectoryQuery() {
+export default function MaterialDirectoryQuery({ userAgency }: MaterialDirectoryQueryProps) {
   const [materials, setMaterials] = useState<Material[]>(mockMaterials);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
   const [showDetail, setShowDetail] = useState<Material | null>(null);
+  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const filtered = materials.filter((m) => m.name.includes(searchTerm) || m.code.includes(searchTerm));
 
@@ -74,15 +81,26 @@ export default function MaterialDirectoryQuery() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">耗材目录管理</h2>
-        <button onClick={() => { setEditing(null); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg">
-          <Plus className="w-4 h-4" /> 新增
-        </button>
+        {isProvince ? (
+          <button onClick={() => { setEditing(null); setShowModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg">
+            <Plus className="w-4 h-4" />
+            新增
+          </button>
+        ) : (
+          <div className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">地市账号仅可查询和查看耗材目录，不可新增、编辑或删除</div>
+        )}
       </div>
 
       <div className="flex gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input type="text" placeholder="搜索编码、名称" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg" />
+          <input
+            type="text"
+            placeholder="搜索编码、名称"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          />
         </div>
       </div>
 
@@ -104,9 +122,19 @@ export default function MaterialDirectoryQuery() {
               <td className="px-4 py-3 text-sm">{m.category}</td>
               <td className="px-4 py-3 text-sm">￥{m.price}</td>
               <td className="px-4 py-3 text-right">
-                <button onClick={() => setShowDetail(m)} className="p-1 text-gray-500 hover:text-blue-500"><Eye className="w-4 h-4" /></button>
-                <button onClick={() => { setEditing(m); setShowModal(true); }} className="p-1 text-gray-500 hover:text-blue-500"><Edit2 className="w-4 h-4" /></button>
-                <button onClick={() => handleDelete(m.id)} className="p-1 text-gray-500 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => setShowDetail(m)} className="p-1 text-gray-500 hover:text-blue-500">
+                  <Eye className="w-4 h-4" />
+                </button>
+                {isProvince && (
+                  <>
+                    <button onClick={() => { setEditing(m); setShowModal(true); }} className="p-1 text-gray-500 hover:text-blue-500">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(m.id)} className="p-1 text-gray-500 hover:text-red-500">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
@@ -114,7 +142,7 @@ export default function MaterialDirectoryQuery() {
       </table>
 
       <AnimatePresence>
-        {showModal && <Modal editing={editing} onClose={() => setShowModal(false)} onSave={handleSave} />}
+        {isProvince && showModal && <Modal editing={editing} onClose={() => setShowModal(false)} onSave={handleSave} />}
         {showDetail && <DetailModal material={showDetail} onClose={() => setShowDetail(null)} />}
       </AnimatePresence>
     </div>
@@ -129,7 +157,7 @@ function Modal({ editing, onClose, onSave }: { editing: Material | null; onClose
     spec: editing?.spec || '',
     unit: editing?.unit || '',
     price: editing?.price || 0,
-    status: editing?.status || 'active'
+    status: editing?.status || 'active',
   });
 
   const submit = (e: React.FormEvent) => {
@@ -145,7 +173,9 @@ function Modal({ editing, onClose, onSave }: { editing: Material | null; onClose
           <input type="text" placeholder="编码" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
           <input type="text" placeholder="名称" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
-            {categories.map((c) => <option key={c}>{c}</option>)}
+            {categories.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
           </select>
           <input type="text" placeholder="规格" value={form.spec} onChange={(e) => setForm({ ...form, spec: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
           <input type="text" placeholder="单位" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
@@ -166,7 +196,9 @@ function DetailModal({ material, onClose }: { material: Material; onClose: () =>
       <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold">耗材详情</h3>
-          <button onClick={onClose}><X className="w-5 h-5" /></button>
+          <button onClick={onClose}>
+            <X className="w-5 h-5" />
+          </button>
         </div>
         <div className="space-y-2 text-sm">
           <p><span className="text-gray-500">编码:</span> {material.code}</p>
