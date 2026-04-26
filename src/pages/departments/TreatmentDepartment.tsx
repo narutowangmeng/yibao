@@ -26,7 +26,7 @@ const modules = [
     name: '险种管理',
     icon: Shield,
     description: '医保险种配置、缴费标准、待遇参数管理',
-    stats: { total: 4, active: 3, inactive: 1 },
+    stats: { total: 6, active: 5, inactive: 1 },
     features: ['险种配置', '缴费标准设置', '待遇参数配置', '险种启用/停用', '险种查询'],
   },
   {

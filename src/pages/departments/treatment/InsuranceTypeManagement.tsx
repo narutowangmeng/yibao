@@ -17,7 +17,7 @@ interface InsuranceType {
   id: string;
   code: string;
   name: string;
-  category: 'employee' | 'resident' | 'flexible' | 'retired';
+  category: 'employee' | 'resident' | 'flexible' | 'major' | 'assistance' | 'retired';
   description: string;
   status: 'active' | 'inactive';
   annualFee: number;
@@ -73,6 +73,34 @@ const mockInsuranceTypes: InsuranceType[] = [
   },
   {
     id: '4',
+    code: 'JS-YB-DB-004',
+    name: '江苏省城乡居民大病保险',
+    category: 'major',
+    description: '衔接城乡居民基本医保，对高额合规医疗费用实行分段补偿，重点减轻大病患者负担。',
+    status: 'active',
+    annualFee: 0,
+    reimbursementRate: 70,
+    coverageLimit: 400000,
+    createdAt: '2021-01-01',
+    updatedAt: '2026-03-08',
+    createdBy: '省待遇保障处 张莹',
+  },
+  {
+    id: '5',
+    code: 'JS-YB-JZ-005',
+    name: '江苏省医疗救助待遇保障',
+    category: 'assistance',
+    description: '针对特困人员、低保对象和因病致贫重病患者，按救助身份类别实施分类资助和二次救助。',
+    status: 'active',
+    annualFee: 0,
+    reimbursementRate: 75,
+    coverageLimit: 300000,
+    createdAt: '2022-01-01',
+    updatedAt: '2026-02-18',
+    createdBy: '省待遇保障处 马会',
+  },
+  {
+    id: '6',
     code: 'JS-YB-LX-004',
     name: '江苏省退休人员补充医疗保障',
     category: 'retired',
@@ -91,6 +119,8 @@ const categoryLabels: Record<string, { label: string; color: string }> = {
   employee: { label: '职工医保', color: 'bg-blue-100 text-blue-700' },
   resident: { label: '居民医保', color: 'bg-green-100 text-green-700' },
   flexible: { label: '灵活就业', color: 'bg-purple-100 text-purple-700' },
+  major: { label: '大病保险', color: 'bg-rose-100 text-rose-700' },
+  assistance: { label: '医疗救助', color: 'bg-amber-100 text-amber-700' },
   retired: { label: '退休补充', color: 'bg-orange-100 text-orange-700' },
 };
 
@@ -203,6 +233,8 @@ export default function InsuranceTypeManagement() {
           <option value="employee">职工医保</option>
           <option value="resident">居民医保</option>
           <option value="flexible">灵活就业</option>
+          <option value="major">大病保险</option>
+          <option value="assistance">医疗救助</option>
           <option value="retired">退休补充</option>
         </select>
         <select
@@ -316,6 +348,8 @@ export default function InsuranceTypeManagement() {
                     <option value="employee">职工医保</option>
                     <option value="resident">居民医保</option>
                     <option value="flexible">灵活就业</option>
+                    <option value="major">大病保险</option>
+                    <option value="assistance">医疗救助</option>
                     <option value="retired">退休补充</option>
                   </select>
                 </div>
