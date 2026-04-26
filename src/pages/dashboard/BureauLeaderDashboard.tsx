@@ -1,51 +1,50 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Wallet, FileText, Building2, TrendingUp, Activity, AlertTriangle, CheckCircle, MapPin, Shield, HeartPulse, FileSignature, Megaphone, BarChart3, Users2 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-
-const stats = [
-  { icon: Users, label: '参保人数', value: '13.6亿', change: '+2.3%', color: '#0891B2' },
-  { icon: Wallet, label: '基金收入', value: '2.8万亿', change: '+8.5%', color: '#22C55E' },
-  { icon: FileText, label: '报销人次', value: '45.2亿', change: '+5.1%', color: '#F59E0B' },
-  { icon: Building2, label: '定点机构', value: '98.5万', change: '+3.2%', color: '#8B5CF6' },
-];
-
-const trendData = [
-  { month: '1月', income: 1800, expense: 1200, balance: 600 },
-  { month: '2月', income: 2200, expense: 1500, balance: 700 },
-  { month: '3月', income: 2800, expense: 1900, balance: 900 },
-  { month: '4月', income: 2600, expense: 2100, balance: 500 },
-  { month: '5月', income: 3200, expense: 2400, balance: 800 },
-  { month: '6月', income: 3500, expense: 2800, balance: 700 },
-];
-
-const regionData = [
-  { name: '东部', enrollment: 4200, revenue: 8500, expense: 6200 },
-  { name: '中部', enrollment: 3100, revenue: 5800, expense: 4200 },
-  { name: '西部', enrollment: 2800, revenue: 4200, expense: 3800 },
-  { name: '东北', enrollment: 1900, revenue: 2800, expense: 2600 },
-];
-
-const policyEffects = [
-  { policy: '门诊共济', coverage: '85%', satisfaction: '92%', costControl: '-12%' },
-  { policy: '集采降价', coverage: '95%', satisfaction: '88%', costControl: '-53%' },
-  { policy: 'DRG付费', coverage: '78%', satisfaction: '85%', costControl: '-8%' },
-];
-
-const approvals = [
-  { id: 'APP-001', title: '2024年医保目录调整', depts: ['待遇保障司', '医药服务司', '基金监管司'], status: '会签中', progress: 67 },
-  { id: 'APP-002', title: '新增医疗服务价格项目', depts: ['医药服务司', '待遇保障司'], status: '待审批', progress: 33 },
-];
-
-const policies = [
-  { id: 1, title: '关于完善门诊共济保障机制的通知', date: '2024-03-15', views: 12560, type: '政策文件' },
-  { id: 2, title: '2024年国家医保药品目录调整方案解读', date: '2024-03-10', views: 8920, type: '政策解读' },
-];
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  BarChart3,
+  Building2,
+  FileSignature,
+  FileText,
+  MapPin,
+  Megaphone,
+  TrendingUp,
+  Users,
+  Wallet
+} from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts';
+import {
+  cityFundDistribution,
+  crossDeptApprovals,
+  fundTrend,
+  leaderFocusList,
+  managementDataUpdatedAt,
+  managementOverview,
+  policyEffectData,
+  policyPublications
+} from '../../data/managementData';
 
 const tabs = [
-  { id: 'dashboard', label: '宏观驾驶舱', icon: BarChart3 },
+  { id: 'dashboard', label: '领导总览', icon: BarChart3 },
   { id: 'approval', label: '协同审批', icon: FileSignature },
-  { id: 'policy', label: '政策发布', icon: Megaphone },
+  { id: 'policy', label: '政策发布', icon: Megaphone }
+];
+
+const stats = [
+  { icon: Users, label: '参保人数', value: managementOverview.insuredPopulation, change: '居民医保参保率 95%+', color: '#0891b2' },
+  { icon: Wallet, label: '基金收入', value: managementOverview.fundIncome, change: `结余 ${managementOverview.fundBalance}`, color: '#22c55e' },
+  { icon: FileText, label: '年度结算', value: managementOverview.annualSettlements, change: `报销率 ${managementOverview.reimbursementRate}`, color: '#f59e0b' },
+  { icon: Building2, label: '定点机构', value: managementOverview.designatedInstitutions, change: '三级医院、基层机构、药店全覆盖', color: '#8b5cf6' }
 ];
 
 export default function BureauLeaderDashboard() {
@@ -53,99 +52,228 @@ export default function BureauLeaderDashboard() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => (
-          <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-start justify-between">
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.08 }}
+            className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm text-gray-500 mb-1">{stat.label}</p>
-                <p className="text-2xl font-bold text-[#134E4A]">{stat.value}</p>
-                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: stat.color }}><TrendingUp size={12} />{stat.change} 较上月</p>
+                <p className="text-sm text-gray-500">{stat.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-[#134E4A]">{stat.value}</p>
+                <p className="mt-2 text-xs" style={{ color: stat.color }}>
+                  {stat.change}
+                </p>
               </div>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}15` }}>
-                <stat.icon size={20} style={{ color: stat.color }} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: `${stat.color}16` }}>
+                <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-4"><Activity size={18} className="text-[#0891B2]" /><h3 className="font-semibold text-[#134E4A]">基金收支趋势</h3></div>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={trendData}>
-              <defs><linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0891B2" stopOpacity={0.3} /><stop offset="95%" stopColor="#0891B2" stopOpacity={0} /></linearGradient></defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <Activity className="h-4 w-4 text-cyan-600" />
+            <h3 className="font-semibold text-[#134E4A]">基金年度收支趋势</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={fundTrend}>
+              <defs>
+                <linearGradient id="leaderIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#0891b2" stopOpacity={0.28} />
+                  <stop offset="95%" stopColor="#0891b2" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="leaderExpense" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.22} />
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-              <Area type="monotone" dataKey="income" stroke="#0891B2" fill="url(#colorIncome)" name="收入" />
-              <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="#EF444420" name="支出" />
+              <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} unit="亿" />
+              <Tooltip formatter={(value: number) => [`${value} 亿元`, '']} />
+              <Area type="monotone" dataKey="income" stroke="#0891b2" fill="url(#leaderIncome)" name="基金收入" />
+              <Area type="monotone" dataKey="expense" stroke="#f97316" fill="url(#leaderExpense)" name="基金支出" />
             </AreaChart>
           </ResponsiveContainer>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-4"><MapPin size={18} className="text-[#8B5CF6]" /><h3 className="font-semibold text-[#134E4A]">区域对比</h3></div>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={regionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-              <Bar dataKey="revenue" fill="#0891B2" radius={[4, 4, 0, 0]} name="收入(亿)" />
-              <Bar dataKey="expense" fill="#EF4444" radius={[4, 4, 0, 0]} name="支出(亿)" />
-            </BarChart>
-          </ResponsiveContainer>
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-emerald-600" />
+            <h3 className="font-semibold text-[#134E4A]">领导关注要点</h3>
+          </div>
+          <div className="space-y-3">
+            {leaderFocusList.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-gray-100 bg-slate-50 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium text-gray-900">{item.title}</p>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs text-cyan-700">{item.tag}</span>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-gray-600">{item.detail}</p>
+              </div>
+            ))}
+          </div>
         </motion.div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-        <div className="flex items-center gap-2 mb-4"><TrendingUp size={18} className="text-[#22C55E]" /><h3 className="font-semibold text-[#134E4A]">政策效果评估</h3></div>
-        <table className="w-full">
-          <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-sm">政策名称</th><th className="px-4 py-3 text-left text-sm">覆盖率</th><th className="px-4 py-3 text-left text-sm">满意度</th><th className="px-4 py-3 text-left text-sm">控费效果</th></tr></thead>
-          <tbody>{policyEffects.map((item, i) => (<tr key={i} className="border-t"><td className="px-4 py-3 text-sm font-medium">{item.policy}</td><td className="px-4 py-3 text-sm text-blue-600">{item.coverage}</td><td className="px-4 py-3 text-sm text-green-600">{item.satisfaction}</td><td className="px-4 py-3 text-sm text-green-600">{item.costControl}</td></tr>))}</tbody>
-        </table>
-      </motion.div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-violet-600" />
+            <h3 className="font-semibold text-[#134E4A]">重点地市基金分布</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={cityFundDistribution}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <XAxis dataKey="city" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} unit="亿" />
+              <Tooltip formatter={(value: number) => [`${value} 亿元`, '']} />
+              <Bar dataKey="income" fill="#0891b2" radius={[6, 6, 0, 0]} name="基金收入" />
+              <Bar dataKey="expense" fill="#f97316" radius={[6, 6, 0, 0]} name="基金支出" />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.16 }}
+          className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-amber-600" />
+            <h3 className="font-semibold text-[#134E4A]">重点政策效果评估</h3>
+          </div>
+          <div className="space-y-3">
+            {policyEffectData.map((item) => (
+              <div key={item.policy} className="rounded-2xl border border-gray-100 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium text-gray-900">{item.policy}</p>
+                  <span className="text-sm text-cyan-700">{item.coverage}</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">覆盖对象：{item.beneficiaries}</p>
+                <p className="mt-1 text-sm text-emerald-700">{item.effect}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 
   const renderApproval = () => (
-    <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="p-4 border-b"><h3 className="font-medium">跨部门协同审批</h3></div>
-        <table className="w-full">
-          <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-sm">审批事项</th><th className="px-4 py-3 text-left text-sm">参与司局</th><th className="px-4 py-3 text-left text-sm">进度</th><th className="px-4 py-3 text-left text-sm">状态</th></tr></thead>
-          <tbody>{approvals.map(item => (<tr key={item.id} className="border-t"><td className="px-4 py-3 text-sm font-medium">{item.title}</td><td className="px-4 py-3 text-sm">{item.depts.join(', ')}</td><td className="px-4 py-3"><div className="w-24 h-2 bg-gray-200 rounded-full"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${item.progress}%` }} /></div></td><td className="px-4 py-3"><span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">{item.status}</span></td></tr>))}</tbody>
-        </table>
+    <div className="rounded-3xl border border-gray-100 bg-white shadow-sm">
+      <div className="border-b border-gray-100 px-5 py-4">
+        <h3 className="font-semibold text-[#134E4A]">跨部门协同审批事项</h3>
       </div>
+      <table className="w-full">
+        <thead className="bg-slate-50">
+          <tr>
+            <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">事项名称</th>
+            <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">参与部门</th>
+            <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">进度</th>
+            <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">状态</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {crossDeptApprovals.map((item) => (
+            <tr key={item.id}>
+              <td className="px-5 py-4">
+                <p className="font-medium text-gray-900">{item.title}</p>
+                <p className="mt-1 text-xs text-gray-400">{item.id}</p>
+              </td>
+              <td className="px-5 py-4 text-sm text-gray-600">{item.departments.join('、')}</td>
+              <td className="px-5 py-4">
+                <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full bg-cyan-600" style={{ width: `${item.progress}%` }} />
+                </div>
+                <p className="mt-2 text-xs text-gray-500">{item.progress}%</p>
+              </td>
+              <td className="px-5 py-4">
+                <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs text-cyan-700">{item.status}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 
   const renderPolicy = () => (
     <div className="space-y-4">
-      <div className="flex gap-2"><button className="px-4 py-2 bg-cyan-600 text-white rounded-lg flex items-center gap-2"><Megaphone className="w-4 h-4" />发布政策</button></div>
-      <div className="bg-white rounded-xl border border-gray-200">
+      <div className="flex justify-end">
+        <button className="rounded-2xl bg-cyan-600 px-4 py-2 text-sm font-medium text-white">发布政策</button>
+      </div>
+      <div className="rounded-3xl border border-gray-100 bg-white shadow-sm">
         <table className="w-full">
-          <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-sm">政策标题</th><th className="px-4 py-3 text-left text-sm">类型</th><th className="px-4 py-3 text-left text-sm">发布日期</th><th className="px-4 py-3 text-left text-sm">浏览量</th></tr></thead>
-          <tbody>{policies.map(item => (<tr key={item.id} className="border-t"><td className="px-4 py-3 text-sm font-medium">{item.title}</td><td className="px-4 py-3"><span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">{item.type}</span></td><td className="px-4 py-3 text-sm">{item.date}</td><td className="px-4 py-3 text-sm">{item.views}</td></tr>))}</tbody>
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">政策标题</th>
+              <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">类型</th>
+              <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">发布日期</th>
+              <th className="px-5 py-3 text-left text-sm font-medium text-gray-600">阅读量</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {policyPublications.map((item) => (
+              <tr key={item.id}>
+                <td className="px-5 py-4 font-medium text-gray-900">{item.title}</td>
+                <td className="px-5 py-4">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700">{item.type}</span>
+                </td>
+                <td className="px-5 py-4 text-sm text-gray-600">{item.date}</td>
+                <td className="px-5 py-4 text-sm text-gray-600">{item.views.toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-semibold text-[#134E4A]">领导驾驶舱</h1><p className="text-sm text-gray-500 mt-1">全局数据概览 · 决策支持</p></div>
-        <span className="text-sm text-gray-500">数据更新时间: 2024-06-30</span>
+    <div className="space-y-6 p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#134E4A]">领导驾驶舱</h1>
+          <p className="mt-1 text-sm text-gray-500">围绕基金运行、参保结构、政策执行和风险态势提供综合决策支持。</p>
+        </div>
+        <span className="text-sm text-gray-500">数据口径：{managementDataUpdatedAt}</span>
       </div>
 
       <div className="flex gap-2 border-b border-gray-200">
-        {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${activeTab === tab.id ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-gray-500'}`}>
-            <tab.icon className="w-4 h-4" />{tab.label}
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
+              activeTab === tab.id ? 'border-b-2 border-cyan-600 text-cyan-600' : 'text-gray-500'
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
           </button>
         ))}
       </div>
