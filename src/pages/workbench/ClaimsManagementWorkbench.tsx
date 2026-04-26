@@ -2,8 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { claimsStages } from './claims/claimsConfig';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
+import ClaimsQueryCenter from './modules/ClaimsQueryCenter';
 
 export default function ClaimsManagementWorkbench() {
+  const [showQueryCenter, setShowQueryCenter] = useState(false);
+  const QueryIcon = claimsStages[0].icon;
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -37,6 +42,20 @@ export default function ClaimsManagementWorkbench() {
       </div>
 
       <div className="grid grid-cols-3 gap-6">
+        <button
+          onClick={() => setShowQueryCenter(true)}
+          className="group bg-white rounded-2xl p-8 shadow-md border border-gray-200 hover:shadow-xl hover:border-cyan-400 hover:-translate-y-1 transition-all text-left"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center mb-5 shadow-lg">
+            <QueryIcon className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="font-bold text-xl text-gray-800 mb-2">理赔查询</h3>
+          <p className="text-base text-gray-500 mb-5">理赔受理、审核、支付、对账、异常处理统一查询与导入导出</p>
+          <div className="flex items-center text-cyan-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            <span>进入办理</span>
+            <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </button>
         {claimsStages.map((stage) => (
           <Link
             key={stage.id}
@@ -55,6 +74,13 @@ export default function ClaimsManagementWorkbench() {
           </Link>
         ))}
       </div>
+      <AnimatePresence>
+        {showQueryCenter && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50">
+            <ClaimsQueryCenter onBack={() => setShowQueryCenter(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

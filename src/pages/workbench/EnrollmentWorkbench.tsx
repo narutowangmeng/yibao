@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -18,7 +18,11 @@ import {
   Camera,
   FileText,
   CreditCard,
+  Download,
+  AlertCircle,
+  Check,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 type EnrollmentCategory =
   | 'resident'
@@ -63,6 +67,114 @@ interface RecordItem {
   extra: Record<string, string>;
   photos: Partial<Record<PhotoFieldKey, boolean>>;
 }
+
+interface BatchImportRecord {
+  row: number;
+  name: string;
+  idCard: string;
+  phone: string;
+  category: string;
+  insuranceType: string;
+  agency: string;
+  status: 'success' | 'error';
+  message: string;
+}
+
+interface BatchImportRow {
+  姓名: string;
+  身份证号: string;
+  手机号: string;
+  参保类型: string;
+  险种: string;
+  所属地: string;
+}
+
+type QueryImportRow = Record<string, string>;
+
+const batchTemplateHeaders = ['姓名', '身份证号', '手机号', '参保类型', '险种', '所属地'];
+const batchCategoryOptions = ['城乡居民', '城镇职工', '灵活就业', '新生儿', '退役军人', '学生'];
+const batchInsuranceOptions = ['城乡居民基本医疗保险', '职工基本医疗保险', '大病保险', '长期护理保险'];
+const batchAgencyOptions = ['南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁'];
+const batchSampleRows: BatchImportRow[] = [
+  { 姓名: '陈思远', 身份证号: '320102198903152415', 手机号: '13851760011', 参保类型: '城镇职工', 险种: '职工基本医疗保险', 所属地: '南京' },
+  { 姓名: '周语彤', 身份证号: '320205199407263526', 手机号: '13915230027', 参保类型: '城乡居民', 险种: '城乡居民基本医疗保险', 所属地: '无锡' },
+  { 姓名: '顾嘉言', 身份证号: '320302199101084633', 手机号: '13775880039', 参保类型: '灵活就业', 险种: '职工基本医疗保险', 所属地: '徐州' },
+  { 姓名: '沈知夏', 身份证号: '320412201910215628', 手机号: '13685210018', 参保类型: '新生儿', 险种: '城乡居民基本医疗保险', 所属地: '常州' },
+  { 姓名: '陆书意', 身份证号: '320507200812163214', 手机号: '13584820042', 参保类型: '学生', 险种: '城乡居民基本医疗保险', 所属地: '苏州' },
+  { 姓名: '许文博', 身份证号: '320602198805204517', 手机号: '13862750016', 参保类型: '退役军人', 险种: '职工基本医疗保险', 所属地: '南通' }
+];
+
+const queryFieldColumns = [
+  { header: '联系电话', key: 'phone' },
+  { header: '性别', key: 'gender' },
+  { header: '出生日期', key: 'birthDate' },
+  { header: '户籍地址', key: 'householdAddress' },
+  { header: '居住地址', key: 'residenceAddress' },
+  { header: '参保生效日期', key: 'enrollmentDate' },
+  { header: '参保身份', key: 'identityType' },
+  { header: '户籍性质', key: 'householdType' },
+  { header: '社区/村居', key: 'community' },
+  { header: '财政补助类别', key: 'subsidyType' },
+  { header: '家庭关系', key: 'familyRelation' },
+  { header: '单位名称', key: 'employerName' },
+  { header: '统一社会信用代码', key: 'creditCode' },
+  { header: '用工形式', key: 'employmentType' },
+  { header: '参加工作时间', key: 'joinWorkDate' },
+  { header: '缴费基数', key: 'paymentBase' },
+  { header: '就业形态', key: 'employmentForm' },
+  { header: '当前就业状态', key: 'currentStatus' },
+  { header: '缴费档次', key: 'paymentGrade' },
+  { header: '收入申报口径', key: 'declaredIncome' },
+  { header: '出生医学证明编号', key: 'birthCertNo' },
+  { header: '监护人姓名', key: 'guardianName' },
+  { header: '监护人关系', key: 'guardianRelation' },
+  { header: '监护人电话', key: 'guardianPhone' },
+  { header: '父亲姓名', key: 'fatherName' },
+  { header: '父亲身份证号', key: 'fatherIdCard' },
+  { header: '母亲姓名', key: 'motherName' },
+  { header: '母亲身份证号', key: 'motherIdCard' },
+  { header: '随父母参保方式', key: 'followInsured' },
+  { header: '落户状态', key: 'settlementStatus' },
+  { header: '退役证编号', key: 'veteranCertNo' },
+  { header: '退役时间', key: 'retireDate' },
+  { header: '服役类别', key: 'serviceType' },
+  { header: '安置方式', key: 'placementType' },
+  { header: '退役军人事务认定单位', key: 'retireBureau' },
+  { header: '优抚对象类别', key: 'preferentialType' },
+  { header: '学校名称', key: 'schoolName' },
+  { header: '学校所在地', key: 'schoolArea' },
+  { header: '学籍号', key: 'studentNo' },
+  { header: '学段', key: 'educationStage' },
+  { header: '班级', key: 'className' },
+  { header: '入学日期', key: 'admissionDate' },
+] as const;
+
+const queryPhotoColumns = [
+  { header: '参保人照片', key: 'profilePhoto' },
+  { header: '身份证正面', key: 'idCardFront' },
+  { header: '身份证反面', key: 'idCardBack' },
+  { header: '户口簿页', key: 'householdRegister' },
+  { header: '出生医学证明影像', key: 'birthCertificate' },
+  { header: '监护人身份证正面', key: 'guardianIdFront' },
+  { header: '监护人身份证反面', key: 'guardianIdBack' },
+  { header: '学生证/学籍证明', key: 'studentProof' },
+  { header: '退役证', key: 'veteranCertificate' },
+  { header: '安置或认定证明', key: 'placementProof' },
+  { header: '劳动合同/就业证明', key: 'employmentProof' },
+] as const satisfies Array<{ header: string; key: PhotoFieldKey }>;
+
+const queryImportHeaders = [
+  '登记编号',
+  '姓名',
+  '身份证号',
+  '参保类型',
+  '险种',
+  '参保地',
+  '参保状态',
+  '提交日期',
+  ...queryFieldColumns.map((item) => item.header),
+  ...queryPhotoColumns.map((item) => item.header),
+];
 
 const modules = [
   { id: 'new', title: '新参保登记', icon: UserPlus, desc: '首次参加医保登记', color: 'from-blue-500 to-blue-600' },
@@ -438,6 +550,13 @@ export default function EnrollmentWorkbench() {
   const [records, setRecords] = useState<RecordItem[]>(initialRecords);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<RecordItem | null>(null);
+  const [queryImporting, setQueryImporting] = useState(false);
+  const [batchFile, setBatchFile] = useState<File | null>(null);
+  const [batchUploading, setBatchUploading] = useState(false);
+  const [batchProgress, setBatchProgress] = useState(0);
+  const [batchResults, setBatchResults] = useState<BatchImportRecord[] | null>(null);
+  const queryImportInputRef = useRef<HTMLInputElement>(null);
+  const batchFileInputRef = useRef<HTMLInputElement>(null);
 
   const activeCategory = useMemo<EnrollmentCategory>(() => {
     if (selectedModule && moduleCategoryMap[selectedModule]) {
@@ -456,6 +575,268 @@ export default function EnrollmentWorkbench() {
     setSelectedCategory('resident');
     setFormState(buildInitialForm('resident'));
     setSelectedRecord(null);
+    setBatchFile(null);
+    setBatchUploading(false);
+    setBatchProgress(0);
+    setBatchResults(null);
+  };
+
+  const downloadBatchWorkbook = (rows: Array<Record<string, string>>, fileName: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(rows, { header: batchTemplateHeaders });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '参保批量导入');
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  const validateBatchRow = (row: Partial<BatchImportRow>, index: number): BatchImportRecord => {
+    const name = String(row.姓名 || '').trim();
+    const idCard = String(row.身份证号 || '').trim().toUpperCase();
+    const phone = String(row.手机号 || '').trim();
+    const category = String(row.参保类型 || '').trim();
+    const insuranceType = String(row.险种 || '').trim();
+    const agency = String(row.所属地 || '').trim();
+    const messages: string[] = [];
+
+    if (!name) messages.push('姓名不能为空');
+    if (!/^\d{17}[\dX]$/.test(idCard)) messages.push('身份证号格式错误');
+    if (!/^1\d{10}$/.test(phone)) messages.push('手机号格式错误');
+    if (!batchCategoryOptions.includes(category)) messages.push('参保类型不在支持范围');
+    if (!batchInsuranceOptions.includes(insuranceType)) messages.push('险种不在支持范围');
+    if (!batchAgencyOptions.includes(agency)) messages.push('所属地不在江苏13市范围');
+
+    return {
+      row: index + 2,
+      name,
+      idCard,
+      phone,
+      category,
+      insuranceType,
+      agency,
+      status: messages.length ? 'error' : 'success',
+      message: messages.length ? messages.join('；') : '导入成功'
+    };
+  };
+
+  const handleBatchFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      setBatchFile(selectedFile);
+      setBatchResults(null);
+    }
+  };
+
+  const handleBatchDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile && /\.(xlsx|xls|csv)$/i.test(droppedFile.name)) {
+      setBatchFile(droppedFile);
+      setBatchResults(null);
+    }
+  };
+
+  const handleBatchTemplateDownload = () => {
+    downloadBatchWorkbook(
+      [{ 姓名: '', 身份证号: '', 手机号: '', 参保类型: '', 险种: '', 所属地: '' }],
+      '参保批量导入模板.xlsx'
+    );
+  };
+
+  const handleBatchSampleDownload = () => {
+    downloadBatchWorkbook(batchSampleRows, '参保批量导入示例数据.xlsx');
+  };
+
+  const handleBatchResultsExport = (onlyErrors = false) => {
+    if (!batchResults) return;
+    const rows = (onlyErrors ? batchResults.filter((item) => item.status === 'error') : batchResults).map((item) => ({
+      行号: String(item.row),
+      姓名: item.name,
+      身份证号: item.idCard,
+      手机号: item.phone,
+      参保类型: item.category,
+      险种: item.insuranceType,
+      所属地: item.agency,
+      导入状态: item.status === 'success' ? '成功' : '失败',
+      处理说明: item.message
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, onlyErrors ? '失败记录' : '导入结果');
+    XLSX.writeFile(workbook, onlyErrors ? '参保导入失败记录.xlsx' : '参保导入结果.xlsx');
+  };
+
+  const handleBatchUpload = async () => {
+    if (!batchFile) return;
+    setBatchUploading(true);
+    setBatchProgress(20);
+
+    try {
+      const buffer = await batchFile.arrayBuffer();
+      setBatchProgress(50);
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Partial<BatchImportRow>>(worksheet, { defval: '', raw: false });
+      setBatchProgress(80);
+      setBatchResults(rows.map((row, index) => validateBatchRow(row, index)));
+      setBatchProgress(100);
+    } catch (error) {
+      setBatchResults([
+        {
+          row: 0,
+          name: '',
+          idCard: '',
+          phone: '',
+          category: '',
+          insuranceType: '',
+          agency: '',
+          status: 'error',
+          message: '文件解析失败，请检查 Excel 格式'
+        }
+      ]);
+    } finally {
+      setBatchUploading(false);
+    }
+  };
+
+  const downloadQueryWorkbook = (rows: Array<Record<string, string>>, fileName: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(rows, { header: queryImportHeaders });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '参保信息查询');
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  const handleQueryTemplateDownload = () => {
+    const emptyRow = queryImportHeaders.reduce<Record<string, string>>((acc, header) => {
+      acc[header] = '';
+      return acc;
+    }, {});
+    downloadQueryWorkbook([emptyRow], '参保信息查询导入模板.xlsx');
+  };
+
+  const normalizePhotoValue = (value: string) => ['是', '已上传', 'Y', 'YES', 'TRUE', '1'].includes(value.trim().toUpperCase());
+
+  const exportQueryRecords = () => {
+    const rows = filteredRecords.map((item) => {
+      const row: Record<string, string> = {
+        登记编号: item.id,
+        姓名: item.name,
+        身份证号: item.idCard,
+        参保类型: categoryLabels[item.category],
+        险种: item.insuranceType,
+        参保地: item.agency,
+        参保状态: item.status,
+        提交日期: item.submitDate
+      };
+
+      queryFieldColumns.forEach(({ header, key }) => {
+        row[header] = item.basic[key] || item.extra[key] || '';
+      });
+
+      queryPhotoColumns.forEach(({ header, key }) => {
+        row[header] = item.photos[key] ? '已上传' : '未上传';
+      });
+
+      return row;
+    });
+
+    downloadQueryWorkbook(rows, `参保信息查询结果_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const handleQueryImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    setQueryImporting(true);
+
+    try {
+      const buffer = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Partial<QueryImportRow>>(worksheet, { defval: '', raw: false });
+      const statusMap: Record<string, string> = {
+        已生效: '已生效',
+        待审核: '待审核',
+        审核中: '待审核',
+        暂停参保: '暂停参保'
+      };
+      const categoryMap: Record<string, EnrollmentCategory> = {
+        城乡居民: 'resident',
+        城镇职工: 'employee',
+        灵活就业: 'flexible',
+        新生儿: 'newborn',
+        退役军人: 'veteran',
+        学生: 'student'
+      };
+
+      const importedRecords = rows
+        .filter((row) => String(row.姓名 || '').trim() && String(row.身份证号 || '').trim())
+        .map((row, index) => {
+          const categoryLabel = String(row.参保类型 || '').trim();
+          const category = categoryMap[categoryLabel] || 'resident';
+          const agency = String(row.参保地 || '').trim() || '南京';
+          const status = statusMap[String(row.参保状态 || '').trim()] || '待审核';
+          const id = String(row.登记编号 || '').trim() || `EBIMP${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(index + 1).padStart(3, '0')}`;
+          const name = String(row.姓名 || '').trim();
+          const idCard = String(row.身份证号 || '').trim().toUpperCase();
+          const insuranceType = String(row.险种 || '').trim() || '城乡居民基本医疗保险';
+          const submitDate = String(row.提交日期 || '').trim() || new Date().toISOString().slice(0, 10);
+          const basicKeys = new Set([
+            ...commonBasicFields.map((field) => field.key),
+            ...categoryFields[category].basic.map((field) => field.key),
+          ]);
+          const extraKeys = new Set([
+            ...commonInsuranceFields.map((field) => field.key),
+            ...categoryFields[category].insurance.map((field) => field.key),
+          ]);
+          const basic: Record<string, string> = {
+            name,
+            idCard,
+            agency,
+          };
+          const extra: Record<string, string> = {
+            insuranceType,
+          };
+          const photos: Partial<Record<PhotoFieldKey, boolean>> = {};
+
+          queryFieldColumns.forEach(({ header, key }) => {
+            const value = String(row[header] || '').trim();
+            if (!value) return;
+            if (basicKeys.has(key)) {
+              basic[key] = value;
+              return;
+            }
+            if (extraKeys.has(key)) {
+              extra[key] = value;
+            }
+          });
+
+          queryPhotoColumns.forEach(({ header, key }) => {
+            const value = String(row[header] || '').trim();
+            if (!value) return;
+            photos[key] = normalizePhotoValue(value);
+          });
+
+          return {
+            id,
+            category,
+            name,
+            idCard,
+            insuranceType,
+            status,
+            agency,
+            submitDate,
+            basic,
+            extra,
+            photos,
+          } as RecordItem;
+        });
+
+      if (importedRecords.length) {
+        setRecords((prev) => [...importedRecords, ...prev]);
+      }
+    } finally {
+      setQueryImporting(false);
+      event.target.value = '';
+    }
   };
 
   const openModule = (moduleId: string) => {
@@ -659,65 +1040,407 @@ export default function EnrollmentWorkbench() {
   );
 
   const renderQuery = () => (
-    <div className="space-y-4">
-      <div className="flex gap-3">
-        <input
-          value={queryKeyword}
-          onChange={(e) => setQueryKeyword(e.target.value)}
-          className="flex-1 px-4 py-2 border rounded-lg"
-          placeholder="请输入姓名、身份证号或登记编号查询"
-        />
+    <div className="space-y-5">
+      <input
+        ref={queryImportInputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        onChange={handleQueryImport}
+        className="hidden"
+      />
+
+      <div className="grid grid-cols-4 gap-4">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <p className="text-sm text-gray-500">参保记录</p>
+          <p className="mt-2 text-3xl font-bold text-gray-800">{records.length}</p>
+        </div>
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+          <p className="text-sm text-green-700">已生效</p>
+          <p className="mt-2 text-3xl font-bold text-green-600">{records.filter((item) => item.status === '已生效').length}</p>
+        </div>
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm text-yellow-700">待审核</p>
+          <p className="mt-2 text-3xl font-bold text-yellow-600">{records.filter((item) => item.status === '待审核').length}</p>
+        </div>
+        <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+          <p className="text-sm text-cyan-700">当前结果</p>
+          <p className="mt-2 text-3xl font-bold text-cyan-600">{filteredRecords.length}</p>
+        </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">登记编号</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">姓名</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">对象类型</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">参保地</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRecords.map((item) => (
-              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm text-gray-700">{item.id}</td>
-                <td className="px-4 py-3 text-sm font-medium text-gray-800">{item.name}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{categoryLabels[item.category]}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{item.agency}</td>
-                <td className="px-4 py-3 text-sm">
-                  <span className={`px-2 py-1 rounded text-xs ${item.status === '已生效' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {item.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <button onClick={() => setSelectedRecord(item)} className="text-cyan-600 hover:text-cyan-700">
-                    查看详情
-                  </button>
-                </td>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-1 gap-3">
+            <input
+              value={queryKeyword}
+              onChange={(e) => setQueryKeyword(e.target.value)}
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2"
+              placeholder="请输入姓名、身份证号或登记编号查询"
+            />
+            <button
+              onClick={() => setQueryKeyword('')}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            >
+              重置
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleQueryTemplateDownload}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            >
+              <Download className="h-4 w-4" />
+              下载导入模板
+            </button>
+            <button
+              onClick={() => queryImportInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 px-4 py-2 text-cyan-700 hover:bg-cyan-50"
+            >
+              <Upload className="h-4 w-4" />
+              {queryImporting ? '导入中...' : '导入参保台账'}
+            </button>
+            <button
+              onClick={exportQueryRecords}
+              className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700"
+            >
+              <Download className="h-4 w-4" />
+              导出查询结果
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="border-b border-gray-200 px-5 py-4">
+          <h4 className="text-lg font-semibold text-gray-800">参保信息台账</h4>
+          <p className="mt-1 text-sm text-gray-500">支持经办查询、Excel 导入补录、结果导出</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1200px]">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">登记编号</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">姓名</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">身份证号</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">对象类型</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">险种</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">参保地</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">提交日期</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">操作</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredRecords.map((item) => (
+                <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-700">{item.id}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-800">{item.name}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600 font-mono">{item.idCard}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{categoryLabels[item.category]}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{item.insuranceType}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{item.agency}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{item.submitDate}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`px-2 py-1 rounded text-xs ${item.status === '已生效' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <button onClick={() => setSelectedRecord(item)} className="text-cyan-600 hover:text-cyan-700">
+                      查看详情
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 
-  const renderBatch = () => (
-    <div className="space-y-6">
-      <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center">
-        <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-        <p className="text-gray-700 mb-2">批量导入职工或学生参保名册</p>
-        <p className="text-sm text-gray-500 mb-4">支持 Excel、CSV，建议按参保对象类型分别导入</p>
-        <button className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">选择导入文件</button>
+  const renderBatch = () => {
+    const successCount = batchResults?.filter((record) => record.status === 'success').length || 0;
+    const errorCount = batchResults?.filter((record) => record.status === 'error').length || 0;
+
+    if (batchResults) {
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <p className="text-sm text-gray-500">总记录数</p>
+              <p className="mt-2 text-3xl font-bold text-gray-800">{batchResults.length}</p>
+            </div>
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
+              <p className="text-sm text-green-700">导入成功</p>
+              <p className="mt-2 text-3xl font-bold text-green-600">{successCount}</p>
+            </div>
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+              <p className="text-sm text-red-700">导入失败</p>
+              <p className="mt-2 text-3xl font-bold text-red-600">{errorCount}</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <div>
+                <h4 className="text-lg font-semibold text-gray-800">导入校验结果</h4>
+                <p className="text-sm text-gray-500">支持导出全部结果或仅导出失败记录</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleBatchResultsExport(false)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <Download className="h-4 w-4" />
+                  导出结果
+                </button>
+                <button
+                  onClick={() => handleBatchResultsExport(true)}
+                  className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                >
+                  <Download className="h-4 w-4" />
+                  导出失败记录
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1080px]">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">行号</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">姓名</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">身份证号</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">手机号</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">参保类型</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">险种</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">所属地</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {batchResults.map((record) => (
+                    <tr key={`${record.row}-${record.idCard}`} className="border-t border-gray-100">
+                      <td className="px-4 py-3 text-sm text-gray-600">{record.row}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-800">{record.name || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 font-mono">{record.idCard || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{record.phone || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{record.category || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{record.insuranceType || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{record.agency || '-'}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+                            record.status === 'success'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {record.status === 'success' ? <Check className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+                          {record.status === 'success' ? '成功' : '失败'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{record.message}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => {
+                setBatchResults(null);
+                setBatchFile(null);
+                setBatchProgress(0);
+              }}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            >
+              继续导入
+            </button>
+            <button
+              onClick={resetForm}
+              className="rounded-lg bg-cyan-600 px-5 py-2 text-white hover:bg-cyan-700"
+            >
+              完成
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h4 className="text-lg font-semibold text-cyan-900">批量参保导入</h4>
+              <p className="mt-1 text-sm text-cyan-700">按模板整理参保人员基础信息，支持江苏省 13 个设区市参保数据校验</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBatchTemplateDownload}
+                className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-white px-4 py-2 text-sm text-cyan-700 hover:bg-cyan-50"
+              >
+                <Download className="h-4 w-4" />
+                下载模板
+              </button>
+              <button
+                onClick={handleBatchSampleDownload}
+                className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm text-white hover:bg-cyan-700"
+              >
+                <Download className="h-4 w-4" />
+                下载示例数据
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          onDrop={handleBatchDrop}
+          onDragOver={(event) => event.preventDefault()}
+          className={`rounded-2xl border-2 border-dashed p-10 text-center transition-all ${
+            batchFile ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-cyan-400'
+          }`}
+        >
+          <input
+            ref={batchFileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleBatchFileSelect}
+            className="hidden"
+          />
+
+          {batchFile ? (
+            <div className="space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+                <FileText className="h-7 w-7 text-green-600" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-gray-800">{batchFile.name}</p>
+                <p className="mt-1 text-sm text-gray-500">{(batchFile.size / 1024).toFixed(2)} KB</p>
+              </div>
+              <button
+                onClick={() => batchFileInputRef.current?.click()}
+                className="rounded-lg border border-green-300 px-4 py-2 text-sm text-green-700 hover:bg-green-100"
+              >
+                重新选择
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                <Upload className="h-7 w-7 text-gray-400" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-gray-800">选择或拖拽 Excel 文件到这里</p>
+                <p className="mt-1 text-sm text-gray-500">支持 `.xlsx`、`.xls`、`.csv` 格式</p>
+              </div>
+              <button
+                onClick={() => batchFileInputRef.current?.click()}
+                className="rounded-lg bg-cyan-600 px-5 py-2 text-white hover:bg-cyan-700"
+              >
+                选择导入文件
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-sm text-gray-600">
+          <div className="grid grid-cols-2 gap-3">
+            <div>必填字段：姓名、身份证号、手机号、参保类型、险种、所属地。</div>
+            <div>所属地统一按南京、无锡、徐州、常州、苏州、南通、连云港、淮安、盐城、扬州、镇江、泰州、宿迁填写。</div>
+            <div>参保类型支持：城乡居民、城镇职工、灵活就业、新生儿、退役军人、学生。</div>
+            <div>险种支持：城乡居民基本医疗保险、职工基本医疗保险、大病医疗保险、长期护理保险。</div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={resetForm}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleBatchUpload}
+            disabled={!batchFile || batchUploading}
+            className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-5 py-2 text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          >
+            {batchUploading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                导入中 {batchProgress}%
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                开始导入
+              </>
+            )}
+          </button>
+        </div>
       </div>
-      <div className="bg-gray-50 rounded-xl p-5 text-sm text-gray-600">
-        建议模板字段：姓名、证件号码、参保地、险种、对象类型，以及学生学籍信息、退役军人安置信息等专属字段。
+    );
+  };
+
+  const getRecordFieldLabel = (category: EnrollmentCategory, key: string) => {
+    const fieldMap = new Map<string, string>();
+
+    [...commonBasicFields, ...categoryFields[category].basic, ...commonInsuranceFields, ...categoryFields[category].insurance].forEach((field) => {
+      fieldMap.set(field.key, field.label);
+    });
+
+    return fieldMap.get(key) || key;
+  };
+
+  const getRecordPhotoLabel = (category: EnrollmentCategory, key: string) => {
+    const photo = categoryFields[category].photos.find((item) => item.key === key);
+    return photo?.label || key;
+  };
+
+  const renderRecordEntries = (
+    category: EnrollmentCategory,
+    entries: Array<[string, string]>,
+  ) => {
+    if (!entries.length) {
+      return <div className="text-sm text-gray-400">暂无数据</div>;
+    }
+
+    return (
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        {entries.map(([key, value]) => (
+          <div key={key} className="flex justify-between border-b border-gray-100 py-2 gap-4">
+            <span className="text-gray-500">{getRecordFieldLabel(category, key)}</span>
+            <span className="font-medium text-gray-800 text-right">{value || '-'}</span>
+          </div>
+        ))}
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderRecordPhotos = (record: RecordItem) => {
+    const requiredPhotos = categoryFields[record.category].photos;
+
+    return (
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        {requiredPhotos.map((photo) => (
+          <div key={photo.key} className="flex justify-between border-b border-gray-100 py-2">
+            <span className="text-gray-500">
+              {photo.label}
+              {photo.required && <span className="ml-1 text-red-500">*</span>}
+            </span>
+            <span className={record.photos[photo.key] ? 'font-medium text-green-600' : 'font-medium text-red-500'}>
+              {record.photos[photo.key] ? '已上传' : '未上传'}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -757,7 +1480,15 @@ export default function EnrollmentWorkbench() {
       <AnimatePresence>
         {selectedModule && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={resetForm}>
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-auto ${
+                selectedModule === 'query' ? 'max-w-7xl' : selectedModule === 'batch' ? 'max-w-6xl' : 'max-w-5xl'
+              }`}
+            >
               <div className="p-6 border-b flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-800">
                   {modules.find((m) => m.id === selectedModule)?.title}
@@ -801,7 +1532,7 @@ export default function EnrollmentWorkbench() {
       <AnimatePresence>
         {selectedRecord && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedRecord(null)}>
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-auto p-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[88vh] overflow-auto p-6">
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <h3 className="text-xl font-bold text-gray-800">{selectedRecord.name}</h3>
@@ -810,7 +1541,7 @@ export default function EnrollmentWorkbench() {
                 <button onClick={() => setSelectedRecord(null)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="rounded-xl border border-gray-200 p-4 bg-gray-50">
                   <p className="text-xs text-gray-500 mb-1">参保状态</p>
                   <p className="font-semibold text-gray-800">{selectedRecord.status}</p>
@@ -823,43 +1554,34 @@ export default function EnrollmentWorkbench() {
                   <p className="text-xs text-gray-500 mb-1">险种</p>
                   <p className="font-semibold text-gray-800">{selectedRecord.insuranceType}</p>
                 </div>
+                <div className="rounded-xl border border-gray-200 p-4 bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">影像材料</p>
+                  <p className="font-semibold text-gray-800">
+                    {Object.values(selectedRecord.photos).filter(Boolean).length}/{categoryFields[selectedRecord.category].photos.length}
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-5">
                 <div className="rounded-xl border border-gray-200 p-5">
                   <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4 text-cyan-600" />基础信息</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {Object.entries(selectedRecord.basic).map(([key, value]) => (
-                      <div key={key} className="flex justify-between border-b border-gray-100 py-2 gap-4">
-                        <span className="text-gray-500">{key}</span>
-                        <span className="font-medium text-gray-800 text-right">{value || '-'}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {renderRecordEntries(
+                    selectedRecord.category,
+                    Object.entries(selectedRecord.basic),
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-gray-200 p-5">
                   <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2"><FileText className="w-4 h-4 text-cyan-600" />专属信息</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {Object.entries(selectedRecord.extra).map(([key, value]) => (
-                      <div key={key} className="flex justify-between border-b border-gray-100 py-2 gap-4">
-                        <span className="text-gray-500">{key}</span>
-                        <span className="font-medium text-gray-800 text-right">{value || '-'}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {renderRecordEntries(
+                    selectedRecord.category,
+                    Object.entries(selectedRecord.extra),
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-gray-200 p-5">
                   <h4 className="font-semibold text-gray-800 mb-4">影像材料</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {Object.entries(selectedRecord.photos).map(([key, value]) => (
-                      <div key={key} className="flex justify-between border-b border-gray-100 py-2">
-                        <span className="text-gray-500">{key}</span>
-                        <span className={value ? 'text-green-600 font-medium' : 'text-red-500'}>{value ? '已上传' : '未上传'}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {renderRecordPhotos(selectedRecord)}
                 </div>
               </div>
             </motion.div>

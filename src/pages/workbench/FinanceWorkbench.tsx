@@ -1,1 +1,3 @@
-export { default } from './FinanceManagementHub';
+import FinanceManagementHub from './FinanceManagementHub';
+
+export default FinanceManagementHub;

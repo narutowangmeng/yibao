@@ -9,6 +9,7 @@ import EmergencyReimbursement from './modules/EmergencyReimbursement';
 import RemoteReimbursement from './modules/RemoteReimbursement';
 import SpecialDrugReimbursement from './modules/SpecialDrugReimbursement';
 import MajorIllnessReimbursement from './modules/MajorIllnessReimbursement';
+import ReimbursementQueryCenter from './modules/ReimbursementQueryCenter';
 
 const modules = [
   { id: 'outpatient', title: '门诊报销', icon: Stethoscope, color: 'from-blue-500 to-blue-600', desc: '普通门诊费用报销', component: OutpatientReimbursement },
@@ -19,6 +20,7 @@ const modules = [
   { id: 'remote', title: '异地报销', icon: Plane, color: 'from-orange-500 to-orange-600', desc: '异地就医费用报销', component: RemoteReimbursement },
   { id: 'special_drug', title: '特殊药品报销', icon: PillIcon, color: 'from-cyan-500 to-cyan-600', desc: '特药定点药店报销', component: SpecialDrugReimbursement },
   { id: 'major_illness', title: '大病报销', icon: HeartPulse, color: 'from-rose-500 to-rose-600', desc: '大病保险二次报销', component: MajorIllnessReimbursement },
+  { id: 'query_center', title: '报销查询', icon: Search, color: 'from-sky-500 to-sky-600', desc: '报销申请、审核进度、结算结果查询与导入导出', component: ReimbursementQueryCenter },
 ];
 
 interface ValidationResult {

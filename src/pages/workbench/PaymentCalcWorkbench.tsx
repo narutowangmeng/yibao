@@ -11,6 +11,7 @@ import ExemptionApply from './modules/ExemptionApply';
 import PaymentNotice from './modules/PaymentNotice';
 import ReminderManage from './modules/ReminderManage';
 import ArrivalConfirm from './modules/ArrivalConfirm';
+import PaymentQueryCenter from './modules/PaymentQueryCenter';
 
 const modules = [
   { id: 'payment_calc', title: '缴费基数核定', icon: Calculator, desc: '核定缴费基数和比例', color: 'from-emerald-500 to-emerald-600', component: PaymentCalc },
@@ -23,6 +24,7 @@ const modules = [
   { id: 'notice', title: '缴费通知单', icon: ScrollText, desc: '生成缴费通知单', color: 'from-cyan-500 to-cyan-600', component: PaymentNotice },
   { id: 'reminder', title: '催缴管理', icon: Bell, desc: '短信电话上门催缴', color: 'from-indigo-500 to-indigo-600', component: ReminderManage },
   { id: 'arrival', title: '到账确认', icon: CheckCircle, desc: '银行税务到账确认', color: 'from-green-500 to-green-600', component: ArrivalConfirm },
+  { id: 'query_center', title: '核定查询', icon: ScrollText, desc: '核定、到账、补退费查询与导入导出', color: 'from-teal-500 to-teal-600', component: PaymentQueryCenter },
 ];
 
 export default function PaymentCalcWorkbench() {

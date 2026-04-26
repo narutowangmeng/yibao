@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Users, Plus, Search, Edit, Trash2, Eye, FileText, X, CheckCircle, Phone, MapPin, Calendar, User } from 'lucide-react';
+import { Building2, Users, Plus, Search, Edit, Trash2, Eye, FileText, X, CheckCircle, Phone, MapPin, Calendar, User, Download, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface Employer {
   id: string;
@@ -28,15 +29,22 @@ const mockEmployers: Employer[] = [
   { id: 'E004', name: '某某教育培训机构', code: '91320000345678901D', type: '民办非企业', scale: '小型', employees: 45, status: '正常', contact: '赵六', phone: '13600136004', address: '南京市建邺区江东中路200号', registerDate: '2019-09-10', industry: '教育', legalPerson: '赵校长', email: 'zhaoliu@edu.com', paymentBase: 6500, lastPaymentDate: '2024-01-13' },
 ];
 
+const employerHeaders = [
+  '单位编号', '单位名称', '统一社会信用代码', '单位类型', '单位规模', '参保人数', '状态', '联系人', '联系电话',
+  '注册地址', '注册日期', '所属行业', '法定代表人', '电子邮箱', '缴费基数', '最后缴费日期',
+];
+
 export default function EmployerManagementWorkbench() {
+  const [employers, setEmployers] = useState<Employer[]>(mockEmployers);
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEmployer, setSelectedEmployer] = useState<Employer | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [toast, setToast] = useState('');
+  const importRef = React.useRef<HTMLInputElement>(null);
 
-  const filteredEmployers = mockEmployers.filter(e => {
+  const filteredEmployers = employers.filter(e => {
     if (activeTab === 'normal') return e.status === '正常';
     if (activeTab === 'arrears') return e.status === '欠费';
     return e.name.includes(searchTerm) || e.code.includes(searchTerm);
@@ -62,6 +70,73 @@ export default function EmployerManagementWorkbench() {
     setTimeout(() => setToast(''), 2000);
   };
 
+  const toExportRow = (employer: Employer) => ({
+    单位编号: employer.id,
+    单位名称: employer.name,
+    统一社会信用代码: employer.code,
+    单位类型: employer.type,
+    单位规模: employer.scale,
+    参保人数: employer.employees,
+    状态: employer.status,
+    联系人: employer.contact,
+    联系电话: employer.phone,
+    注册地址: employer.address,
+    注册日期: employer.registerDate,
+    所属行业: employer.industry,
+    法定代表人: employer.legalPerson,
+    电子邮箱: employer.email,
+    缴费基数: employer.paymentBase,
+    最后缴费日期: employer.lastPaymentDate,
+  });
+
+  const writeWorkbook = (rows: Array<Record<string, string | number>>, fileName: string) => {
+    const sheet = XLSX.utils.json_to_sheet(rows, { header: employerHeaders });
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, '参保单位台账');
+    XLSX.writeFile(book, fileName);
+  };
+
+  const handleTemplateDownload = () => {
+    writeWorkbook(employers.slice(0, 3).map(toExportRow), '参保单位导入模板.xlsx');
+  };
+
+  const handleExport = () => {
+    writeWorkbook(filteredEmployers.map(toExportRow), `参保单位查询结果_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '', raw: false });
+      const imported = rows
+        .filter((item) => String(item['单位名称'] || '').trim() && String(item['统一社会信用代码'] || '').trim())
+        .map((item, index) => ({
+          id: String(item['单位编号'] || `EIMP${String(index + 1).padStart(3, '0')}`),
+          name: String(item['单位名称'] || ''),
+          code: String(item['统一社会信用代码'] || ''),
+          type: String(item['单位类型'] || '企业'),
+          scale: String(item['单位规模'] || '中型'),
+          employees: Number(item['参保人数'] || 0),
+          status: String(item['状态'] || '正常') as Employer['status'],
+          contact: String(item['联系人'] || ''),
+          phone: String(item['联系电话'] || ''),
+          address: String(item['注册地址'] || ''),
+          registerDate: String(item['注册日期'] || ''),
+          industry: String(item['所属行业'] || ''),
+          legalPerson: String(item['法定代表人'] || ''),
+          email: String(item['电子邮箱'] || ''),
+          paymentBase: Number(item['缴费基数'] || 0),
+          lastPaymentDate: String(item['最后缴费日期'] || ''),
+        }));
+      if (imported.length) setEmployers((prev) => [...imported, ...prev]);
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     return status === '正常' 
       ? <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">正常</span>
@@ -75,9 +150,21 @@ export default function EmployerManagementWorkbench() {
           <h2 className="text-2xl font-bold text-gray-800">参保单位管理</h2>
           <p className="text-sm text-gray-500 mt-1">单位参保登记、信息维护、员工管理</p>
         </div>
-        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
-          <Plus className="w-4 h-4" />新增单位
-        </button>
+        <div className="flex items-center gap-3">
+          <input ref={importRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} className="hidden" />
+          <button onClick={handleTemplateDownload} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <Download className="w-4 h-4" />下载模板
+          </button>
+          <button onClick={() => importRef.current?.click()} className="flex items-center gap-2 px-4 py-2 border border-cyan-300 text-cyan-700 rounded-lg hover:bg-cyan-50">
+            <Upload className="w-4 h-4" />导入单位台账
+          </button>
+          <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50">
+            <Download className="w-4 h-4" />导出查询结果
+          </button>
+          <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
+            <Plus className="w-4 h-4" />新增单位
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
