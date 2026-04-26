@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, GitBranch, Settings, Plus, Trash2, Edit3, Save, Eye, Copy, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, GitBranch, Settings, Plus, Edit3, Save, Eye, Copy, CheckCircle, Clock } from 'lucide-react';
 
 interface WorkflowNode {
   id: string;
@@ -19,9 +19,49 @@ interface WorkflowDef {
 }
 
 const mockWorkflows: WorkflowDef[] = [
-  { id: '1', name: '费用报销审批', category: '报销业务', version: 'v2.1', status: 'active', nodes: [], updatedAt: '2024-01-15' },
-  { id: '2', name: '参保登记审批', category: '参保业务', version: 'v1.3', status: 'active', nodes: [], updatedAt: '2024-01-10' },
-  { id: '3', name: '机构准入审批', category: '机构管理', version: 'v1.0', status: 'draft', nodes: [], updatedAt: '2024-01-20' },
+  { id: 'WF-001', name: '门诊慢特病待遇认定流程', category: '待遇保障', version: 'v3.2', status: 'active', nodes: [], updatedAt: '2025-04-18' },
+  { id: 'WF-002', name: '异地就医备案审核流程', category: '待遇保障', version: 'v2.7', status: 'active', nodes: [], updatedAt: '2025-04-10' },
+  { id: 'WF-003', name: '双通道药店准入审批流程', category: '医药服务', version: 'v1.9', status: 'draft', nodes: [], updatedAt: '2025-04-22' },
+  { id: 'WF-004', name: '定点医疗机构协议续签流程', category: '医药服务', version: 'v2.3', status: 'active', nodes: [], updatedAt: '2025-04-07' },
+  { id: 'WF-005', name: '医保目录外诊疗项目申报流程', category: '医药服务', version: 'v1.6', status: 'inactive', nodes: [], updatedAt: '2025-03-28' },
+  { id: 'WF-006', name: '医保基金飞行检查立项流程', category: '基金监管', version: 'v4.0', status: 'active', nodes: [], updatedAt: '2025-04-15' },
+  { id: 'WF-007', name: '违规结算案件核查流程', category: '基金监管', version: 'v3.5', status: 'active', nodes: [], updatedAt: '2025-04-19' },
+  { id: 'WF-008', name: '投诉举报线索分办流程', category: '基金监管', version: 'v2.2', status: 'active', nodes: [], updatedAt: '2025-04-12' },
+  { id: 'WF-009', name: '信用评价结果复核流程', category: '基金监管', version: 'v1.8', status: 'draft', nodes: [], updatedAt: '2025-04-21' },
+  { id: 'WF-010', name: '长期护理保险失能评估复审流程', category: '待遇保障', version: 'v1.5', status: 'active', nodes: [], updatedAt: '2025-04-11' },
+  { id: 'WF-011', name: '居民医保集中参保登记流程', category: '经办管理', version: 'v2.4', status: 'active', nodes: [], updatedAt: '2025-04-05' },
+  { id: 'WF-012', name: '单位缴费基数调整审批流程', category: '经办管理', version: 'v2.1', status: 'active', nodes: [], updatedAt: '2025-04-02' },
+  { id: 'WF-013', name: '门诊费用稽核复审流程', category: '经办管理', version: 'v2.8', status: 'inactive', nodes: [], updatedAt: '2025-03-26' },
+  { id: 'WF-014', name: '基金追回支付指令流程', category: '基金监管', version: 'v1.4', status: 'active', nodes: [], updatedAt: '2025-04-08' },
+  { id: 'WF-015', name: '耗材目录调整申报流程', category: '医药服务', version: 'v1.7', status: 'draft', nodes: [], updatedAt: '2025-04-24' },
+  { id: 'WF-016', name: '药品目录准入会审流程', category: '医药服务', version: 'v2.0', status: 'active', nodes: [], updatedAt: '2025-04-17' },
+  { id: 'WF-017', name: '医保数据字典发布流程', category: '系统治理', version: 'v1.3', status: 'active', nodes: [], updatedAt: '2025-04-13' },
+  { id: 'WF-018', name: '规则引擎生产发布流程', category: '系统治理', version: 'v2.6', status: 'active', nodes: [], updatedAt: '2025-04-20' },
+  { id: 'WF-019', name: '13市月度统计报表汇交流程', category: '系统治理', version: 'v1.9', status: 'active', nodes: [], updatedAt: '2025-04-25' },
+  { id: 'WF-020', name: '医保中心用户权限申请流程', category: '系统治理', version: 'v2.2', status: 'active', nodes: [], updatedAt: '2025-04-09' },
+];
+
+const instanceData = [
+  { id: 'INST-001', name: '门诊慢特病待遇认定流程', initiator: '南京市医保中心', node: '复审节点', status: 'running', time: '2025-04-26 09:10' },
+  { id: 'INST-002', name: '异地就医备案审核流程', initiator: '苏州市医保中心', node: '初审节点', status: 'completed', time: '2025-04-26 08:54' },
+  { id: 'INST-003', name: '双通道药店准入审批流程', initiator: '无锡市医保局', node: '会签节点', status: 'suspended', time: '2025-04-25 17:33' },
+  { id: 'INST-004', name: '定点医疗机构协议续签流程', initiator: '徐州市医保局', node: '终审节点', status: 'running', time: '2025-04-25 16:41' },
+  { id: 'INST-005', name: '医保基金飞行检查立项流程', initiator: '省医保局基金监管处', node: '领导审批', status: 'running', time: '2025-04-25 15:28' },
+  { id: 'INST-006', name: '投诉举报线索分办流程', initiator: '南通市医保中心', node: '案件分办', status: 'completed', time: '2025-04-25 14:52' },
+  { id: 'INST-007', name: '信用评价结果复核流程', initiator: '镇江市医保局', node: '材料补正', status: 'running', time: '2025-04-25 14:11' },
+  { id: 'INST-008', name: '长期护理保险失能评估复审流程', initiator: '盐城市医保局', node: '专家评估', status: 'running', time: '2025-04-25 13:40' },
+  { id: 'INST-009', name: '居民医保集中参保登记流程', initiator: '宿迁市医保中心', node: '数据校验', status: 'completed', time: '2025-04-25 11:24' },
+  { id: 'INST-010', name: '单位缴费基数调整审批流程', initiator: '常州市医保中心', node: '经办审核', status: 'running', time: '2025-04-25 10:37' },
+  { id: 'INST-011', name: '门诊费用稽核复审流程', initiator: '扬州市医保中心', node: '复审节点', status: 'suspended', time: '2025-04-25 10:06' },
+  { id: 'INST-012', name: '基金追回支付指令流程', initiator: '泰州市医保局', node: '财务确认', status: 'running', time: '2025-04-25 09:18' },
+  { id: 'INST-013', name: '耗材目录调整申报流程', initiator: '省医保局医药服务管理处', node: '专家评议', status: 'running', time: '2025-04-24 18:22' },
+  { id: 'INST-014', name: '药品目录准入会审流程', initiator: '连云港市医保局', node: '会签节点', status: 'completed', time: '2025-04-24 17:09' },
+  { id: 'INST-015', name: '医保数据字典发布流程', initiator: '省医保局信息中心', node: '版本校验', status: 'running', time: '2025-04-24 16:44' },
+  { id: 'INST-016', name: '规则引擎生产发布流程', initiator: '省医保局信息中心', node: '灰度发布', status: 'running', time: '2025-04-24 15:36' },
+  { id: 'INST-017', name: '13市月度统计报表汇交流程', initiator: '淮安市医保中心', node: '数据复核', status: 'completed', time: '2025-04-24 15:08' },
+  { id: 'INST-018', name: '医保中心用户权限申请流程', initiator: '苏州市医保局', node: '信息中心审批', status: 'running', time: '2025-04-24 14:39' },
+  { id: 'INST-019', name: '违规结算案件核查流程', initiator: '南京市医保局', node: '调查取证', status: 'running', time: '2025-04-24 13:55' },
+  { id: 'INST-020', name: '异地就医备案审核流程', initiator: '泰州市医保中心', node: '自动归档', status: 'completed', time: '2025-04-24 12:43' },
 ];
 
 const nodeTypes = [
@@ -60,7 +100,7 @@ export default function WorkflowEngine() {
           { id: 'designer', label: '流程设计器', icon: GitBranch },
           { id: 'instances', label: '流程实例', icon: Play },
           { id: 'templates', label: '流程模板', icon: Copy },
-        ].map(tab => (
+        ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
@@ -95,7 +135,7 @@ export default function WorkflowEngine() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {workflows.map(wf => (
+              {workflows.map((wf) => (
                 <tr key={wf.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-800">{wf.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{wf.category}</td>
@@ -139,7 +179,7 @@ export default function WorkflowEngine() {
             <div className="w-48 border-r border-gray-200 p-4 bg-gray-50">
               <h3 className="text-sm font-medium text-gray-700 mb-3">节点类型</h3>
               <div className="space-y-2">
-                {nodeTypes.map(node => (
+                {nodeTypes.map((node) => (
                   <div key={node.type} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-cyan-400">
                     <div className={`w-3 h-3 rounded-full ${node.color}`} />
                     <span className="text-sm text-gray-700">{node.name}</span>
@@ -149,15 +189,15 @@ export default function WorkflowEngine() {
             </div>
             <div className="flex-1 p-8 bg-gray-50 relative">
               <div className="flex flex-col items-center gap-6">
-                <div className="w-32 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-sm">开始</div>
+                <div className="w-40 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-sm">流程发起</div>
                 <div className="w-0.5 h-8 bg-gray-300" />
-                <div className="w-32 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm">初审</div>
+                <div className="w-40 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm">经办审核</div>
                 <div className="w-0.5 h-8 bg-gray-300" />
-                <div className="w-32 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm">条件判断</div>
+                <div className="w-40 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm">规则校验</div>
                 <div className="w-0.5 h-8 bg-gray-300" />
-                <div className="w-32 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm">复审</div>
+                <div className="w-40 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm">复核审批</div>
                 <div className="w-0.5 h-8 bg-gray-300" />
-                <div className="w-32 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white text-sm">结束</div>
+                <div className="w-40 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white text-sm">流程归档</div>
               </div>
             </div>
             <div className="w-64 border-l border-gray-200 p-4">
@@ -168,11 +208,11 @@ export default function WorkflowEngine() {
                   <input type="text" className="w-full mt-1 px-3 py-2 border border-gray-200 rounded text-sm" placeholder="输入节点名称" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">审批人</label>
+                  <label className="text-xs text-gray-500">审批岗位</label>
                   <select className="w-full mt-1 px-3 py-2 border border-gray-200 rounded text-sm">
-                    <option>初审岗</option>
-                    <option>复审岗</option>
-                    <option>终审</option>
+                    <option>经办审核岗</option>
+                    <option>基金监管岗</option>
+                    <option>复核审批岗</option>
                   </select>
                 </div>
                 <div>
@@ -195,18 +235,14 @@ export default function WorkflowEngine() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">实例ID</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">流程名称</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">发起人</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">发起方</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">当前节点</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">状态</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">启动时间</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {[
-                { id: 'INST-001', name: '费用报销审批', initiator: '参保人A', node: '复审', status: 'running', time: '2024-01-20 10:30' },
-                { id: 'INST-002', name: '参保登记审批', initiator: '参保人B', node: '初审', status: 'completed', time: '2024-01-20 09:15' },
-                { id: 'INST-003', name: '费用报销审批', initiator: '参保人C', node: '初审', status: 'suspended', time: '2024-01-19 16:45' },
-              ].map(inst => (
+              {instanceData.map((inst) => (
                 <tr key={inst.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-600">{inst.id}</td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-800">{inst.name}</td>
@@ -228,9 +264,9 @@ export default function WorkflowEngine() {
       {activeTab === 'templates' && (
         <div className="grid grid-cols-3 gap-4">
           {[
-            { name: '标准三级审批', desc: '初审→复审→终审', icon: GitBranch },
-            { name: '快速审批', desc: '单级审批快速通过', icon: CheckCircle },
-            { name: '会签审批', desc: '多部门并行审批', icon: Settings },
+            { name: '标准三级审核', desc: '经办审核 → 复核审批 → 归档发布', icon: GitBranch },
+            { name: '快速待遇审批', desc: '自动校验后单级审批快速通过', icon: CheckCircle },
+            { name: '跨处室会签流程', desc: '待遇保障、医药服务、基金监管并行会签', icon: Settings },
           ].map((tpl, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:border-cyan-400 cursor-pointer">
               <div className="flex items-center gap-3 mb-2">

@@ -17,29 +17,74 @@ export default function CreditManagement() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
   const [evaluationData, setEvaluationData] = useState([
-    { id: 1, name: '某医院', score: 95, level: 'A级', date: '2024-01' },
-    { id: 2, name: '某药店', score: 82, level: 'B级', date: '2024-01' },
-    { id: 3, name: '某诊所', score: 65, level: 'C级', date: '2024-01' }
+    { id: 1, name: '江苏省人民医院', score: 98, level: 'A级', date: '2026-03' },
+    { id: 2, name: '南京鼓楼医院', score: 97, level: 'A级', date: '2026-03' },
+    { id: 3, name: '无锡市人民医院', score: 95, level: 'A级', date: '2026-03' },
+    { id: 4, name: '徐州医科大学附属医院', score: 96, level: 'A级', date: '2026-03' },
+    { id: 5, name: '常州市第一人民医院', score: 93, level: 'A级', date: '2026-03' },
+    { id: 6, name: '苏州大学附属第一医院', score: 98, level: 'A级', date: '2026-03' },
+    { id: 7, name: '南通大学附属医院', score: 94, level: 'A级', date: '2026-03' },
+    { id: 8, name: '连云港市第一人民医院', score: 91, level: 'B级', date: '2026-03' },
+    { id: 9, name: '淮安市第一人民医院', score: 92, level: 'A级', date: '2026-03' },
+    { id: 10, name: '盐城市第一人民医院', score: 93, level: 'A级', date: '2026-03' },
+    { id: 11, name: '扬州大学附属医院', score: 92, level: 'A级', date: '2026-03' },
+    { id: 12, name: '镇江市第一人民医院', score: 89, level: 'B级', date: '2026-03' },
+    { id: 13, name: '泰州市人民医院', score: 90, level: 'B级', date: '2026-03' },
+    { id: 14, name: '宿迁市人民医院', score: 88, level: 'B级', date: '2026-03' },
+    { id: 15, name: '南京益丰大药房中央路店', score: 90, level: 'B级', date: '2026-03' },
+    { id: 16, name: '无锡九州大药房广瑞路店', score: 87, level: 'B级', date: '2026-03' },
+    { id: 17, name: '苏州礼安医药双通道药房园区店', score: 95, level: 'A级', date: '2026-03' },
+    { id: 18, name: '南通国大药房崇川店', score: 86, level: 'B级', date: '2026-03' },
+    { id: 19, name: '扬州百信缘大药房文昌阁店', score: 84, level: 'B级', date: '2026-03' },
+    { id: 20, name: '宿迁大参林药房宿城店', score: 79, level: 'C级', date: '2026-03' }
   ]);
 
-  const [archiveData, setArchiveData] = useState([
-    { id: 1, name: '某医院', type: '医疗机构', records: 12, status: '正常', details: '近三年无违规记录，信用良好' },
-    { id: 2, name: '某药店', type: '零售药店', records: 5, status: '正常', details: '按时报送数据，无异常' }
+  const [archiveData] = useState([
+    { id: 1, name: '江苏省人民医院', type: '医疗机构', records: 16, status: '正常', details: '近三年按月报送结算清单，飞检未发现重大违规结算。' },
+    { id: 2, name: '南京鼓楼医院', type: '医疗机构', records: 14, status: '正常', details: '门诊慢特病审核及时，异地就医结算差错率低于全省均值。' },
+    { id: 3, name: '无锡市人民医院', type: '医疗机构', records: 12, status: '正常', details: '医保医师和医保药师年度考核结果良好。' },
+    { id: 4, name: '徐州医科大学附属医院', type: '医疗机构', records: 13, status: '正常', details: 'DRG 结算偏差率持续下降，基金使用规范。' },
+    { id: 5, name: '常州市第一人民医院', type: '医疗机构', records: 11, status: '正常', details: '耗材目录执行规范，违规收费整改已闭环。' },
+    { id: 6, name: '苏州大学附属第一医院', type: '医疗机构', records: 17, status: '正常', details: '双通道处方流转管理规范，药品追溯数据完整。' },
+    { id: 7, name: '南通大学附属医院', type: '医疗机构', records: 10, status: '正常', details: '异地联网结算服务满意度较高。' },
+    { id: 8, name: '连云港市第一人民医院', type: '医疗机构', records: 9, status: '观察', details: '门诊统筹审核曾出现编码维护滞后，已纳入季度复核。' },
+    { id: 9, name: '淮安市第一人民医院', type: '医疗机构', records: 10, status: '正常', details: '基金监督抽查记录完整，无重复收费问题。' },
+    { id: 10, name: '盐城市第一人民医院', type: '医疗机构', records: 12, status: '正常', details: '医保接口调用稳定，月度对账准确率高。' },
+    { id: 11, name: '扬州大学附属医院', type: '医疗机构', records: 11, status: '正常', details: '高值耗材备案及时，诊疗项目匹配率良好。' },
+    { id: 12, name: '镇江市第一人民医院', type: '医疗机构', records: 8, status: '观察', details: '曾发生 1 起超标准收费投诉，已完成整改复核。' },
+    { id: 13, name: '泰州市人民医院', type: '医疗机构', records: 9, status: '正常', details: '医保结算清分及时，信用评价保持稳定。' },
+    { id: 14, name: '宿迁市人民医院', type: '医疗机构', records: 7, status: '观察', details: '门诊处方审核规则执行有提升空间。' },
+    { id: 15, name: '南京益丰大药房中央路店', type: '零售药店', records: 6, status: '正常', details: '处方留存与药品追溯台账完整。' },
+    { id: 16, name: '苏州礼安医药双通道药房园区店', type: '双通道药店', records: 7, status: '正常', details: '双通道特药供应稳定，购药实名核验执行到位。' },
+    { id: 17, name: '南通国大药房崇川店', type: '零售药店', records: 5, status: '正常', details: '月度信用检查未发现违规刷卡结算。' },
+    { id: 18, name: '扬州百信缘大药房文昌阁店', type: '零售药店', records: 5, status: '观察', details: '曾因上传票据延迟被提醒整改。' },
+    { id: 19, name: '宿迁大参林药房宿城店', type: '零售药店', records: 4, status: '预警', details: '存在一次串换药品编码结算问题，处于重点监管期。' },
+    { id: 20, name: '无锡九州大药房广瑞路店', type: '零售药店', records: 5, status: '正常', details: '购药实名制与发票开具规范。' }
   ]);
 
   const [punishmentData, setPunishmentData] = useState([
-    { id: 1, name: '某诊所', reason: '欺诈骗保', measure: '暂停结算', date: '2024-01-15' },
-    { id: 2, name: '某药店', reason: '违规刷卡', measure: '罚款2万', date: '2024-01-10' }
+    { id: 1, name: '宿迁大参林药房宿城店', reason: '串换药品编码结算', measure: '暂停医保结算 3 个月', date: '2026-02-18' },
+    { id: 2, name: '镇江市第一人民医院', reason: '超标准收取一次性耗材费用', measure: '责令退回基金 18.6 万元', date: '2026-02-09' },
+    { id: 3, name: '连云港市第一人民医院', reason: '重复上传住院结算清单', measure: '全院通报并限期整改', date: '2026-01-26' },
+    { id: 4, name: '扬州百信缘大药房文昌阁店', reason: '未按规定留存电子处方', measure: '记分 6 分', date: '2026-01-19' },
+    { id: 5, name: '宿迁市人民医院', reason: '门诊统筹审核规则执行不到位', measure: '约谈分管负责人', date: '2026-01-12' },
+    { id: 6, name: '无锡九州大药房广瑞路店', reason: '医保结算票据上传不及时', measure: '责令整改并书面说明', date: '2025-12-28' }
   ]);
 
   const [repairData, setRepairData] = useState([
-    { id: 1, name: '某药店', applyDate: '2024-01-20', status: '审核中', reason: '已整改完毕' },
-    { id: 2, name: '某诊所', applyDate: '2024-01-18', status: '已通过', reason: '完成信用修复培训' }
+    { id: 1, name: '宿迁大参林药房宿城店', applyDate: '2026-03-08', status: '审核中', reason: '已完成药品编码专项培训并补建追溯台账。' },
+    { id: 2, name: '镇江市第一人民医院', applyDate: '2026-03-12', status: '已通过', reason: '已退回违规基金并完成耗材收费规则重检。' },
+    { id: 3, name: '连云港市第一人民医院', applyDate: '2026-03-15', status: '审核中', reason: '已完成结算上传接口改造并提交核验材料。' },
+    { id: 4, name: '扬州百信缘大药房文昌阁店', applyDate: '2026-03-20', status: '已通过', reason: '电子处方归档补齐，门店负责人完成信用修复培训。' },
+    { id: 5, name: '宿迁市人民医院', applyDate: '2026-03-22', status: '驳回', reason: '需补充门诊统筹审核整改复盘材料。' },
+    { id: 6, name: '无锡九州大药房广瑞路店', applyDate: '2026-03-25', status: '审核中', reason: '票据上传时效已改善，申请解除重点关注。' }
   ]);
 
   const [publicityData, setPublicityData] = useState([
-    { id: 1, title: '2024年第一期信用评价结果', date: '2024-01-15', views: 1256, content: '本次评价覆盖全市医疗机构...' },
-    { id: 2, title: '失信惩戒名单公示', date: '2024-01-10', views: 892, content: '根据相关规定，现将失信机构公示...' }
+    { id: 1, title: '2026年第一季度江苏省定点医药机构信用评价结果公示', date: '2026-04-02', views: 2356, content: '本次信用评价覆盖全省医疗机构、零售药店和双通道药店，评价周期为 2026 年第一季度。' },
+    { id: 2, title: '2026年第一批失信惩戒机构名单公示', date: '2026-03-21', views: 1824, content: '依据基金监督检查结果，对存在违规结算和票据管理问题的机构予以公示。' },
+    { id: 3, title: '江苏省医保信用修复通过名单（2026年3月）', date: '2026-03-31', views: 1498, content: '对已完成整改、培训和基金退回的定点机构信用修复结果予以公告。' },
+    { id: 4, title: '双通道药店专项检查信用提示', date: '2026-03-12', views: 1265, content: '提示全省双通道药店加强实名购药、电子处方留存和药品追溯管理。' }
   ]);
 
   const openModal = (type: 'add' | 'edit' | 'view', item?: any) => {
@@ -54,17 +99,17 @@ export default function CreditManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (activeTab === 'evaluation') setEvaluationData(evaluationData.filter(i => i.id !== id));
-    if (activeTab === 'punishment') setPunishmentData(punishmentData.filter(i => i.id !== id));
-    if (activeTab === 'repair') setRepairData(repairData.filter(i => i.id !== id));
-    if (activeTab === 'publicity') setPublicityData(publicityData.filter(i => i.id !== id));
+    if (activeTab === 'evaluation') setEvaluationData(evaluationData.filter((i) => i.id !== id));
+    if (activeTab === 'punishment') setPunishmentData(punishmentData.filter((i) => i.id !== id));
+    if (activeTab === 'repair') setRepairData(repairData.filter((i) => i.id !== id));
+    if (activeTab === 'publicity') setPublicityData(publicityData.filter((i) => i.id !== id));
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    
+
     if (activeTab === 'evaluation') {
       const newItem = {
         id: selectedItem?.id || Date.now(),
@@ -74,12 +119,12 @@ export default function CreditManagement() {
         date: formData.get('date') as string
       };
       if (modalType === 'edit') {
-        setEvaluationData(evaluationData.map(i => i.id === selectedItem.id ? newItem : i));
+        setEvaluationData(evaluationData.map((i) => (i.id === selectedItem.id ? newItem : i)));
       } else {
         setEvaluationData([...evaluationData, newItem]);
       }
     }
-    
+
     if (activeTab === 'punishment') {
       const newItem = {
         id: selectedItem?.id || Date.now(),
@@ -89,12 +134,12 @@ export default function CreditManagement() {
         date: formData.get('date') as string
       };
       if (modalType === 'edit') {
-        setPunishmentData(punishmentData.map(i => i.id === selectedItem.id ? newItem : i));
+        setPunishmentData(punishmentData.map((i) => (i.id === selectedItem.id ? newItem : i)));
       } else {
         setPunishmentData([...punishmentData, newItem]);
       }
     }
-    
+
     if (activeTab === 'repair') {
       const newItem = {
         id: selectedItem?.id || Date.now(),
@@ -104,12 +149,12 @@ export default function CreditManagement() {
         reason: formData.get('reason') as string
       };
       if (modalType === 'edit') {
-        setRepairData(repairData.map(i => i.id === selectedItem.id ? newItem : i));
+        setRepairData(repairData.map((i) => (i.id === selectedItem.id ? newItem : i)));
       } else {
         setRepairData([...repairData, newItem]);
       }
     }
-    
+
     if (activeTab === 'publicity') {
       const newItem = {
         id: selectedItem?.id || Date.now(),
@@ -119,18 +164,18 @@ export default function CreditManagement() {
         content: formData.get('content') as string
       };
       if (modalType === 'edit') {
-        setPublicityData(publicityData.map(i => i.id === selectedItem.id ? newItem : i));
+        setPublicityData(publicityData.map((i) => (i.id === selectedItem.id ? newItem : i)));
       } else {
         setPublicityData([...publicityData, newItem]);
       }
     }
-    
+
     closeModal();
   };
 
   const renderModal = () => {
     if (!modalOpen) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-auto">
@@ -145,7 +190,7 @@ export default function CreditManagement() {
             </h3>
             <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
           </div>
-          
+
           {modalType === 'view' && activeTab === 'archive' ? (
             <div className="space-y-4">
               <p><span className="font-medium">机构名称：</span>{selectedItem?.name}</p>
@@ -189,7 +234,7 @@ export default function CreditManagement() {
                   <select name="status" defaultValue={selectedItem?.status || '审核中'} className="w-full px-3 py-2 border rounded-lg">
                     <option value="审核中">审核中</option>
                     <option value="已通过">已通过</option>
-                    <option value="已驳回">已驳回</option>
+                    <option value="驳回">驳回</option>
                   </select>
                   <textarea name="reason" defaultValue={selectedItem?.reason} placeholder="修复原因" className="w-full px-3 py-2 border rounded-lg" rows={3} />
                 </>
@@ -213,29 +258,38 @@ export default function CreditManagement() {
   };
 
   const renderContent = () => {
-    const data = activeTab === 'evaluation' ? evaluationData :
-                 activeTab === 'archive' ? archiveData :
-                 activeTab === 'punishment' ? punishmentData :
-                 activeTab === 'repair' ? repairData :
-                 activeTab === 'publicity' ? publicityData : [];
-    
+    const data =
+      activeTab === 'evaluation'
+        ? evaluationData
+        : activeTab === 'archive'
+          ? archiveData
+          : activeTab === 'punishment'
+            ? punishmentData
+            : activeTab === 'repair'
+              ? repairData
+              : activeTab === 'publicity'
+                ? publicityData
+                : [];
+
     return (
       <div className="space-y-4">
         <div className="flex gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" placeholder="搜索..." className="w-full pl-10 pr-4 py-2 border rounded-lg" />
+            <input type="text" placeholder="搜索机构、药店或公示标题" className="w-full pl-10 pr-4 py-2 border rounded-lg" />
           </div>
           <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
-            <Filter className="w-4 h-4" />筛选
+            <Filter className="w-4 h-4" />
+            筛选
           </button>
           {activeTab !== 'archive' && (
             <button onClick={() => openModal('add')} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
-              <Plus className="w-4 h-4" />新增
+              <Plus className="w-4 h-4" />
+              新增
             </button>
           )}
         </div>
-        
+
         <div className="bg-white rounded-lg border overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -258,7 +312,7 @@ export default function CreditManagement() {
                   {item.reason && !item.applyDate && <td className="p-3 text-center text-red-600">{item.reason}</td>}
                   {item.measure && <td className="p-3 text-center">{item.measure}</td>}
                   {item.applyDate && <td className="p-3 text-center">{item.applyDate}</td>}
-                  {item.status && <td className="p-3 text-center"><span className={`px-2 py-1 rounded text-xs ${item.status === '正常' || item.status === '已通过' ? 'bg-green-100 text-green-700' : item.status === '审核中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{item.status}</span></td>}
+                  {item.status && <td className="p-3 text-center"><span className={`px-2 py-1 rounded text-xs ${item.status === '正常' || item.status === '已通过' ? 'bg-green-100 text-green-700' : item.status === '审核中' || item.status === '观察' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{item.status}</span></td>}
                   {item.date && !item.applyDate && <td className="p-3 text-center text-gray-600">{item.date}</td>}
                   {item.views && <td className="p-3 text-center text-gray-600">{item.views}</td>}
                   <td className="p-3">
@@ -284,7 +338,7 @@ export default function CreditManagement() {
   return (
     <div className="space-y-4">
       <div className="flex gap-2 border-b">
-        {tabs.map(tab => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
@@ -292,7 +346,8 @@ export default function CreditManagement() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab.id ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-gray-600 hover:text-gray-800'}`}
             >
-              <Icon className="w-4 h-4" />{tab.label}
+              <Icon className="w-4 h-4" />
+              {tab.label}
             </button>
           );
         })}

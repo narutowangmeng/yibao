@@ -1,49 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane, Calendar, Users, ClipboardCheck, AlertCircle, CheckCircle, X, Plus, Search, Edit2, Trash2, Eye } from 'lucide-react';
+import { Plane, Calendar, Users, ClipboardCheck, AlertCircle, CheckCircle, X, Plus, Edit2, Trash2, Eye } from 'lucide-react';
 
-interface PlanItem {
-  id: string;
-  name: string;
-  date: string;
-  status: '计划中' | '进行中' | '已完成';
-  target: string;
-  inspector: string;
-}
+interface PlanItem { id: string; name: string; date: string; status: '计划中' | '进行中' | '已完成'; target: string; inspector: string; }
+interface AssignItem { id: string; inspector: string; target: string; date: string; status: '待分配' | '已分配' | '进行中'; }
+interface RecordItem { id: string; hospital: string; date: string; issues: number; status: '待记录' | '已记录'; findings: string; }
+interface ResultItem { id: string; hospital: string; result: '合规' | '违规'; amount: number; status: '待处理' | '已处理'; decision: string; }
+interface TrackItem { id: string; hospital: string; issue: string; deadline: string; status: '整改中' | '已整改'; }
 
-interface AssignItem {
-  id: string;
-  inspector: string;
-  target: string;
-  date: string;
-  status: '待分配' | '已分配' | '进行中';
-}
-
-interface RecordItem {
-  id: string;
-  hospital: string;
-  date: string;
-  issues: number;
-  status: '待记录' | '已记录';
-  findings: string;
-}
-
-interface ResultItem {
-  id: string;
-  hospital: string;
-  result: '合规' | '违规';
-  amount: number;
-  status: '待处理' | '已处理';
-  decision: string;
-}
-
-interface TrackItem {
-  id: string;
-  hospital: string;
-  issue: string;
-  deadline: string;
-  status: '整改中' | '已整改';
-}
+const institutions = ['江苏省人民医院', '南京鼓楼医院', '无锡市人民医院', '徐州医科大学附属医院', '常州市第一人民医院', '苏州大学附属第一医院', '南通大学附属医院', '连云港市第一人民医院', '淮安市第一人民医院', '盐城市第一人民医院', '扬州市中医院', '镇江市第一人民医院', '泰州市人民医院', '宿迁市人民医院', '南京益丰大药房中央路店', '苏州礼安医药双通道药房园区店', '南通国大药房崇川店', '扬州百信缘大药房文昌阁店', '宿迁大参林药房宿城店', '无锡九州大药房广瑞路店'];
+const inspectors = ['陈思远', '赵雅宁', '高若溪', '周景明', '彭若楠', '顾文博', '陈雨桐', '沈嘉怡', '许若琳', '陆欣怡', '邵立成', '唐若宁'];
 
 export default function FlightInspection() {
   const [activeTab, setActiveTab] = useState('plan');
@@ -53,31 +19,11 @@ export default function FlightInspection() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState('');
 
-  const [plans, setPlans] = useState<PlanItem[]>([
-    { id: 'P001', name: '2024年Q1飞行检查', date: '2024-03-15', status: '进行中', target: '某三甲医院', inspector: '张检查员' },
-    { id: 'P002', name: '定点医疗机构专项检查', date: '2024-02-20', status: '已完成', target: '某社区医院', inspector: '李检查员' }
-  ]);
-
-  const [assigns, setAssigns] = useState<AssignItem[]>([
-    { id: 'T001', inspector: '张检查员', target: '某三甲医院', date: '2024-03-10', status: '已分配' },
-    { id: 'T002', inspector: '李检查员', target: '某社区医院', date: '2024-03-12', status: '待分配' }
-  ]);
-
-  const [records, setRecords] = useState<RecordItem[]>([
-    { id: 'R001', hospital: '某三甲医院', date: '2024-03-10', issues: 3, status: '已记录', findings: '存在过度医疗问题' },
-    { id: 'R002', hospital: '某药店', date: '2024-03-11', issues: 1, status: '已记录', findings: '处方管理不规范' }
-  ]);
-
-  const [results, setResults] = useState<ResultItem[]>([
-    { id: 'RS001', hospital: '某三甲医院', result: '违规', amount: 125000, status: '待处理', decision: '追回违规金额' },
-    { id: 'RS002', hospital: '某药店', result: '合规', amount: 0, status: '已处理', decision: '无需处理' }
-  ]);
-
-  const [tracks, setTracks] = useState<TrackItem[]>([
-    { id: 'TR001', hospital: '某三甲医院', issue: '过度医疗', deadline: '2024-04-15', status: '整改中' },
-    { id: 'TR002', hospital: '某药店', issue: '处方不规范', deadline: '2024-03-30', status: '已整改' }
-  ]);
-
+  const [plans, setPlans] = useState<PlanItem[]>(Array.from({ length: 20 }, (_, i) => ({ id: `P${String(i + 1).padStart(3, '0')}`, name: ['飞行检查计划', '专项检查计划', '双通道药店检查计划', '门诊慢特病检查计划'][i % 4] + `-${i + 1}`, date: `2026-04-${String((i % 25) + 1).padStart(2, '0')}`, status: ['计划中', '进行中', '已完成'][i % 3] as PlanItem['status'], target: institutions[i], inspector: inspectors[i % inspectors.length] })));
+  const [assigns, setAssigns] = useState<AssignItem[]>(Array.from({ length: 20 }, (_, i) => ({ id: `T${String(i + 1).padStart(3, '0')}`, inspector: inspectors[i % inspectors.length], target: institutions[i], date: `2026-04-${String((i % 25) + 1).padStart(2, '0')}`, status: ['待分配', '已分配', '进行中'][i % 3] as AssignItem['status'] })));
+  const [records, setRecords] = useState<RecordItem[]>(Array.from({ length: 20 }, (_, i) => ({ id: `R${String(i + 1).padStart(3, '0')}`, hospital: institutions[i], date: `2026-04-${String((i % 25) + 1).padStart(2, '0')}`, issues: (i % 5) + 1, status: i % 3 === 0 ? '待记录' : '已记录', findings: ['高值耗材使用异常', '门诊统筹处方留存不完整', '住院清单上传延迟', '药品追溯台账缺项', '异地就医备案核验不一致'][i % 5] })));
+  const [results, setResults] = useState<ResultItem[]>(Array.from({ length: 20 }, (_, i) => ({ id: `RS${String(i + 1).padStart(3, '0')}`, hospital: institutions[i], result: i % 4 === 0 ? '合规' : '违规', amount: i % 4 === 0 ? 0 : 38000 + i * 5600, status: i % 3 === 0 ? '待处理' : '已处理', decision: i % 4 === 0 ? '继续保持规范管理' : ['追回违规结算基金', '暂停医保结算资格', '责令限期整改', '约谈机构负责人'][i % 4] })));
+  const [tracks, setTracks] = useState<TrackItem[]>(Array.from({ length: 20 }, (_, i) => ({ id: `TR${String(i + 1).padStart(3, '0')}`, hospital: institutions[i], issue: ['过度检查', '串换项目结算', '处方管理不规范', '双通道实名核验缺失', '分解收费'][i % 5], deadline: `2026-05-${String((i % 25) + 1).padStart(2, '0')}`, status: i % 3 === 0 ? '整改中' : '已整改' })));
   const [formData, setFormData] = useState<any>({});
 
   const tabs = [
@@ -88,241 +34,38 @@ export default function FlightInspection() {
     { id: 'track', label: '整改跟踪', icon: CheckCircle }
   ];
 
-  const openModal = (type: 'add' | 'edit' | 'view', item?: any) => {
-    setModalType(type);
-    setSelectedItem(item);
-    setFormData(item || {});
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedItem(null);
-    setFormData({});
-  };
-
-  const handleSave = () => {
-    const newId = Math.random().toString(36).substr(2, 6).toUpperCase();
-    if (activeTab === 'plan') {
-      if (modalType === 'add') {
-        setPlans([...plans, { ...formData, id: `P${newId}` }]);
-      } else if (modalType === 'edit' && selectedItem) {
-        setPlans(plans.map(p => p.id === selectedItem.id ? { ...formData, id: selectedItem.id } : p));
-      }
-    } else if (activeTab === 'assign') {
-      if (modalType === 'add') {
-        setAssigns([...assigns, { ...formData, id: `T${newId}` }]);
-      } else if (modalType === 'edit' && selectedItem) {
-        setAssigns(assigns.map(a => a.id === selectedItem.id ? { ...formData, id: selectedItem.id } : a));
-      }
-    } else if (activeTab === 'record') {
-      if (modalType === 'add') {
-        setRecords([...records, { ...formData, id: `R${newId}` }]);
-      } else if (modalType === 'edit' && selectedItem) {
-        setRecords(records.map(r => r.id === selectedItem.id ? { ...formData, id: selectedItem.id } : r));
-      }
-    } else if (activeTab === 'result') {
-      if (modalType === 'add') {
-        setResults([...results, { ...formData, id: `RS${newId}` }]);
-      } else if (modalType === 'edit' && selectedItem) {
-        setResults(results.map(r => r.id === selectedItem.id ? { ...formData, id: selectedItem.id } : r));
-      }
-    } else if (activeTab === 'track') {
-      if (modalType === 'add') {
-        setTracks([...tracks, { ...formData, id: `TR${newId}` }]);
-      } else if (modalType === 'edit' && selectedItem) {
-        setTracks(tracks.map(t => t.id === selectedItem.id ? { ...formData, id: selectedItem.id } : t));
-      }
-    }
-    closeModal();
-  };
-
-  const confirmDelete = (id: string) => {
-    setDeleteId(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleDelete = () => {
-    if (activeTab === 'plan') setPlans(plans.filter(p => p.id !== deleteId));
-    else if (activeTab === 'assign') setAssigns(assigns.filter(a => a.id !== deleteId));
-    else if (activeTab === 'record') setRecords(records.filter(r => r.id !== deleteId));
-    else if (activeTab === 'result') setResults(results.filter(r => r.id !== deleteId));
-    else if (activeTab === 'track') setTracks(tracks.filter(t => t.id !== deleteId));
-    setShowDeleteConfirm(false);
-    setDeleteId('');
-  };
+  const openModal = (type: 'add' | 'edit' | 'view', item?: any) => { setModalType(type); setSelectedItem(item); setFormData(item || {}); setShowModal(true); };
+  const closeModal = () => { setShowModal(false); setSelectedItem(null); setFormData({}); };
+  const handleSave = () => { const newId = Math.random().toString(36).substr(2, 6).toUpperCase(); if (activeTab === 'plan') modalType === 'add' ? setPlans([...plans, { ...formData, id: `P${newId}` }]) : setPlans(plans.map((p) => p.id === selectedItem.id ? { ...formData, id: selectedItem.id } : p)); else if (activeTab === 'assign') modalType === 'add' ? setAssigns([...assigns, { ...formData, id: `T${newId}` }]) : setAssigns(assigns.map((a) => a.id === selectedItem.id ? { ...formData, id: selectedItem.id } : a)); else if (activeTab === 'record') modalType === 'add' ? setRecords([...records, { ...formData, id: `R${newId}` }]) : setRecords(records.map((r) => r.id === selectedItem.id ? { ...formData, id: selectedItem.id } : r)); else if (activeTab === 'result') modalType === 'add' ? setResults([...results, { ...formData, id: `RS${newId}` }]) : setResults(results.map((r) => r.id === selectedItem.id ? { ...formData, id: selectedItem.id } : r)); else modalType === 'add' ? setTracks([...tracks, { ...formData, id: `TR${newId}` }]) : setTracks(tracks.map((t) => t.id === selectedItem.id ? { ...formData, id: selectedItem.id } : t)); closeModal(); };
+  const confirmDelete = (id: string) => { setDeleteId(id); setShowDeleteConfirm(true); };
+  const handleDelete = () => { if (activeTab === 'plan') setPlans(plans.filter((p) => p.id !== deleteId)); else if (activeTab === 'assign') setAssigns(assigns.filter((a) => a.id !== deleteId)); else if (activeTab === 'record') setRecords(records.filter((r) => r.id !== deleteId)); else if (activeTab === 'result') setResults(results.filter((r) => r.id !== deleteId)); else setTracks(tracks.filter((t) => t.id !== deleteId)); setShowDeleteConfirm(false); setDeleteId(''); };
 
   const renderForm = () => {
-    const inputClass = "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500";
-    if (activeTab === 'plan') {
-      return (
-        <div className="space-y-4">
-          <div><label className="block text-sm font-medium mb-1">计划名称</label><input type="text" className={inputClass} value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查日期</label><input type="date" className={inputClass} value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查对象</label><input type="text" className={inputClass} value={formData.target || ''} onChange={e => setFormData({...formData, target: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查人员</label><input type="text" className={inputClass} value={formData.inspector || ''} onChange={e => setFormData({...formData, inspector: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">状态</label><select className={inputClass} value={formData.status || '计划中'} onChange={e => setFormData({...formData, status: e.target.value})}><option>计划中</option><option>进行中</option><option>已完成</option></select></div>
-        </div>
-      );
-    } else if (activeTab === 'assign') {
-      return (
-        <div className="space-y-4">
-          <div><label className="block text-sm font-medium mb-1">检查人员</label><input type="text" className={inputClass} value={formData.inspector || ''} onChange={e => setFormData({...formData, inspector: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查对象</label><input type="text" className={inputClass} value={formData.target || ''} onChange={e => setFormData({...formData, target: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">分配日期</label><input type="date" className={inputClass} value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">状态</label><select className={inputClass} value={formData.status || '待分配'} onChange={e => setFormData({...formData, status: e.target.value})}><option>待分配</option><option>已分配</option><option>进行中</option></select></div>
-        </div>
-      );
-    } else if (activeTab === 'record') {
-      return (
-        <div className="space-y-4">
-          <div><label className="block text-sm font-medium mb-1">医疗机构</label><input type="text" className={inputClass} value={formData.hospital || ''} onChange={e => setFormData({...formData, hospital: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查日期</label><input type="date" className={inputClass} value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">发现问题数</label><input type="number" className={inputClass} value={formData.issues || 0} onChange={e => setFormData({...formData, issues: parseInt(e.target.value)})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查发现</label><textarea className={inputClass} rows={3} value={formData.findings || ''} onChange={e => setFormData({...formData, findings: e.target.value})} /></div>
-        </div>
-      );
-    } else if (activeTab === 'result') {
-      return (
-        <div className="space-y-4">
-          <div><label className="block text-sm font-medium mb-1">医疗机构</label><input type="text" className={inputClass} value={formData.hospital || ''} onChange={e => setFormData({...formData, hospital: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">检查结果</label><select className={inputClass} value={formData.result || '合规'} onChange={e => setFormData({...formData, result: e.target.value})}><option>合规</option><option>违规</option></select></div>
-          <div><label className="block text-sm font-medium mb-1">涉及金额</label><input type="number" className={inputClass} value={formData.amount || 0} onChange={e => setFormData({...formData, amount: parseInt(e.target.value)})} /></div>
-          <div><label className="block text-sm font-medium mb-1">处理决定</label><textarea className={inputClass} rows={3} value={formData.decision || ''} onChange={e => setFormData({...formData, decision: e.target.value})} /></div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="space-y-4">
-          <div><label className="block text-sm font-medium mb-1">医疗机构</label><input type="text" className={inputClass} value={formData.hospital || ''} onChange={e => setFormData({...formData, hospital: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">整改问题</label><input type="text" className={inputClass} value={formData.issue || ''} onChange={e => setFormData({...formData, issue: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">整改期限</label><input type="date" className={inputClass} value={formData.deadline || ''} onChange={e => setFormData({...formData, deadline: e.target.value})} /></div>
-          <div><label className="block text-sm font-medium mb-1">状态</label><select className={inputClass} value={formData.status || '整改中'} onChange={e => setFormData({...formData, status: e.target.value})}><option>整改中</option><option>已整改</option></select></div>
-        </div>
-      );
-    }
+    const inputClass = 'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500';
+    if (activeTab === 'plan') return <div className="space-y-4"><input type="text" className={inputClass} value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} /><input type="date" className={inputClass} value={formData.date || ''} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /><input type="text" className={inputClass} value={formData.target || ''} onChange={(e) => setFormData({ ...formData, target: e.target.value })} /><input type="text" className={inputClass} value={formData.inspector || ''} onChange={(e) => setFormData({ ...formData, inspector: e.target.value })} /><select className={inputClass} value={formData.status || '计划中'} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option>计划中</option><option>进行中</option><option>已完成</option></select></div>;
+    if (activeTab === 'assign') return <div className="space-y-4"><input type="text" className={inputClass} value={formData.inspector || ''} onChange={(e) => setFormData({ ...formData, inspector: e.target.value })} /><input type="text" className={inputClass} value={formData.target || ''} onChange={(e) => setFormData({ ...formData, target: e.target.value })} /><input type="date" className={inputClass} value={formData.date || ''} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /><select className={inputClass} value={formData.status || '待分配'} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option>待分配</option><option>已分配</option><option>进行中</option></select></div>;
+    if (activeTab === 'record') return <div className="space-y-4"><input type="text" className={inputClass} value={formData.hospital || ''} onChange={(e) => setFormData({ ...formData, hospital: e.target.value })} /><input type="date" className={inputClass} value={formData.date || ''} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /><input type="number" className={inputClass} value={formData.issues || 0} onChange={(e) => setFormData({ ...formData, issues: parseInt(e.target.value) })} /><textarea className={inputClass} rows={3} value={formData.findings || ''} onChange={(e) => setFormData({ ...formData, findings: e.target.value })} /></div>;
+    if (activeTab === 'result') return <div className="space-y-4"><input type="text" className={inputClass} value={formData.hospital || ''} onChange={(e) => setFormData({ ...formData, hospital: e.target.value })} /><select className={inputClass} value={formData.result || '合规'} onChange={(e) => setFormData({ ...formData, result: e.target.value })}><option>合规</option><option>违规</option></select><input type="number" className={inputClass} value={formData.amount || 0} onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) })} /><textarea className={inputClass} rows={3} value={formData.decision || ''} onChange={(e) => setFormData({ ...formData, decision: e.target.value })} /></div>;
+    return <div className="space-y-4"><input type="text" className={inputClass} value={formData.hospital || ''} onChange={(e) => setFormData({ ...formData, hospital: e.target.value })} /><input type="text" className={inputClass} value={formData.issue || ''} onChange={(e) => setFormData({ ...formData, issue: e.target.value })} /><input type="date" className={inputClass} value={formData.deadline || ''} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} /><select className={inputClass} value={formData.status || '整改中'} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option>整改中</option><option>已整改</option></select></div>;
   };
 
   const renderContent = () => {
-    let data: any[] = [];
-    let columns: { key: string; label: string }[] = [];
-    if (activeTab === 'plan') {
-      data = plans;
-      columns = [{ key: 'id', label: '编号' }, { key: 'name', label: '计划名称' }, { key: 'target', label: '检查对象' }, { key: 'inspector', label: '检查人员' }, { key: 'date', label: '日期' }, { key: 'status', label: '状态' }];
-    } else if (activeTab === 'assign') {
-      data = assigns;
-      columns = [{ key: 'id', label: '编号' }, { key: 'inspector', label: '检查人员' }, { key: 'target', label: '检查对象' }, { key: 'date', label: '日期' }, { key: 'status', label: '状态' }];
-    } else if (activeTab === 'record') {
-      data = records;
-      columns = [{ key: 'id', label: '编号' }, { key: 'hospital', label: '医疗机构' }, { key: 'date', label: '日期' }, { key: 'issues', label: '问题数' }, { key: 'status', label: '状态' }];
-    } else if (activeTab === 'result') {
-      data = results;
-      columns = [{ key: 'id', label: '编号' }, { key: 'hospital', label: '医疗机构' }, { key: 'result', label: '结果' }, { key: 'amount', label: '金额' }, { key: 'status', label: '状态' }];
-    } else {
-      data = tracks;
-      columns = [{ key: 'id', label: '编号' }, { key: 'hospital', label: '医疗机构' }, { key: 'issue', label: '整改问题' }, { key: 'deadline', label: '期限' }, { key: 'status', label: '状态' }];
-    }
-
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              {columns.map(col => <th key={col.key} className="px-4 py-3 text-left text-sm font-medium text-gray-600">{col.label}</th>)}
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item: any) => (
-              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
-                {columns.map(col => (
-                  <td key={col.key} className="px-4 py-3 text-sm text-gray-800">
-                    {col.key === 'status' ? (
-                      <span className={`px-2 py-1 text-xs rounded ${item.status?.includes('完成') || item.status?.includes('已') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{item[col.key]}</span>
-                    ) : col.key === 'amount' ? (
-                      <span className="text-cyan-600">¥{item[col.key].toLocaleString()}</span>
-                    ) : (
-                      item[col.key]
-                    )}
-                  </td>
-                ))}
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => openModal('view', item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => openModal('edit', item)} className="p-1 text-cyan-600 hover:bg-cyan-50 rounded"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => confirmDelete(item.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
+    let data: any[] = []; let columns: { key: string; label: string }[] = [];
+    if (activeTab === 'plan') { data = plans; columns = [{ key: 'id', label: '编号' }, { key: 'name', label: '计划名称' }, { key: 'target', label: '检查对象' }, { key: 'inspector', label: '检查人员' }, { key: 'date', label: '日期' }, { key: 'status', label: '状态' }]; }
+    else if (activeTab === 'assign') { data = assigns; columns = [{ key: 'id', label: '编号' }, { key: 'inspector', label: '检查人员' }, { key: 'target', label: '检查对象' }, { key: 'date', label: '日期' }, { key: 'status', label: '状态' }]; }
+    else if (activeTab === 'record') { data = records; columns = [{ key: 'id', label: '编号' }, { key: 'hospital', label: '医疗机构' }, { key: 'date', label: '日期' }, { key: 'issues', label: '问题数' }, { key: 'status', label: '状态' }]; }
+    else if (activeTab === 'result') { data = results; columns = [{ key: 'id', label: '编号' }, { key: 'hospital', label: '医疗机构' }, { key: 'result', label: '结果' }, { key: 'amount', label: '金额' }, { key: 'status', label: '状态' }]; }
+    else { data = tracks; columns = [{ key: 'id', label: '编号' }, { key: 'hospital', label: '医疗机构' }, { key: 'issue', label: '整改问题' }, { key: 'deadline', label: '期限' }, { key: 'status', label: '状态' }]; }
+    return <div className="bg-white rounded-xl border border-gray-200 overflow-hidden"><table className="w-full"><thead className="bg-gray-50"><tr>{columns.map((col) => <th key={col.key} className="px-4 py-3 text-left text-sm font-medium text-gray-600">{col.label}</th>)}<th className="px-4 py-3 text-left text-sm font-medium text-gray-600">操作</th></tr></thead><tbody>{data.map((item: any) => <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">{columns.map((col) => <td key={col.key} className="px-4 py-3 text-sm text-gray-800">{col.key === 'status' ? <span className={`px-2 py-1 text-xs rounded ${String(item.status).includes('完成') || String(item.status).includes('已') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{item[col.key]}</span> : col.key === 'amount' ? <span className="text-cyan-600">￥{item[col.key].toLocaleString()}</span> : item[col.key]}</td>)}<td className="px-4 py-3"><div className="flex gap-2"><button onClick={() => openModal('view', item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Eye className="w-4 h-4" /></button><button onClick={() => openModal('edit', item)} className="p-1 text-cyan-600 hover:bg-cyan-50 rounded"><Edit2 className="w-4 h-4" /></button><button onClick={() => confirmDelete(item.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button></div></td></tr>)}</tbody></table></div>;
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800">飞行检查</h2>
-        <button onClick={() => openModal('add')} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
-          <Plus className="w-4 h-4" />新增
-        </button>
-      </div>
-
-      <div className="flex gap-2 border-b border-gray-200">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab.id ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-gray-600 hover:text-gray-800'}`}>
-              <Icon className="w-4 h-4" />{tab.label}
-            </button>
-          );
-        })}
-      </div>
-
+      <div className="flex items-center justify-between"><h2 className="text-xl font-bold text-gray-800">飞行检查</h2><button onClick={() => openModal('add')} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700"><Plus className="w-4 h-4" />新增</button></div>
+      <div className="flex gap-2 border-b border-gray-200">{tabs.map((tab) => { const Icon = tab.icon; return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab.id ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-gray-600 hover:text-gray-800'}`}><Icon className="w-4 h-4" />{tab.label}</button>; })}</div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{renderContent()}</motion.div>
-
-      <AnimatePresence>
-        {showModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">{modalType === 'add' ? '新增' : modalType === 'edit' ? '编辑' : '查看'}{tabs.find(t => t.id === activeTab)?.label}</h3>
-                <button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
-              </div>
-              {modalType === 'view' ? (
-                <div className="space-y-3 text-sm">
-                  {Object.entries(selectedItem || {}).map(([key, value]) => (
-                    <div key={key} className="flex justify-between py-2 border-b"><span className="text-gray-500">{key}</span><span className="font-medium">{String(value)}</span></div>
-                  ))}
-                </div>
-              ) : (
-                renderForm()
-              )}
-              <div className="flex gap-3 mt-6">
-                {modalType !== 'view' && <button onClick={handleSave} className="flex-1 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">保存</button>}
-                <button onClick={closeModal} className="flex-1 py-2 border rounded-lg hover:bg-gray-50">{modalType === 'view' ? '关闭' : '取消'}</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showDeleteConfirm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-full max-w-sm">
-              <h3 className="text-lg font-bold mb-2">确认删除</h3>
-              <p className="text-gray-600 mb-4">确定要删除这条记录吗？此操作不可撤销。</p>
-              <div className="flex gap-3">
-                <button onClick={handleDelete} className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">删除</button>
-                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 border rounded-lg hover:bg-gray-50">取消</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{showModal && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"><div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold">{modalType === 'add' ? '新增' : modalType === 'edit' ? '编辑' : '查看'}{tabs.find((t) => t.id === activeTab)?.label}</h3><button onClick={closeModal} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button></div>{modalType === 'view' ? <div className="space-y-3 text-sm">{Object.entries(selectedItem || {}).map(([key, value]) => <div key={key} className="flex justify-between py-2 border-b"><span className="text-gray-500">{key}</span><span className="font-medium">{String(value)}</span></div>)}</div> : renderForm()}<div className="flex gap-3 mt-6">{modalType !== 'view' && <button onClick={handleSave} className="flex-1 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">保存</button>}<button onClick={closeModal} className="flex-1 py-2 border rounded-lg hover:bg-gray-50">{modalType === 'view' ? '关闭' : '取消'}</button></div></motion.div></motion.div>}</AnimatePresence>
+      <AnimatePresence>{showDeleteConfirm && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-xl p-6 w-full max-w-sm"><h3 className="text-lg font-bold mb-2">确认删除</h3><p className="text-gray-600 mb-4">确定要删除这条记录吗？此操作不可撤销。</p><div className="flex gap-3"><button onClick={handleDelete} className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">删除</button><button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 border rounded-lg hover:bg-gray-50">取消</button></div></motion.div></motion.div>}</AnimatePresence>
     </div>
   );
 }

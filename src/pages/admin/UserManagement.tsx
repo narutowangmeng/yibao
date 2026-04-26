@@ -5,13 +5,9 @@ import {
   Plus,
   Edit2,
   Trash2,
-  MoreVertical,
   User,
-  Shield,
-  Building,
   CheckCircle,
   XCircle,
-  Filter
 } from 'lucide-react';
 
 interface UserData {
@@ -29,49 +25,30 @@ interface UserData {
 }
 
 const mockUsers: UserData[] = [
-  {
-    id: '1',
-    name: '管理员A',
-    username: 'admin001',
-    email: 'admin@nhis.gov.cn',
-    phone: '138****0001',
-    role: '系统管理员',
-    department: '信息中心',
-    level: 'national',
-    status: 'active',
-    lastLogin: '2024-01-15 09:30',
-    createdAt: '2023-06-01'
-  },
-  {
-    id: '2',
-    name: '经办员A',
-    username: 'operator001',
-    email: 'operator@nhis.gov.cn',
-    phone: '138****0002',
-    role: '业务经办',
-    department: '参保管理科',
-    level: 'provincial',
-    status: 'active',
-    lastLogin: '2024-01-14 16:45',
-    createdAt: '2023-08-15'
-  },
-  {
-    id: '3',
-    name: '审核员A',
-    username: 'auditor001',
-    email: 'auditor@nhis.gov.cn',
-    phone: '138****0003',
-    role: '审核人员',
-    department: '审核科',
-    level: 'municipal',
-    status: 'inactive',
-    lastLogin: '2024-01-10 11:20',
-    createdAt: '2023-09-20'
-  }
+  { id: '1', name: '沈志远', username: 'jsyb_admin_001', email: 'shenzy@jsyb.gov.cn', phone: '13805150011', role: '系统管理员', department: '省医保局信息中心', level: 'provincial', status: 'active', lastLogin: '2025-04-26 08:42', createdAt: '2023-05-18' },
+  { id: '2', name: '顾明珠', username: 'jsyb_policy_002', email: 'gumz@jsyb.gov.cn', phone: '13805150012', role: '待遇保障专员', department: '待遇保障处', level: 'provincial', status: 'active', lastLogin: '2025-04-25 17:31', createdAt: '2023-07-08' },
+  { id: '3', name: '周柏成', username: 'jsyb_fund_003', email: 'zhoubc@jsyb.gov.cn', phone: '13805150013', role: '基金监管专员', department: '基金监管处', level: 'provincial', status: 'active', lastLogin: '2025-04-25 15:09', createdAt: '2023-08-12' },
+  { id: '4', name: '钱雨菲', username: 'nanjing_center_004', email: 'qianyf@njyb.gov.cn', phone: '13805150014', role: '经办审核岗', department: '南京市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-26 09:13', createdAt: '2023-10-16' },
+  { id: '5', name: '邵天宇', username: 'wuxi_audit_005', email: 'shaoty@wxyb.gov.cn', phone: '13805150015', role: '基金监管专员', department: '无锡市医保局', level: 'municipal', status: 'active', lastLogin: '2025-04-26 07:56', createdAt: '2024-01-10' },
+  { id: '6', name: '许梦瑶', username: 'xuzhou_drug_006', email: 'xumy@xzyb.gov.cn', phone: '13805150016', role: '医药服务专员', department: '徐州市医保局', level: 'municipal', status: 'inactive', lastLogin: '2025-04-20 18:24', createdAt: '2024-02-06' },
+  { id: '7', name: '韩文韬', username: 'changzhou_rule_007', email: 'hanwt@czyb.gov.cn', phone: '13805150017', role: '规则引擎管理员', department: '常州市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-25 14:08', createdAt: '2024-02-21' },
+  { id: '8', name: '汪静姝', username: 'suzhou_claims_008', email: 'wangjs@szyb.gov.cn', phone: '13805150018', role: '经办审核岗', department: '苏州市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-26 08:58', createdAt: '2024-03-14' },
+  { id: '9', name: '蒋承业', username: 'nantong_portal_009', email: 'jiangcy@ntyb.gov.cn', phone: '13805150019', role: '门户运维岗', department: '南通市医保局', level: 'municipal', status: 'active', lastLogin: '2025-04-24 19:40', createdAt: '2024-03-28' },
+  { id: '10', name: '陆思齐', username: 'lyg_settle_010', email: 'lusiqi@lygyb.gov.cn', phone: '13805150020', role: '结算管理岗', department: '连云港市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-25 11:22', createdAt: '2024-04-02' },
+  { id: '11', name: '潘雨辰', username: 'huaian_remote_011', email: 'panyc@hayb.gov.cn', phone: '13805150021', role: '异地就医专员', department: '淮安市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-26 08:17', createdAt: '2024-04-08' },
+  { id: '12', name: '戴清妍', username: 'yancheng_ltc_012', email: 'daiqy@ycyb.gov.cn', phone: '13805150022', role: '长期护理专员', department: '盐城市医保局', level: 'municipal', status: 'inactive', lastLogin: '2025-04-18 16:55', createdAt: '2024-04-11' },
+  { id: '13', name: '唐一鸣', username: 'yangzhou_dict_013', email: 'tangym@yzyb.gov.cn', phone: '13805150023', role: '数据字典管理员', department: '扬州市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-24 10:36', createdAt: '2024-04-15' },
+  { id: '14', name: '宋安澜', username: 'zhenjiang_eval_014', email: 'songanl@zjyb.gov.cn', phone: '13805150024', role: '信用评价专员', department: '镇江市医保局', level: 'municipal', status: 'active', lastLogin: '2025-04-25 13:52', createdAt: '2024-04-18' },
+  { id: '15', name: '罗辰皓', username: 'taizhou_proc_015', email: 'luoch@tzyb.gov.cn', phone: '13805150025', role: '医药服务专员', department: '泰州市医保局', level: 'municipal', status: 'active', lastLogin: '2025-04-25 09:44', createdAt: '2024-04-20' },
+  { id: '16', name: '高若溪', username: 'suqian_flight_016', email: 'gaorx@sqyb.gov.cn', phone: '13805150026', role: '飞行检查岗', department: '宿迁市医保中心', level: 'municipal', status: 'active', lastLogin: '2025-04-24 15:03', createdAt: '2024-04-22' },
+  { id: '17', name: '陶子诚', username: 'jsyb_report_017', email: 'taozc@jsyb.gov.cn', phone: '13805150027', role: '统计报表专员', department: '省医保局办公室', level: 'provincial', status: 'active', lastLogin: '2025-04-26 08:05', createdAt: '2024-04-23' },
+  { id: '18', name: '彭若楠', username: 'jsyb_rule_018', email: 'pengrn@jsyb.gov.cn', phone: '13805150028', role: '规则引擎管理员', department: '省医保局信息中心', level: 'provincial', status: 'active', lastLogin: '2025-04-25 20:11', createdAt: '2024-04-24' },
+  { id: '19', name: '魏嘉禾', username: 'suzhou_credit_019', email: 'weijh@szyb.gov.cn', phone: '13805150029', role: '信用评价专员', department: '苏州市医保局', level: 'municipal', status: 'inactive', lastLogin: '2025-04-19 09:37', createdAt: '2024-04-24' },
+  { id: '20', name: '龚书宁', username: 'nanjing_supervise_020', email: 'gongsn@njyb.gov.cn', phone: '13805150030', role: '基金监管专员', department: '南京市医保局', level: 'municipal', status: 'active', lastLogin: '2025-04-26 09:28', createdAt: '2024-04-25' },
 ];
 
-const roles = ['系统管理员', '业务经办', '审核人员', '监管人员', '财务人员', '领导'];
-const departments = ['信息中心', '参保管理科', '审核科', '监管科', '财务科', '办公室'];
+const roles = ['系统管理员', '待遇保障专员', '基金监管专员', '经办审核岗', '医药服务专员', '规则引擎管理员', '门户运维岗', '结算管理岗', '异地就医专员', '长期护理专员', '数据字典管理员', '信用评价专员', '飞行检查岗', '统计报表专员'];
+const departments = ['省医保局信息中心', '待遇保障处', '基金监管处', '医药服务管理处', '省医保局办公室', '南京市医保局', '南京市医保中心', '无锡市医保局', '徐州市医保局', '常州市医保中心', '苏州市医保局', '苏州市医保中心', '南通市医保局', '连云港市医保中心', '淮安市医保中心', '盐城市医保局', '扬州市医保中心', '镇江市医保局', '泰州市医保局', '宿迁市医保中心'];
 const levels = [
   { value: 'national', label: '国家级' },
   { value: 'provincial', label: '省级' },
@@ -86,10 +63,11 @@ export default function UserManagement() {
   const [filterRole, setFilterRole] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.includes(searchTerm) || 
-                         user.username.includes(searchTerm) ||
-                         user.email.includes(searchTerm);
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name.includes(searchTerm) ||
+      user.username.includes(searchTerm) ||
+      user.email.includes(searchTerm);
     const matchesRole = !filterRole || user.role === filterRole;
     const matchesLevel = !filterLevel || user.level === filterLevel;
     return matchesSearch && matchesRole && matchesLevel;
@@ -106,11 +84,11 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(u => u.id !== userId));
+    setUsers(users.filter((u) => u.id !== userId));
   };
 
   const handleToggleStatus = (userId: string) => {
-    setUsers(users.map(u => 
+    setUsers(users.map((u) =>
       u.id === userId ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
     ));
   };
@@ -159,7 +137,7 @@ export default function UserManagement() {
           className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
         >
           <option value="">全部角色</option>
-          {roles.map(role => <option key={role} value={role}>{role}</option>)}
+          {roles.map((role) => <option key={role} value={role}>{role}</option>)}
         </select>
         <select
           value={filterLevel}
@@ -167,7 +145,7 @@ export default function UserManagement() {
           className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
         >
           <option value="">全部层级</option>
-          {levels.map(level => <option key={level.value} value={level.value}>{level.label}</option>)}
+          {levels.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
         </select>
       </div>
 
@@ -213,15 +191,15 @@ export default function UserManagement() {
                   <button
                     onClick={() => handleToggleStatus(user.id)}
                     className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                      user.status === 'active' 
-                        ? 'bg-green-100 text-green-700' 
+                      user.status === 'active'
+                        ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-600'
                     }`}
                   >
                     {user.status === 'active' ? (
                       <><CheckCircle className="w-3 h-3" /> 启用</>
                     ) : (
-                      <><XCircle className="w-3 h-3" /> 禁用</>
+                      <><XCircle className="w-3 h-3" /> 停用</>
                     )}
                   </button>
                 </td>
@@ -255,9 +233,17 @@ export default function UserManagement() {
             onClose={() => setShowModal(false)}
             onSave={(userData) => {
               if (editingUser) {
-                setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...userData } : u));
+                setUsers(users.map((u) => u.id === editingUser.id ? { ...u, ...userData } : u));
               } else {
-                setUsers([...users, { ...userData, id: String(users.length + 1), lastLogin: '-', createdAt: new Date().toISOString().split('T')[0] }]);
+                setUsers([
+                  ...users,
+                  {
+                    ...userData,
+                    id: String(users.length + 1),
+                    lastLogin: '-',
+                    createdAt: new Date().toISOString().split('T')[0]
+                  } as UserData
+                ]);
               }
               setShowModal(false);
             }}
@@ -363,7 +349,7 @@ function UserModal({ user, onClose, onSave }: UserModalProps) {
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
-                {roles.map(role => <option key={role} value={role}>{role}</option>)}
+                {roles.map((role) => <option key={role} value={role}>{role}</option>)}
               </select>
             </div>
             <div>
@@ -373,7 +359,7 @@ function UserModal({ user, onClose, onSave }: UserModalProps) {
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
-                {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                {departments.map((dept) => <option key={dept} value={dept}>{dept}</option>)}
               </select>
             </div>
           </div>
@@ -385,7 +371,7 @@ function UserModal({ user, onClose, onSave }: UserModalProps) {
                 onChange={(e) => setFormData({ ...formData, level: e.target.value as 'national' | 'provincial' | 'municipal' })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
-                {levels.map(level => <option key={level.value} value={level.value}>{level.label}</option>)}
+                {levels.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
               </select>
             </div>
             <div>
@@ -396,7 +382,7 @@ function UserModal({ user, onClose, onSave }: UserModalProps) {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 <option value="active">启用</option>
-                <option value="inactive">禁用</option>
+                <option value="inactive">停用</option>
               </select>
             </div>
           </div>

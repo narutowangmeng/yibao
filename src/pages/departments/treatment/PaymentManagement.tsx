@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, DollarSign, Bell, CheckCircle, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Bell, X } from 'lucide-react';
 
 interface PaymentStandard {
   id: string;
@@ -27,19 +27,80 @@ interface OverduePayment {
   days: number;
 }
 
+const initialStandards: PaymentStandard[] = [
+  { id: '1', name: '南京市职工医保月缴费基数上限', type: '职工', amount: 24396, status: 'active' },
+  { id: '2', name: '南京市职工医保月缴费基数下限', type: '职工', amount: 4879, status: 'active' },
+  { id: '3', name: '无锡市职工医保月缴费基数上限', type: '职工', amount: 23118, status: 'active' },
+  { id: '4', name: '无锡市职工医保月缴费基数下限', type: '职工', amount: 4624, status: 'active' },
+  { id: '5', name: '徐州市职工医保月缴费基数上限', type: '职工', amount: 21624, status: 'active' },
+  { id: '6', name: '徐州市职工医保月缴费基数下限', type: '职工', amount: 4325, status: 'active' },
+  { id: '7', name: '常州市职工医保月缴费基数上限', type: '职工', amount: 22785, status: 'active' },
+  { id: '8', name: '常州市职工医保月缴费基数下限', type: '职工', amount: 4557, status: 'active' },
+  { id: '9', name: '苏州市职工医保月缴费基数上限', type: '职工', amount: 24042, status: 'active' },
+  { id: '10', name: '苏州市职工医保月缴费基数下限', type: '职工', amount: 4808, status: 'active' },
+  { id: '11', name: '南通市职工医保月缴费基数上限', type: '职工', amount: 22041, status: 'active' },
+  { id: '12', name: '南通市职工医保月缴费基数下限', type: '职工', amount: 4408, status: 'active' },
+  { id: '13', name: '连云港市居民医保个人缴费标准', type: '居民', amount: 460, status: 'active' },
+  { id: '14', name: '淮安市居民医保个人缴费标准', type: '居民', amount: 450, status: 'active' },
+  { id: '15', name: '盐城市居民医保个人缴费标准', type: '居民', amount: 460, status: 'active' },
+  { id: '16', name: '扬州市居民医保个人缴费标准', type: '居民', amount: 470, status: 'active' },
+  { id: '17', name: '镇江市居民医保个人缴费标准', type: '居民', amount: 460, status: 'active' },
+  { id: '18', name: '泰州市居民医保个人缴费标准', type: '居民', amount: 450, status: 'active' },
+  { id: '19', name: '宿迁市居民医保个人缴费标准', type: '居民', amount: 440, status: 'active' },
+  { id: '20', name: '灵活就业人员医疗保险年缴费参考标准', type: '灵活就业', amount: 6120, status: 'inactive' },
+];
+
+const initialAudits: PaymentAudit[] = [
+  { id: 'A01', person: '王建国', type: '南京职工医保补缴审核', amount: 4680, status: 'pending', date: '2026-04-18' },
+  { id: 'A02', person: '陈海燕', type: '无锡居民医保参保审核', amount: 460, status: 'approved', date: '2026-04-18' },
+  { id: 'A03', person: '赵文静', type: '徐州灵活就业参保审核', amount: 6120, status: 'pending', date: '2026-04-17' },
+  { id: 'A04', person: '周明辉', type: '常州职工医保单位核定', amount: 9360, status: 'approved', date: '2026-04-17' },
+  { id: 'A05', person: '孙晓梅', type: '苏州居民医保补缴审核', amount: 470, status: 'rejected', date: '2026-04-17' },
+  { id: 'A06', person: '钱志强', type: '南通职工医保补缴审核', amount: 4680, status: 'pending', date: '2026-04-16' },
+  { id: 'A07', person: '李桂芳', type: '连云港居民医保减免审核', amount: 460, status: 'approved', date: '2026-04-16' },
+  { id: 'A08', person: '顾晨阳', type: '淮安灵活就业参保审核', amount: 6120, status: 'pending', date: '2026-04-15' },
+  { id: 'A09', person: '唐雪梅', type: '盐城居民医保补贴审核', amount: 450, status: 'approved', date: '2026-04-15' },
+  { id: 'A10', person: '郑宏伟', type: '扬州职工医保基数调整', amount: 5280, status: 'pending', date: '2026-04-15' },
+  { id: 'A11', person: '谢丽华', type: '镇江居民医保参保审核', amount: 460, status: 'approved', date: '2026-04-14' },
+  { id: 'A12', person: '龚立新', type: '泰州职工医保欠费核销', amount: 4860, status: 'pending', date: '2026-04-14' },
+  { id: 'A13', person: '韩玉兰', type: '宿迁居民医保补缴审核', amount: 440, status: 'pending', date: '2026-04-13' },
+  { id: 'A14', person: '蒋伟东', type: '南京居民医保参保审核', amount: 470, status: 'approved', date: '2026-04-13' },
+  { id: 'A15', person: '魏春梅', type: '苏州职工医保转入审核', amount: 4680, status: 'pending', date: '2026-04-12' },
+  { id: 'A16', person: '彭晓峰', type: '无锡职工医保补缴情形复核', amount: 5020, status: 'rejected', date: '2026-04-12' },
+  { id: 'A17', person: '罗静', type: '常州居民医保资助审核', amount: 450, status: 'approved', date: '2026-04-11' },
+  { id: 'A18', person: '贺家成', type: '南通灵活就业缴费核定', amount: 6120, status: 'pending', date: '2026-04-11' },
+  { id: 'A19', person: '邱丽娟', type: '镇江居民医保停保审核', amount: 460, status: 'approved', date: '2026-04-10' },
+  { id: 'A20', person: '梁志勇', type: '宿迁职工医保补缴情形审核', amount: 4860, status: 'pending', date: '2026-04-10' },
+];
+
+const initialOverdues: OverduePayment[] = [
+  { id: 'O01', person: '朱建平', amount: 4680, dueDate: '2026-03-31', days: 18 },
+  { id: 'O02', person: '姜美玲', amount: 460, dueDate: '2026-04-01', days: 17 },
+  { id: 'O03', person: '许志鹏', amount: 6120, dueDate: '2026-03-28', days: 21 },
+  { id: 'O04', person: '严春花', amount: 470, dueDate: '2026-04-02', days: 16 },
+  { id: 'O05', person: '戴国强', amount: 4860, dueDate: '2026-03-30', days: 19 },
+  { id: 'O06', person: '陶慧', amount: 450, dueDate: '2026-04-03', days: 15 },
+  { id: 'O07', person: '盛志明', amount: 5020, dueDate: '2026-03-27', days: 22 },
+  { id: 'O08', person: '黄玉琴', amount: 460, dueDate: '2026-04-04', days: 14 },
+  { id: 'O09', person: '蔡俊峰', amount: 4680, dueDate: '2026-03-29', days: 20 },
+  { id: 'O10', person: '陆春燕', amount: 440, dueDate: '2026-04-05', days: 13 },
+  { id: 'O11', person: '马金海', amount: 6120, dueDate: '2026-03-25', days: 24 },
+  { id: 'O12', person: '袁雪梅', amount: 460, dueDate: '2026-04-06', days: 12 },
+  { id: 'O13', person: '孟祥东', amount: 4860, dueDate: '2026-03-26', days: 23 },
+  { id: 'O14', person: '顾海霞', amount: 470, dueDate: '2026-04-07', days: 11 },
+  { id: 'O15', person: '范立群', amount: 4680, dueDate: '2026-03-24', days: 25 },
+  { id: 'O16', person: '谢晓丽', amount: 450, dueDate: '2026-04-08', days: 10 },
+  { id: 'O17', person: '褚建华', amount: 6120, dueDate: '2026-03-23', days: 26 },
+  { id: 'O18', person: '邵美英', amount: 460, dueDate: '2026-04-09', days: 9 },
+  { id: 'O19', person: '任宏伟', amount: 4860, dueDate: '2026-03-22', days: 27 },
+  { id: 'O20', person: '倪晓红', amount: 440, dueDate: '2026-04-10', days: 8 },
+];
+
 export default function PaymentManagement() {
   const [activeTab, setActiveTab] = useState('standard');
-  const [standards, setStandards] = useState<PaymentStandard[]>([
-    { id: '1', name: '职工医保高档', type: '职工', amount: 3600, status: 'active' },
-    { id: '2', name: '居民医保中档', type: '居民', amount: 600, status: 'active' },
-  ]);
-  const [audits, setAudits] = useState<PaymentAudit[]>([
-    { id: '1', person: '参保人A', type: '职工医保', amount: 3600, status: 'pending', date: '2024-01-15' },
-    { id: '2', person: '参保人B', type: '居民医保', amount: 600, status: 'pending', date: '2024-01-14' },
-  ]);
-  const [overdues, setOverdues] = useState<OverduePayment[]>([
-    { id: '1', person: '参保人C', amount: 3600, dueDate: '2024-01-01', days: 15 },
-  ]);
+  const [standards, setStandards] = useState<PaymentStandard[]>(initialStandards);
+  const [audits, setAudits] = useState<PaymentAudit[]>(initialAudits);
+  const [overdues, setOverdues] = useState<OverduePayment[]>(initialOverdues);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -58,12 +119,12 @@ export default function PaymentManagement() {
   };
 
   const handleDelete = (id: string) => {
-    setStandards(standards.filter(s => s.id !== id));
+    setStandards(standards.filter((s) => s.id !== id));
   };
 
   const handleSave = () => {
     if (editingItem) {
-      setStandards(standards.map(s => s.id === editingItem.id ? { ...s, ...formData } : s));
+      setStandards(standards.map((s) => (s.id === editingItem.id ? { ...s, ...formData } : s)));
     } else {
       setStandards([...standards, { id: String(Date.now()), ...formData, status: 'active' }]);
     }
@@ -71,11 +132,11 @@ export default function PaymentManagement() {
   };
 
   const handleAudit = (id: string, status: 'approved' | 'rejected') => {
-    setAudits(audits.map(a => a.id === id ? { ...a, status } : a));
+    setAudits(audits.map((a) => (a.id === id ? { ...a, status } : a)));
   };
 
   const handleRemind = (id: string) => {
-    setOverdues(overdues.filter(o => o.id !== id));
+    setOverdues(overdues.filter((o) => o.id !== id));
     alert('催缴通知已发送');
   };
 
@@ -94,7 +155,7 @@ export default function PaymentManagement() {
         <table className="w-full">
           <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">标准名称</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">类型</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">金额</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th><th className="px-4 py-3 text-right text-sm font-medium text-gray-600">操作</th></tr></thead>
           <tbody className="divide-y divide-gray-200">
-            {standards.filter(s => s.name.includes(searchTerm)).map((item) => (
+            {standards.filter((s) => s.name.includes(searchTerm)).map((item) => (
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 text-sm font-medium text-gray-800">{item.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{item.type}</td>
@@ -112,7 +173,7 @@ export default function PaymentManagement() {
   const renderAuditTab = () => (
     <div className="bg-white rounded-lg border border-gray-200">
       <table className="w-full">
-        <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">参保人</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">险种</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">金额</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th><th className="px-4 py-3 text-right text-sm font-medium text-gray-600">操作</th></tr></thead>
+        <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">参保人</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">审核事项</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">金额</th><th className="px-4 py-3 text-left text-sm font-medium text-gray-600">状态</th><th className="px-4 py-3 text-right text-sm font-medium text-gray-600">操作</th></tr></thead>
         <tbody className="divide-y divide-gray-200">
           {audits.map((item) => (
             <tr key={item.id} className="hover:bg-gray-50">
@@ -165,7 +226,7 @@ export default function PaymentManagement() {
               <div className="flex justify-between items-center mb-4"><h3 className="text-lg font-bold">{editingItem ? '编辑' : '新增'}缴费标准</h3><button onClick={() => setShowModal(false)}><X className="w-5 h-5" /></button></div>
               <div className="space-y-4">
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">标准名称</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg" /></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-1">类型</label><select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>职工</option><option>居民</option></select></div>
+                <div><label className="block text-sm font-medium text-gray-700 mb-1">类型</label><select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>职工</option><option>居民</option><option>灵活就业</option></select></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-1">金额</label><input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })} className="w-full px-3 py-2 border border-gray-200 rounded-lg" /></div>
               </div>
               <div className="flex justify-end gap-3 mt-6"><button onClick={() => setShowModal(false)} className="px-4 py-2 border rounded-lg">取消</button><button onClick={handleSave} className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">保存</button></div>

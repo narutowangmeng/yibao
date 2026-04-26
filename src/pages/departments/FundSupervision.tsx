@@ -515,7 +515,7 @@ export default function FundSupervision() {
                 <p className="text-xl font-bold text-gray-800">2,491</p>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-500">测试集</p>
+                  <p className="text-sm text-gray-500">江苏省医保监管规则样本</p>
                 <p className="text-xl font-bold text-gray-800">1,245</p>
               </div>
             </div>
@@ -739,7 +739,7 @@ export default function FundSupervision() {
         </h3>
         <div className="space-y-3">
           {[
-            { level: 'critical', title: '某医院报销异常增长320%', desc: '本月报销金额较上月增长320%，存在虚假住院嫌疑', amount: '125万' },
+                    { level: 'critical', title: '苏州某三级医院报销异常增长320%', desc: '本月报销金额较上月增长320%，存在虚假住院和分解结算嫌疑', amount: '125万' },
             { level: 'high', title: '个人账户频繁大额消费', desc: '检测到3个账户存在异常消费模式，疑似套现行为', amount: '8.5万' },
             { level: 'medium', title: '药品使用异常', desc: '某医生抗生素使用频率高于科室平均水平200%', amount: '1.2万' }
           ].map((item, idx) => (
