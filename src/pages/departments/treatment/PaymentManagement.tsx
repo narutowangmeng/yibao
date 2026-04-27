@@ -37,22 +37,79 @@ const initialStandards: PaymentStandard[] = [
   { id: '2', name: '南京市职工医保月缴费基数下限', type: '职工', amount: 4879, status: 'active' },
   { id: '3', name: '苏州市职工医保月缴费基数上限', type: '职工', amount: 24042, status: 'active' },
   { id: '4', name: '江苏省灵活就业人员年缴费参考标准', type: '灵活就业', amount: 6120, status: 'inactive' },
+  { id: '5', name: '无锡市城乡居民医保个人缴费标准', type: '居民', amount: 470, status: 'active' },
+  { id: '6', name: '徐州市城乡居民医保财政补助标准', type: '居民', amount: 810, status: 'active' },
+  { id: '7', name: '常州市职工医保单位缴费基数下限', type: '职工', amount: 4494, status: 'active' },
+  { id: '8', name: '苏州市生育保险并入职工医保缴费口径', type: '职工', amount: 22140, status: 'active' },
+  { id: '9', name: '南通市灵活就业人员月缴费档次一', type: '灵活就业', amount: 510, status: 'active' },
+  { id: '10', name: '连云港市灵活就业人员月缴费档次二', type: '灵活就业', amount: 680, status: 'active' },
+  { id: '11', name: '淮安市城乡居民大病保险个人筹资标准', type: '居民', amount: 95, status: 'active' },
+  { id: '12', name: '盐城市大学生参保个人缴费标准', type: '居民', amount: 350, status: 'active' },
+  { id: '13', name: '扬州市新生儿落地参保年度缴费标准', type: '居民', amount: 380, status: 'active' },
+  { id: '14', name: '镇江市退役军人补充医保缴费参考标准', type: '职工', amount: 1200, status: 'active' },
+  { id: '15', name: '泰州市职工医保退休人员补缴标准', type: '职工', amount: 9360, status: 'active' },
+  { id: '16', name: '宿迁市城乡居民困难群体代缴标准', type: '居民', amount: 470, status: 'active' },
+  { id: '17', name: '江苏省长期护理保险个人筹资标准', type: '居民', amount: 120, status: 'active' },
+  { id: '18', name: '南京市灵活就业人员失业转续缴费标准', type: '灵活就业', amount: 560, status: 'active' },
+  { id: '19', name: '无锡市职工医保补缴情形利息计收标准', type: '职工', amount: 85, status: 'active' },
+  { id: '20', name: '苏州市城乡居民集中征缴补录标准', type: '居民', amount: 470, status: 'active' },
 ];
 
 const initialAudits: PaymentAudit[] = [
   { id: 'A01', person: '王建国', type: '南京职工医保补缴情形审核', amount: 4680, status: 'pending', date: '2026-04-18' },
   { id: 'A02', person: '陈海燕', type: '无锡居民医保参保审核', amount: 460, status: 'approved', date: '2026-04-18' },
   { id: 'A03', person: '赵文静', type: '徐州灵活就业参保审核', amount: 6120, status: 'rejected', date: '2026-04-17' },
+  { id: 'A04', person: '周明轩', type: '常州单位职工批量补缴审核', amount: 18320, status: 'pending', date: '2026-04-17' },
+  { id: 'A05', person: '李晓岚', type: '苏州新生儿落地参保缴费核定', amount: 380, status: 'approved', date: '2026-04-16' },
+  { id: 'A06', person: '孙国华', type: '南通退休人员一次性补缴审核', amount: 27840, status: 'pending', date: '2026-04-16' },
+  { id: 'A07', person: '吴佳宁', type: '连云港学生医保集中参保审核', amount: 350, status: 'approved', date: '2026-04-15' },
+  { id: 'A08', person: '朱红梅', type: '淮安城乡居民困难代缴审核', amount: 470, status: 'approved', date: '2026-04-15' },
+  { id: 'A09', person: '何志强', type: '盐城灵活就业档次调整审核', amount: 680, status: 'pending', date: '2026-04-14' },
+  { id: 'A10', person: '马晓云', type: '扬州单位批量申报缴费审核', amount: 42650, status: 'approved', date: '2026-04-14' },
+  { id: 'A11', person: '顾春雷', type: '镇江退役军人补充医保缴费审核', amount: 1200, status: 'rejected', date: '2026-04-13' },
+  { id: 'A12', person: '曹丽丽', type: '泰州灵活就业年度续缴审核', amount: 6120, status: 'approved', date: '2026-04-13' },
+  { id: 'A13', person: '许志成', type: '宿迁居民医保集中征缴补录审核', amount: 470, status: 'pending', date: '2026-04-12' },
+  { id: 'A14', person: '蒋春燕', type: '南京大学生医保年度续保审核', amount: 350, status: 'approved', date: '2026-04-12' },
+  { id: 'A15', person: '韩志鹏', type: '无锡长期护理保险个人筹资审核', amount: 120, status: 'approved', date: '2026-04-11' },
+  { id: 'A16', person: '丁雪琴', type: '徐州居民大病保险筹资补录审核', amount: 95, status: 'pending', date: '2026-04-11' },
+  { id: 'A17', person: '吕欣悦', type: '常州单位新开户缴费标准审核', amount: 9850, status: 'approved', date: '2026-04-10' },
+  { id: 'A18', person: '彭小龙', type: '苏州参保关系转入补缴审核', amount: 7640, status: 'rejected', date: '2026-04-10' },
+  { id: 'A19', person: '程海波', type: '南通单位断缴恢复核定审核', amount: 15680, status: 'approved', date: '2026-04-09' },
+  { id: 'A20', person: '谢婷婷', type: '宿迁新就业形态人员缴费核定审核', amount: 560, status: 'pending', date: '2026-04-09' },
 ];
 
 const initialOverdues: OverduePayment[] = [
   { id: 'O01', person: '朱建平', amount: 4680, dueDate: '2026-03-31', days: 18 },
   { id: 'O02', person: '姜美琴', amount: 460, dueDate: '2026-04-01', days: 17 },
   { id: 'O03', person: '许志鹏', amount: 6120, dueDate: '2026-03-28', days: 21 },
+  { id: 'O04', person: '王德林', amount: 350, dueDate: '2026-04-02', days: 16 },
+  { id: 'O05', person: '陈素华', amount: 470, dueDate: '2026-04-03', days: 15 },
+  { id: 'O06', person: '周建军', amount: 9850, dueDate: '2026-03-26', days: 23 },
+  { id: 'O07', person: '蒋晓红', amount: 1200, dueDate: '2026-03-29', days: 20 },
+  { id: 'O08', person: '顾建新', amount: 380, dueDate: '2026-04-04', days: 14 },
+  { id: 'O09', person: '刘翠萍', amount: 560, dueDate: '2026-04-05', days: 13 },
+  { id: 'O10', person: '韩文斌', amount: 680, dueDate: '2026-04-06', days: 12 },
+  { id: 'O11', person: '马春雷', amount: 9360, dueDate: '2026-03-25', days: 24 },
+  { id: 'O12', person: '曹雪梅', amount: 470, dueDate: '2026-04-07', days: 11 },
+  { id: 'O13', person: '丁海荣', amount: 120, dueDate: '2026-04-08', days: 10 },
+  { id: 'O14', person: '吕秀英', amount: 350, dueDate: '2026-04-09', days: 9 },
+  { id: 'O15', person: '彭国庆', amount: 15680, dueDate: '2026-03-24', days: 25 },
+  { id: 'O16', person: '谢海涛', amount: 470, dueDate: '2026-04-10', days: 8 },
+  { id: 'O17', person: '沈春燕', amount: 6120, dueDate: '2026-03-23', days: 26 },
+  { id: 'O18', person: '陶玉兰', amount: 460, dueDate: '2026-04-11', days: 7 },
+  { id: 'O19', person: '邵建华', amount: 7640, dueDate: '2026-03-27', days: 22 },
+  { id: 'O20', person: '严晓峰', amount: 470, dueDate: '2026-04-12', days: 6 },
 ];
 
 export default function PaymentManagement({ userAgency }: PaymentManagementProps) {
-  const [activeTab, setActiveTab] = useState('standard');
+  const isProvince = getAgencyLevel(userAgency) === 'province';
+  const visibleTabs = isProvince
+    ? [{ id: 'standard', label: '缴费标准' }]
+    : [
+        { id: 'audit', label: '缴费核定' },
+        { id: 'overdue', label: '催缴管理' },
+      ];
+  const [activeTab, setActiveTab] = useState(visibleTabs[0].id);
   const [standards, setStandards] = useState<PaymentStandard[]>(initialStandards);
   const [audits, setAudits] = useState<PaymentAudit[]>(initialAudits);
   const [overdues, setOverdues] = useState<OverduePayment[]>(initialOverdues);
@@ -60,7 +117,6 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<PaymentStandard | null>(null);
   const [formData, setFormData] = useState({ name: '', type: '职工', amount: 0 });
-  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -99,11 +155,7 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
   return (
     <div className="space-y-4">
       <div className="flex gap-2 border-b border-gray-200">
-        {[
-          { id: 'standard', label: '缴费标准' },
-          { id: 'audit', label: '缴费核定' },
-          { id: 'overdue', label: '催缴管理' },
-        ].map((tab) => (
+        {visibleTabs.map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-3 text-sm font-medium ${activeTab === tab.id ? 'border-b-2 border-cyan-600 text-cyan-600' : 'text-gray-600 hover:text-gray-800'}`}>
             {tab.label}
           </button>

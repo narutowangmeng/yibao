@@ -7,10 +7,11 @@ interface LongTermCareProps {
   userAgency: string;
 }
 
-const tabs = [
+const provinceTabs = [{ id: 'institutions', label: '护理机构列表', icon: User }];
+
+const cityTabs = [
   { id: 'assessment', label: '失能评估申请', icon: FileText },
   { id: 'service', label: '护理服务管理', icon: Clock },
-  { id: 'institutions', label: '护理机构列表', icon: User },
   { id: 'payment', label: '待遇支付记录', icon: DollarSign },
   { id: 'query', label: '评估查询', icon: Search },
 ];
@@ -19,28 +20,98 @@ const assessmentData = [
   { id: 'A001', name: '王桂兰', age: 79, status: '待评估', date: '2026-04-18', idCard: '320102194703156428', address: '南京市鼓楼区凤凰西街86号', contact: '13813800101' },
   { id: 'A002', name: '陈国华', age: 82, status: '已通过', date: '2026-04-18', idCard: '320205194402085216', address: '无锡市梁溪区中山路88号', contact: '13813800102' },
   { id: 'A003', name: '李素琴', age: 76, status: '复评中', date: '2026-04-17', idCard: '320303195001124625', address: '徐州市泉山区矿大南路33号', contact: '13813800103' },
+  { id: 'A004', name: '周秀兰', age: 81, status: '待评估', date: '2026-04-17', idCard: '320402194507186243', address: '常州市天宁区延陵中路118号', contact: '13813800104' },
+  { id: 'A005', name: '吴德芳', age: 78, status: '已通过', date: '2026-04-16', idCard: '320508194811203817', address: '苏州市姑苏区人民路208号', contact: '13813800105' },
+  { id: 'A006', name: '孙月琴', age: 84, status: '复评中', date: '2026-04-16', idCard: '320602194204118529', address: '南通市崇川区工农路166号', contact: '13813800106' },
+  { id: 'A007', name: '朱爱华', age: 75, status: '待评估', date: '2026-04-15', idCard: '320706195102024611', address: '连云港市海州区通灌南路99号', contact: '13813800107' },
+  { id: 'A008', name: '何金凤', age: 83, status: '已通过', date: '2026-04-15', idCard: '320803194310154266', address: '淮安市清江浦区北京北路56号', contact: '13813800108' },
+  { id: 'A009', name: '马桂芝', age: 80, status: '待评估', date: '2026-04-14', idCard: '320902194602281934', address: '盐城市亭湖区解放南路68号', contact: '13813800109' },
+  { id: 'A010', name: '顾美珍', age: 77, status: '已通过', date: '2026-04-14', idCard: '321002194901134528', address: '扬州市广陵区文昌中路188号', contact: '13813800110' },
+  { id: 'A011', name: '蒋玉梅', age: 85, status: '复评中', date: '2026-04-13', idCard: '321102194108083412', address: '镇江市京口区解放路77号', contact: '13813800111' },
+  { id: 'A012', name: '曹兰英', age: 74, status: '已通过', date: '2026-04-13', idCard: '321202195203173649', address: '泰州市海陵区青年南路101号', contact: '13813800112' },
+  { id: 'A013', name: '谢秀英', age: 82, status: '待评估', date: '2026-04-12', idCard: '321302194404267820', address: '宿迁市宿城区洪泽湖路66号', contact: '13813800113' },
+  { id: 'A014', name: '韩凤兰', age: 79, status: '已通过', date: '2026-04-12', idCard: '320104194702194425', address: '南京市秦淮区中山东路212号', contact: '13813800114' },
+  { id: 'A015', name: '丁月华', age: 76, status: '复评中', date: '2026-04-11', idCard: '320213195001306517', address: '无锡市滨湖区梁清路55号', contact: '13813800115' },
+  { id: 'A016', name: '吕秀珍', age: 88, status: '待评估', date: '2026-04-11', idCard: '320311193803157236', address: '徐州市云龙区和平大道90号', contact: '13813800116' },
+  { id: 'A017', name: '彭淑华', age: 73, status: '已通过', date: '2026-04-10', idCard: '320404195305193628', address: '常州市钟楼区勤业路128号', contact: '13813800117' },
+  { id: 'A018', name: '严桂芳', age: 81, status: '待评估', date: '2026-04-10', idCard: '320507194507253941', address: '苏州市吴中区东吴北路36号', contact: '13813800118' },
+  { id: 'A019', name: '邵玉珍', age: 84, status: '复评中', date: '2026-04-09', idCard: '320611194206182354', address: '南通市通州区建设路98号', contact: '13813800119' },
+  { id: 'A020', name: '陶爱琴', age: 78, status: '已通过', date: '2026-04-09', idCard: '320703194812047125', address: '连云港市赣榆区青口镇黄海路39号', contact: '13813800120' },
 ];
 
 const serviceData = [
   { id: 'S001', name: '王桂兰', service: '居家生活照护', date: '2026-04-18', status: '进行中', nurse: '周海燕', hours: 36 },
   { id: 'S002', name: '陈国华', service: '失能康复护理', date: '2026-04-18', status: '已完成', nurse: '许红梅', hours: 48 },
   { id: 'S003', name: '李素琴', service: '压疮护理', date: '2026-04-17', status: '进行中', nurse: '何晓梅', hours: 24 },
+  { id: 'S004', name: '周秀兰', service: '居家助浴服务', date: '2026-04-17', status: '已完成', nurse: '秦玉兰', hours: 12 },
+  { id: 'S005', name: '吴德芳', service: '鼻饲护理', date: '2026-04-16', status: '进行中', nurse: '蒋莉', hours: 28 },
+  { id: 'S006', name: '孙月琴', service: '失能康复训练', date: '2026-04-16', status: '已完成', nurse: '冯晓琴', hours: 42 },
+  { id: 'S007', name: '朱爱华', service: '翻身拍背护理', date: '2026-04-15', status: '进行中', nurse: '沈小梅', hours: 18 },
+  { id: 'S008', name: '何金凤', service: '居家巡视照护', date: '2026-04-15', status: '已完成', nurse: '赵春燕', hours: 16 },
+  { id: 'S009', name: '马桂芝', service: '导尿管护理', date: '2026-04-14', status: '进行中', nurse: '顾婷婷', hours: 20 },
+  { id: 'S010', name: '顾美珍', service: '认知障碍照护', date: '2026-04-14', status: '已完成', nurse: '潘海燕', hours: 30 },
+  { id: 'S011', name: '蒋玉梅', service: '失禁护理', date: '2026-04-13', status: '进行中', nurse: '周雪梅', hours: 22 },
+  { id: 'S012', name: '曹兰英', service: '居家上门护理', date: '2026-04-13', status: '已完成', nurse: '陈丽娟', hours: 26 },
+  { id: 'S013', name: '谢秀英', service: '压疮换药护理', date: '2026-04-12', status: '进行中', nurse: '刘巧云', hours: 19 },
+  { id: 'S014', name: '韩凤兰', service: '康复步行训练', date: '2026-04-12', status: '已完成', nurse: '马小凤', hours: 34 },
+  { id: 'S015', name: '丁月华', service: '生活照料服务', date: '2026-04-11', status: '进行中', nurse: '郑海燕', hours: 21 },
+  { id: 'S016', name: '吕秀珍', service: '鼻胃管护理', date: '2026-04-11', status: '已完成', nurse: '谢晓琴', hours: 32 },
+  { id: 'S017', name: '彭淑华', service: '肢体功能训练', date: '2026-04-10', status: '进行中', nurse: '韩艳', hours: 25 },
+  { id: 'S018', name: '严桂芳', service: '夜间照护服务', date: '2026-04-10', status: '已完成', nurse: '吕慧芳', hours: 40 },
+  { id: 'S019', name: '邵玉珍', service: '居家助餐服务', date: '2026-04-09', status: '进行中', nurse: '陶丽华', hours: 14 },
+  { id: 'S020', name: '陶爱琴', service: '失能日常照护', date: '2026-04-09', status: '已完成', nurse: '吴海霞', hours: 36 },
 ];
 
 const institutionData = [
   { id: 'I001', name: '南京市鼓楼区康宁护理院', type: '定点护理机构', beds: 180, rating: 4.8, address: '南京市鼓楼区中央路18号', contact: '025-86620001' },
   { id: 'I002', name: '苏州市姑苏区康复护理中心', type: '定点护理机构', beds: 210, rating: 4.9, address: '苏州市姑苏区人民路16号', contact: '0512-65880035' },
   { id: 'I003', name: '盐城市亭湖区德馨护理院', type: '定点护理机构', beds: 140, rating: 4.7, address: '盐城市亭湖区建军东路121号', contact: '0515-88360016' },
+  { id: 'I004', name: '无锡市梁溪区颐康护理院', type: '定点护理机构', beds: 160, rating: 4.7, address: '无锡市梁溪区健康路55号', contact: '0510-82350018' },
+  { id: 'I005', name: '徐州市泉山区安泰护理中心', type: '定点护理机构', beds: 188, rating: 4.6, address: '徐州市泉山区湖北路72号', contact: '0516-83860022' },
+  { id: 'I006', name: '常州市天宁区福寿护理院', type: '定点护理机构', beds: 132, rating: 4.5, address: '常州市天宁区劳动中路98号', contact: '0519-86620019' },
+  { id: 'I007', name: '南通市崇川区康悦护理中心', type: '定点护理机构', beds: 176, rating: 4.8, address: '南通市崇川区人民中路126号', contact: '0513-89070015' },
+  { id: 'I008', name: '连云港市海州区仁和护理院', type: '定点护理机构', beds: 120, rating: 4.4, address: '连云港市海州区海连中路88号', contact: '0518-85630027' },
+  { id: 'I009', name: '淮安市清江浦区安康护理院', type: '定点护理机构', beds: 148, rating: 4.6, address: '淮安市清江浦区北京南路36号', contact: '0517-83990031' },
+  { id: 'I010', name: '扬州市广陵区颐养护理中心', type: '定点护理机构', beds: 154, rating: 4.7, address: '扬州市广陵区运河西路66号', contact: '0514-87880026' },
+  { id: 'I011', name: '镇江市京口区康复护理院', type: '定点护理机构', beds: 168, rating: 4.8, address: '镇江市京口区学府路58号', contact: '0511-85270013' },
+  { id: 'I012', name: '泰州市海陵区同心护理院', type: '定点护理机构', beds: 142, rating: 4.5, address: '泰州市海陵区青年北路80号', contact: '0523-86250017' },
+  { id: 'I013', name: '宿迁市宿城区惠民护理中心', type: '定点护理机构', beds: 138, rating: 4.5, address: '宿迁市宿城区洪泽湖西路39号', contact: '0527-84360029' },
+  { id: 'I014', name: '南京市建邺区怡宁护理院', type: '定点护理机构', beds: 190, rating: 4.9, address: '南京市建邺区江东中路88号', contact: '025-87770012' },
+  { id: 'I015', name: '苏州市吴中区乐龄护理院', type: '定点护理机构', beds: 158, rating: 4.6, address: '苏州市吴中区东吴南路109号', contact: '0512-67010025' },
+  { id: 'I016', name: '无锡市滨湖区仁爱护理中心', type: '定点护理机构', beds: 126, rating: 4.4, address: '无锡市滨湖区太湖大道101号', contact: '0510-85820033' },
+  { id: 'I017', name: '徐州市鼓楼区福康护理院', type: '定点护理机构', beds: 150, rating: 4.6, address: '徐州市鼓楼区复兴北路45号', contact: '0516-87650041' },
+  { id: 'I018', name: '南通市通州区安泰护理院', type: '定点护理机构', beds: 144, rating: 4.5, address: '南通市通州区建设路120号', contact: '0513-86590038' },
+  { id: 'I019', name: '盐城市盐都区康乐护理院', type: '定点护理机构', beds: 136, rating: 4.4, address: '盐城市盐都区世纪大道128号', contact: '0515-88490021' },
+  { id: 'I020', name: '扬州市邗江区安馨护理中心', type: '定点护理机构', beds: 162, rating: 4.7, address: '扬州市邗江区文汇西路59号', contact: '0514-87910018' },
 ];
 
 const paymentData = [
   { id: 'P001', name: '王桂兰', amount: 2860, month: '2026-04', status: '已发放', bank: '中国工商银行', account: '6212****3481' },
   { id: 'P002', name: '陈国华', amount: 3200, month: '2026-04', status: '已发放', bank: '中国建设银行', account: '6227****5814' },
   { id: 'P003', name: '李素琴', amount: 2480, month: '2026-04', status: '已发放', bank: '中国银行', account: '6216****1920' },
+  { id: 'P004', name: '周秀兰', amount: 2160, month: '2026-04', status: '已发放', bank: '中国农业银行', account: '6228****4416' },
+  { id: 'P005', name: '吴德芳', amount: 3020, month: '2026-04', status: '已发放', bank: '交通银行', account: '6222****1508' },
+  { id: 'P006', name: '孙月琴', amount: 3380, month: '2026-04', status: '已发放', bank: '中国邮政储蓄银行', account: '6210****6271' },
+  { id: 'P007', name: '朱爱华', amount: 2250, month: '2026-04', status: '已发放', bank: '中国银行', account: '6216****3395' },
+  { id: 'P008', name: '何金凤', amount: 2760, month: '2026-04', status: '已发放', bank: '中国建设银行', account: '6227****2604' },
+  { id: 'P009', name: '马桂芝', amount: 2430, month: '2026-04', status: '已发放', bank: '江苏银行', account: '6229****1932' },
+  { id: 'P010', name: '顾美珍', amount: 2940, month: '2026-04', status: '已发放', bank: '中国工商银行', account: '6212****5487' },
+  { id: 'P011', name: '蒋玉梅', amount: 2680, month: '2026-04', status: '已发放', bank: '中国农业银行', account: '6228****3246' },
+  { id: 'P012', name: '曹兰英', amount: 2580, month: '2026-04', status: '已发放', bank: '中国邮政储蓄银行', account: '6210****8412' },
+  { id: 'P013', name: '谢秀英', amount: 2310, month: '2026-04', status: '已发放', bank: '交通银行', account: '6222****9517' },
+  { id: 'P014', name: '韩凤兰', amount: 2870, month: '2026-04', status: '已发放', bank: '中国银行', account: '6216****4031' },
+  { id: 'P015', name: '丁月华', amount: 2520, month: '2026-04', status: '已发放', bank: '江苏银行', account: '6229****6024' },
+  { id: 'P016', name: '吕秀珍', amount: 3460, month: '2026-04', status: '已发放', bank: '中国建设银行', account: '6227****7320' },
+  { id: 'P017', name: '彭淑华', amount: 2400, month: '2026-04', status: '已发放', bank: '中国工商银行', account: '6212****1746' },
+  { id: 'P018', name: '严桂芳', amount: 3180, month: '2026-04', status: '已发放', bank: '中国农业银行', account: '6228****4950' },
+  { id: 'P019', name: '邵玉珍', amount: 2650, month: '2026-04', status: '已发放', bank: '交通银行', account: '6222****2874' },
+  { id: 'P020', name: '陶爱琴', amount: 2780, month: '2026-04', status: '已发放', bank: '中国邮政储蓄银行', account: '6210****5683' },
 ];
 
 export default function LongTermCare({ userAgency }: LongTermCareProps) {
-  const [activeTab, setActiveTab] = useState('assessment');
+  const isProvince = getAgencyLevel(userAgency) === 'province';
+  const visibleTabs = isProvince ? provinceTabs : cityTabs;
+  const [activeTab, setActiveTab] = useState(visibleTabs[0].id);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'add' | 'edit' | 'view'>('add');
@@ -49,7 +120,6 @@ export default function LongTermCare({ userAgency }: LongTermCareProps) {
   const [services, setServices] = useState(serviceData);
   const [institutions, setInstitutions] = useState(institutionData);
   const [queryResult, setQueryResult] = useState<any>(null);
-  const isProvince = getAgencyLevel(userAgency) === 'province';
 
   const openModal = (type: 'add' | 'edit' | 'view', item?: any) => {
     setModalType(type);
@@ -163,7 +233,7 @@ export default function LongTermCare({ userAgency }: LongTermCareProps) {
         <span className="text-gray-800">长期护理保险</span>
       </div>
       <div className="flex gap-2 border-b border-gray-200">
-        {tabs.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${activeTab === tab.id ? 'border-b-2 border-cyan-600 text-cyan-600' : 'text-gray-600 hover:text-gray-800'}`}>
             <tab.icon className="h-4 w-4" />
             {tab.label}

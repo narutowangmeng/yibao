@@ -21,6 +21,9 @@ import {
   Download,
   AlertCircle,
   Check,
+  Fingerprint,
+  ScanFace,
+  Eye,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -66,6 +69,22 @@ interface RecordItem {
   basic: Record<string, string>;
   extra: Record<string, string>;
   photos: Partial<Record<PhotoFieldKey, boolean>>;
+  biometrics?: {
+    fingerprint?: boolean;
+    faceScan?: boolean;
+    irisScan?: boolean;
+  };
+}
+
+interface EnrollmentFormState {
+  basic: Record<string, string>;
+  insurance: Record<string, string>;
+  photos: Partial<Record<PhotoFieldKey, boolean>>;
+  biometrics: {
+    fingerprint: boolean;
+    faceScan: boolean;
+    irisScan: boolean;
+  };
 }
 
 interface BatchImportRecord {
@@ -487,7 +506,7 @@ const initialRecords: RecordItem[] = [
 
 const defaultPhotoState: Partial<Record<PhotoFieldKey, boolean>> = {};
 
-function buildInitialForm(category: EnrollmentCategory): { basic: Record<string, string>; insurance: Record<string, string>; photos: Partial<Record<PhotoFieldKey, boolean>> } {
+function buildInitialForm(category: EnrollmentCategory): EnrollmentFormState {
   const basic: Record<string, string> = {};
   const insurance: Record<string, string> = {};
 
@@ -502,7 +521,16 @@ function buildInitialForm(category: EnrollmentCategory): { basic: Record<string,
     }
   });
 
-  return { basic, insurance, photos: { ...defaultPhotoState } };
+  return {
+    basic,
+    insurance,
+    photos: { ...defaultPhotoState },
+    biometrics: {
+      fingerprint: false,
+      faceScan: false,
+      irisScan: false,
+    },
+  };
 }
 
 function renderField(
@@ -859,6 +887,16 @@ export default function EnrollmentWorkbench() {
     setFormState((prev) => ({ ...prev, photos: { ...prev.photos, [key]: !prev.photos[key] } }));
   };
 
+  const captureBiometric = (type: 'fingerprint' | 'faceScan' | 'irisScan') => {
+    setFormState((prev) => ({
+      ...prev,
+      biometrics: {
+        ...prev.biometrics,
+        [type]: !prev.biometrics[type],
+      },
+    }));
+  };
+
   const filteredRecords = records.filter(
     (item) => item.name.includes(queryKeyword) || item.idCard.includes(queryKeyword) || item.id.includes(queryKeyword),
   );
@@ -889,6 +927,7 @@ export default function EnrollmentWorkbench() {
       basic: formState.basic,
       extra: formState.insurance,
       photos: formState.photos,
+      biometrics: formState.biometrics,
     };
     setRecords((prev) => [newRecord, ...prev]);
     setShowSuccess(true);
@@ -945,6 +984,11 @@ export default function EnrollmentWorkbench() {
 
   const renderMaterialsStep = () => (
     <div className="space-y-6">
+      <div className="rounded-xl border border-cyan-100 bg-cyan-50 p-4">
+        <h4 className="font-semibold text-cyan-800">材料影像与现场采集</h4>
+        <p className="mt-1 text-sm text-cyan-700">先上传本次参保所需影像材料，再补充现场拍照和生物识别采集信息。</p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         {photoFields.map((photo) => (
           <div key={photo.key} className={`rounded-xl border p-4 ${formState.photos[photo.key] ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white'}`}>
@@ -971,6 +1015,85 @@ export default function EnrollmentWorkbench() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Camera className="w-5 h-5 text-cyan-600" />
+          <h4 className="font-semibold text-gray-800">现场拍照</h4>
+        </div>
+        <div className={`rounded-xl border p-4 ${formState.photos.profilePhoto ? 'border-green-300 bg-green-50' : 'border-dashed border-gray-300 bg-gray-50'}`}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-medium text-gray-800">参保人现场照片</p>
+              <p className="mt-1 text-sm text-gray-500">
+                {formState.photos.profilePhoto ? '已完成现场拍照，可撤销后重新采集。' : '点击下方按钮模拟现场拍照留档。'}
+              </p>
+            </div>
+            {formState.photos.profilePhoto && <CheckCircle className="w-5 h-5 text-green-600" />}
+          </div>
+          <button
+            onClick={() => togglePhoto('profilePhoto')}
+            className={`mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm ${
+              formState.photos.profilePhoto ? 'border border-green-300 bg-white text-green-700' : 'bg-cyan-600 text-white'
+            }`}
+          >
+            <Camera className="w-4 h-4" />
+            {formState.photos.profilePhoto ? '重拍照片' : '开始拍照'}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Fingerprint className="w-5 h-5 text-cyan-600" />
+          <h4 className="font-semibold text-gray-800">生物识别采集</h4>
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {[
+            {
+              key: 'fingerprint' as const,
+              title: '指纹采集',
+              desc: '采集参保人指纹信息，用于实名核验。',
+              icon: Fingerprint,
+              active: formState.biometrics.fingerprint,
+              primary: true,
+            },
+            {
+              key: 'faceScan' as const,
+              title: '人脸采集',
+              desc: '采集现场人脸图像，用于经办身份比对。',
+              icon: ScanFace,
+              active: formState.biometrics.faceScan,
+              primary: true,
+            },
+            {
+              key: 'irisScan' as const,
+              title: '虹膜采集',
+              desc: '可选采集项，用于增强身份核验能力。',
+              icon: Eye,
+              active: formState.biometrics.irisScan,
+              primary: false,
+            },
+          ].map((item) => (
+            <div key={item.key} className={`rounded-xl border-2 p-5 transition ${item.active ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-white'}`}>
+              <div className="text-center">
+                <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full ${item.active ? 'bg-green-100' : 'bg-gray-100'}`}>
+                  <item.icon className={`w-7 h-7 ${item.active ? 'text-green-600' : 'text-gray-400'}`} />
+                </div>
+                <p className="font-medium text-gray-800">{item.title}</p>
+                <p className="mt-2 text-sm text-gray-500">{item.desc}</p>
+                {item.primary && <p className="mt-2 text-xs text-red-500">建议至少完成指纹或人脸其中一项</p>}
+                <button
+                  onClick={() => captureBiometric(item.key)}
+                  className={`mt-4 rounded-lg px-4 py-2 text-sm ${item.active ? 'border border-green-300 bg-white text-green-700' : 'bg-cyan-600 text-white'}`}
+                >
+                  {item.active ? '已采集，点击重采' : '开始采集'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1007,6 +1130,24 @@ export default function EnrollmentWorkbench() {
               <span className="text-gray-500">{photo.label}</span>
               <span className={formState.photos[photo.key] ? 'text-green-600 font-medium' : 'text-red-500'}>
                 {formState.photos[photo.key] ? '已上传' : '未上传'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="bg-gray-50 rounded-xl p-5">
+        <h4 className="font-semibold text-gray-800 mb-4">现场采集</h4>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          {[
+            { label: '现场拍照', value: formState.photos.profilePhoto },
+            { label: '指纹采集', value: formState.biometrics.fingerprint },
+            { label: '人脸采集', value: formState.biometrics.faceScan },
+            { label: '虹膜采集', value: formState.biometrics.irisScan },
+          ].map((item) => (
+            <div key={item.label} className="flex justify-between border-b border-gray-200 py-2">
+              <span className="text-gray-500">{item.label}</span>
+              <span className={item.value ? 'text-green-600 font-medium' : 'text-red-500'}>
+                {item.value ? '已完成' : '未采集'}
               </span>
             </div>
           ))}
@@ -1442,6 +1583,27 @@ export default function EnrollmentWorkbench() {
     );
   };
 
+  const renderRecordBiometrics = (record: RecordItem) => {
+    const biometrics = record.biometrics || {};
+    return (
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        {[
+          { label: '现场拍照', value: record.photos.profilePhoto },
+          { label: '指纹采集', value: biometrics.fingerprint },
+          { label: '人脸采集', value: biometrics.faceScan },
+          { label: '虹膜采集', value: biometrics.irisScan },
+        ].map((item) => (
+          <div key={item.label} className="flex justify-between border-b border-gray-100 py-2">
+            <span className="text-gray-500">{item.label}</span>
+            <span className={item.value ? 'font-medium text-green-600' : 'font-medium text-red-500'}>
+              {item.value ? '已完成' : '未采集'}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -1579,14 +1741,19 @@ export default function EnrollmentWorkbench() {
                   )}
                 </div>
 
-                <div className="rounded-xl border border-gray-200 p-5">
-                  <h4 className="font-semibold text-gray-800 mb-4">影像材料</h4>
-                  {renderRecordPhotos(selectedRecord)}
+                  <div className="rounded-xl border border-gray-200 p-5">
+                    <h4 className="font-semibold text-gray-800 mb-4">影像材料</h4>
+                    {renderRecordPhotos(selectedRecord)}
+                  </div>
+
+                  <div className="rounded-xl border border-gray-200 p-5">
+                    <h4 className="font-semibold text-gray-800 mb-4">现场采集</h4>
+                    {renderRecordBiometrics(selectedRecord)}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
       </AnimatePresence>
 
       <AnimatePresence>
