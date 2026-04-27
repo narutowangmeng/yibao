@@ -114,6 +114,15 @@ function AppContent() {
     if (currentPath.startsWith('/reports')) {
       return 'reports';
     }
+    if (currentPath.startsWith('/institutions')) {
+      return currentRole === 'institution_pharmacy' ? 'pharmacy-portal' : 'institution-portal';
+    }
+    if (currentPath.startsWith('/employer')) {
+      return 'employer-portal';
+    }
+    if (currentPath.startsWith('/personal')) {
+      return 'personal-portal';
+    }
     const path = currentPath.replace('/', '');
     return path || 'dashboard';
   };
@@ -127,7 +136,8 @@ function AppContent() {
 
     let defaultPath = '#/dashboard';
     if (role === 'bureau_leader' && nextAgency === 'headquarters') defaultPath = '#/reports';
-    if (role === 'institution_admin') defaultPath = '#/institutions';
+    if (role === 'institution_admin' || role === 'institution_hospital') defaultPath = '#/institutions?mode=hospital';
+    else if (role === 'institution_pharmacy') defaultPath = '#/institutions?mode=pharmacy';
     else if (role === 'employer_admin') defaultPath = '#/employer';
     else if (role === 'insured_person') defaultPath = '#/personal';
     else if (role === 'operator_enrollment') defaultPath = '#/workbench/enrollment';
@@ -164,6 +174,8 @@ function AppContent() {
       employer_management: 'operation',
       operation_admin: 'operation',
       institution_admin: 'portal',
+      institution_hospital: 'portal',
+      institution_pharmacy: 'portal',
       employer_admin: 'portal',
       insured_person: 'portal',
     };
@@ -238,7 +250,7 @@ function AppContent() {
             <Route path="/workbench/employer-management" element={<EmployerManagementWorkbench />} />
             <Route path="/workbench/operation-admin" element={<OperationAdminManagement />} />
 
-            <Route path="/institutions" element={<InstitutionPortal />} />
+            <Route path="/institutions" element={<InstitutionPortal portalRole={currentRole} />} />
             <Route path="/employer" element={<EmployerPortal />} />
             <Route path="/personal" element={<PersonalService />} />
 

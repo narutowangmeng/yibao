@@ -15,9 +15,9 @@ interface HeaderProps {
 const ROLE_NAMES: Record<string, string> = {
   system_admin: '系统管理员',
   bureau_leader: '医保局领导',
-  treatment_director: '待遇保障',
-  fund_supervisor: '基金监管',
-  medical_service_director: '医药服务管理',
+  treatment_director: '待遇保障司',
+  fund_supervisor: '基金监管司',
+  medical_service_director: '医药服务管理司',
   office_director: '办公室',
   operator: '经办人员',
   operator_enrollment: '参保登记',
@@ -27,13 +27,15 @@ const ROLE_NAMES: Record<string, string> = {
   operator_claims: '理赔管理',
   auditor_first: '初审岗',
   auditor_second: '复审岗',
-  auditor_final: '终审',
+  auditor_final: '终审岗',
   auditor_audit: '费用审核',
   auditor_settlement: '基金结算',
   auditor_inspection: '稽核检查',
   operation_admin: '系统管理',
   employer_management: '参保单位管理',
   institution_admin: '医疗机构',
+  institution_hospital: '医院端',
+  institution_pharmacy: '药店端',
   employer_admin: '参保单位',
   insured_person: '参保人员',
 };
@@ -89,12 +91,14 @@ export const Header: React.FC<HeaderProps> = ({
   const roleName = userRole && ROLE_NAMES[userRole] ? ROLE_NAMES[userRole] : '管理员';
 
   const displayName =
-    userRole && ['institution_admin', 'employer_admin', 'insured_person'].includes(userRole)
-      ? userRole === 'institution_admin'
-        ? '南京市第一医院'
+    userRole && ['institution_admin', 'institution_hospital', 'institution_pharmacy', 'employer_admin', 'insured_person'].includes(userRole)
+      ? userRole === 'institution_pharmacy'
+        ? '南京国大双通道药店'
         : userRole === 'employer_admin'
-          ? '某某科技有限公司'
-          : '张三'
+          ? '江苏智康科技有限公司'
+          : userRole === 'insured_person'
+            ? '张雨晴'
+            : '南京市第一医院'
       : userRole && OPERATION_ROLES.includes(userRole)
         ? `${agencyName}${userOperatorIdentity || '经办'}${roleName}`
         : `${agencyName} · ${roleName}`;

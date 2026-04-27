@@ -20,6 +20,8 @@ export type UserRole =
   | 'operation_admin'
   | 'employer_management'
   | 'institution_admin'
+  | 'institution_hospital'
+  | 'institution_pharmacy'
   | 'employer_admin'
   | 'insured_person';
 
@@ -244,6 +246,22 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     department: '定点医疗机构',
     level: 3,
     description: '负责机构业务管理和医保结算申报。',
+    permissions: ['dashboard:view', 'institutions:view', 'reimbursement:view', 'reimbursement:create'],
+  },
+  institution_hospital: {
+    code: 'institution_hospital',
+    name: '鍖婚櫌绔?',
+    department: '瀹氱偣鍖婚櫌',
+    level: 3,
+    description: '璐熻矗鍖婚櫌缁撶畻娓呭崟銆佽垂鐢ㄧ敵鎶ャ€佸璐︾‘璁ゅ拰鍖荤枟涓氬姟鍗忓悓銆?',
+    permissions: ['dashboard:view', 'institutions:view', 'reimbursement:view', 'reimbursement:create'],
+  },
+  institution_pharmacy: {
+    code: 'institution_pharmacy',
+    name: '鑽簵绔?',
+    department: '鍙岄€氶亾 / 闆跺敭鑽簵',
+    level: 3,
+    description: '璐熻矗澶勬柟鎺ユ敹銆佽嵂甯堝鏂广€佽皟鍓傚彂鑽拰鍖讳繚缁撶畻銆?',
     permissions: ['dashboard:view', 'institutions:view', 'reimbursement:view', 'reimbursement:create'],
   },
   employer_admin: {

@@ -1,6 +1,29 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, User, Lock, Eye, EyeOff, ChevronRight, Building2, Users, PersonStanding, ArrowLeft, Crown, Wallet, FileCheck, Stethoscope, Settings, FileText, UserCheck, Building, Briefcase, MapPin } from 'lucide-react';
+import {
+  Shield,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  ChevronRight,
+  Building2,
+  Users,
+  PersonStanding,
+  ArrowLeft,
+  Crown,
+  Wallet,
+  FileCheck,
+  Stethoscope,
+  Settings,
+  FileText,
+  UserCheck,
+  Building,
+  Briefcase,
+  MapPin,
+  Store,
+  X,
+} from 'lucide-react';
 import type { UserRole } from '../types/roles';
 
 interface LoginProps {
@@ -21,6 +44,8 @@ const ROLE_ICONS: Record<string, React.ElementType> = {
   auditor_final: FileCheck,
   operator_claims: FileCheck,
   institution_admin: Building,
+  institution_hospital: Building2,
+  institution_pharmacy: Store,
   employer_admin: Briefcase,
   insured_person: User,
 };
@@ -57,18 +82,18 @@ const SYSTEMS = [
     hoverBorder: 'hover:border-blue-400',
     needAgency: true,
     roles: [
-      { code: 'bureau_leader' as UserRole, name: '报表中心', desc: '进入医保报表中心，查看全局统计、专题分析和监管报表' },
-      { code: 'treatment_director' as UserRole, name: '待遇保障司', desc: '待遇政策、险种管理' },
-      { code: 'fund_supervisor' as UserRole, name: '基金监管司', desc: '基金监管、违规查处' },
-      { code: 'medical_service_director' as UserRole, name: '医药服务管理司', desc: '医药价格、目录管理' },
-      { code: 'system_admin' as UserRole, name: '系统管理员', desc: '系统配置、用户管理' },
-    ]
+      { code: 'bureau_leader' as UserRole, name: '报表中心', desc: '查看全局统计、专题分析和监管报表' },
+      { code: 'treatment_director' as UserRole, name: '待遇保障司', desc: '待遇政策、险种管理、数据字典' },
+      { code: 'fund_supervisor' as UserRole, name: '基金监管司', desc: '基金监管、风险预警、违规查处' },
+      { code: 'medical_service_director' as UserRole, name: '医药服务管理司', desc: '机构管理、目录管理、价格管理' },
+      { code: 'system_admin' as UserRole, name: '系统管理员', desc: '系统配置、用户管理、权限维护' },
+    ],
   },
   {
     id: 'operation' as SystemType,
     name: '经办系统',
     subtitle: 'Operation System',
-    desc: '业务经办人员使用',
+    desc: '业务经办和审核处理使用',
     icon: Users,
     color: 'from-cyan-500 to-teal-600',
     bgColor: 'bg-cyan-50',
@@ -77,17 +102,17 @@ const SYSTEMS = [
     needAgency: true,
     roles: [
       { code: 'operator_enrollment' as UserRole, name: '参保登记', desc: '参保登记、信息变更、关系转移' },
-      { code: 'operator_contribution' as UserRole, name: '缴费', desc: '单位缴费、个人缴费、缴费单管理、到账状态查询' },
+      { code: 'operator_contribution' as UserRole, name: '缴费', desc: '单位缴费、个人缴费、到账状态查询' },
       { code: 'operator_payment' as UserRole, name: '缴费核定', desc: '缴费基数核定、费用计算、催缴管理' },
-      { code: 'operator_reimbursement' as UserRole, name: '费用报销', desc: '医疗费用报销申请受理、材料初审' },
-      { code: 'operator_claims' as UserRole, name: '理赔管理', desc: '申报受理、人工审核、结算审核、支付指令、机构对账、异常处理' },
-      { code: 'auditor_audit' as UserRole, name: '费用审核', desc: '医疗费用审核、合规性检查、异常处理' },
+      { code: 'operator_reimbursement' as UserRole, name: '费用报销', desc: '报销受理、材料初审、报销查询' },
+      { code: 'operator_claims' as UserRole, name: '理赔管理', desc: '申报受理、人工审核、结算审核' },
+      { code: 'auditor_audit' as UserRole, name: '费用审核', desc: '合规性检查、异常处理、复核退回' },
       { code: 'auditor_settlement' as UserRole, name: '基金结算', desc: '基金结算、拨付管理、对账处理' },
-      { code: 'finance_manager' as UserRole, name: '财务管理', desc: '自动对账、总账管理、基金报表' },
-      { code: 'auditor_inspection' as UserRole, name: '稽核检查', desc: '稽核检查、违规查处、飞行检查' },
-      { code: 'employer_management' as UserRole, name: '参保单位管理', desc: '单位参保管理、员工增减员、缴费申报' },
+      { code: 'finance_manager' as UserRole, name: '财务管理', desc: '到账确认、账务处理、财务报表' },
+      { code: 'auditor_inspection' as UserRole, name: '稽核检查', desc: '专项检查、飞行检查、违规查处' },
+      { code: 'employer_management' as UserRole, name: '参保单位管理', desc: '单位参保管理、增减员、缴费申报' },
       { code: 'operation_admin' as UserRole, name: '系统管理', desc: '系统配置、人员管理、权限分配' },
-    ]
+    ],
   },
   {
     id: 'portal' as SystemType,
@@ -101,11 +126,26 @@ const SYSTEMS = [
     hoverBorder: 'hover:border-emerald-400',
     needAgency: false,
     roles: [
-      { code: 'institution_admin' as UserRole, name: '医疗机构', desc: '机构业务、结算申请' },
-      { code: 'employer_admin' as UserRole, name: '参保单位', desc: '单位参保、员工管理' },
-      { code: 'insured_person' as UserRole, name: '参保人员', desc: '个人查询、业务办理' },
-    ]
-  }
+      { code: 'institution_admin' as UserRole, name: '医疗机构', desc: '医院端 / 药店端入口' },
+      { code: 'employer_admin' as UserRole, name: '参保单位', desc: '单位参保、员工管理、缴费申报' },
+      { code: 'insured_person' as UserRole, name: '参保人员', desc: '个人查询、业务办理、家庭共济' },
+    ],
+  },
+];
+
+const INSTITUTION_ENTRY_OPTIONS = [
+  {
+    code: 'institution_hospital' as UserRole,
+    name: '医院端',
+    desc: '结算清单、费用申报、对账确认、医护工作站',
+    icon: Building2,
+  },
+  {
+    code: 'institution_pharmacy' as UserRole,
+    name: '药店端',
+    desc: '处方接收、药师审方、发药结算、库存追溯',
+    icon: Store,
+  },
 ];
 
 export default function Login({ onLogin }: LoginProps) {
@@ -116,8 +156,8 @@ export default function Login({ onLogin }: LoginProps) {
   const [selectedSystem, setSelectedSystem] = useState<SystemType | null>(null);
   const [selectedAgency, setSelectedAgency] = useState<string>('headquarters');
   const [selectedOperatorIdentity, setSelectedOperatorIdentity] = useState<'经办' | '审核'>('经办');
+  const [showInstitutionSelector, setShowInstitutionSelector] = useState(false);
 
-  // 从URL参数读取系统类型
   React.useEffect(() => {
     const hash = window.location.hash;
     const match = hash.match(/\?system=(management|operation|portal)/);
@@ -130,12 +170,23 @@ export default function Login({ onLogin }: LoginProps) {
     }
   }, []);
 
+  const currentSystem = useMemo(() => SYSTEMS.find((system) => system.id === selectedSystem), [selectedSystem]);
+  const visibleAgencies = selectedSystem === 'operation' ? OPERATION_AGENCIES : AGENCIES;
+  const visibleRoles =
+    currentSystem?.id === 'operation'
+      ? currentSystem.roles.filter((role) =>
+          selectedOperatorIdentity === '经办'
+            ? ['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code)
+            : !['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code),
+        )
+      : currentSystem?.roles || [];
+
   const handleSystemSelect = (systemId: SystemType) => {
     setSelectedSystem(systemId);
+    setShowInstitutionSelector(false);
     if (systemId === 'operation' && selectedAgency === 'headquarters') {
       setSelectedAgency('nanjing');
     }
-    // 清除URL参数
     window.location.hash = '';
   };
 
@@ -143,9 +194,10 @@ export default function Login({ onLogin }: LoginProps) {
     setSelectedSystem(null);
     setSelectedAgency('headquarters');
     setSelectedOperatorIdentity('经办');
+    setShowInstitutionSelector(false);
   };
 
-  const handleRoleLogin = (role: UserRole) => {
+  const commitLogin = (role: UserRole) => {
     if (selectedSystem === 'management' && role === 'bureau_leader' && selectedAgency !== 'headquarters') {
       window.alert('地市账号无权限进入报表中心');
       return;
@@ -155,46 +207,28 @@ export default function Login({ onLogin }: LoginProps) {
     setTimeout(() => {
       setIsLoading(false);
       onLogin(role, selectedAgency, selectedSystem === 'operation' ? selectedOperatorIdentity : undefined);
-    }, 500);
+    }, 400);
+  };
+
+  const handleRoleLogin = (role: UserRole) => {
+    if (selectedSystem === 'portal' && role === 'institution_admin') {
+      setShowInstitutionSelector(true);
+      return;
+    }
+    commitLogin(role);
   };
 
   const handlePasswordLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin('bureau_leader', selectedAgency, selectedSystem === 'operation' ? selectedOperatorIdentity : undefined);
-    }, 1000);
+    commitLogin('bureau_leader');
   };
-
-  const currentSystem = SYSTEMS.find(s => s.id === selectedSystem);
-  const currentAgency = AGENCIES.find(a => a.code === selectedAgency);
-  const visibleAgencies = selectedSystem === 'operation' ? OPERATION_AGENCIES : AGENCIES;
-  const visibleRoles =
-    currentSystem?.id === 'operation'
-      ? currentSystem.roles.filter((role) =>
-          selectedOperatorIdentity === '经办'
-            ? ['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code)
-            : !['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code)
-        )
-      : currentSystem?.roles || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-gray-200 flex items-center justify-center p-8">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-6xl"
-      >
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-6xl">
         <AnimatePresence mode="wait">
           {!selectedSystem ? (
-            <motion.div
-              key="systems"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center"
-            >
+            <motion.div key="systems" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
               <div className="mb-12">
                 <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-8">
                   <Shield className="w-12 h-12 text-cyan-600" />
@@ -231,29 +265,12 @@ export default function Login({ onLogin }: LoginProps) {
                   );
                 })}
               </div>
-
-              <div className="mt-16 flex items-center justify-center gap-8 text-gray-400">
-                <button className="hover:text-gray-600 transition-colors">帮助中心</button>
-                <span className="w-px h-4 bg-gray-300" />
-                <button className="hover:text-gray-600 transition-colors">联系客服</button>
-                <span className="w-px h-4 bg-gray-300" />
-                <span>© 2025 医疗保障局</span>
-              </div>
             </motion.div>
           ) : (
-            <motion.div
-              key="roles"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-white rounded-3xl shadow-2xl p-12 max-w-5xl mx-auto"
-            >
+            <motion.div key="roles" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white rounded-3xl shadow-2xl p-12 max-w-5xl mx-auto relative">
               <div className="text-center mb-10">
                 <div className="flex items-center justify-between mb-6">
-                  <button
-                    onClick={handleBack}
-                    className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
+                  <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors">
                     <ArrowLeft className="w-5 h-5" />
                     <span>返回</span>
                   </button>
@@ -330,7 +347,7 @@ export default function Login({ onLogin }: LoginProps) {
                       <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-gray-900">{role.name}</h3>
                       <p className="text-gray-500 text-sm">{role.desc}</p>
                       <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ChevronRight className={`w-6 h-6 ${currentSystem?.color.replace('from-', 'text-').split(' ')[0].replace('to-', '')}`} />
+                        <ChevronRight className="w-6 h-6 text-cyan-500" />
                       </div>
                     </motion.button>
                   );
@@ -372,15 +389,57 @@ export default function Login({ onLogin }: LoginProps) {
                       disabled={isLoading}
                       className="px-8 py-3 bg-cyan-600 text-white rounded-xl font-medium hover:bg-cyan-700 disabled:bg-gray-300 transition-colors whitespace-nowrap"
                     >
-                      {isLoading ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
-                      ) : (
-                        '登录'
-                      )}
+                      {isLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : '登录'}
                     </button>
                   </div>
                 </form>
               </div>
+
+              <AnimatePresence>
+                {showInstitutionSelector && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-20 flex items-center justify-center rounded-3xl bg-white/90 backdrop-blur-sm p-10"
+                  >
+                    <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} className="w-full max-w-3xl rounded-3xl border border-emerald-100 bg-white p-8 shadow-2xl">
+                      <div className="mb-6 flex items-start justify-between">
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-800">选择医疗机构端口</h3>
+                          <p className="mt-2 text-sm text-gray-500">同一账号登录时只进入一个端口，这里先明确选择后再进入系统。</p>
+                        </div>
+                        <button onClick={() => setShowInstitutionSelector(false)} className="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-6">
+                        {INSTITUTION_ENTRY_OPTIONS.map((option) => {
+                          const Icon = option.icon;
+                          return (
+                            <button
+                              key={option.code}
+                              type="button"
+                              onClick={() => commitLogin(option.code)}
+                              className="group rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 p-8 text-left transition-all hover:border-emerald-300 hover:bg-white hover:shadow-lg"
+                            >
+                              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white group-hover:scale-105 transition-transform">
+                                <Icon className="h-8 w-8" />
+                              </div>
+                              <h4 className="text-xl font-bold text-gray-800">{option.name}</h4>
+                              <p className="mt-2 text-sm leading-6 text-gray-500">{option.desc}</p>
+                              <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-emerald-600">
+                                <span>进入{option.name}</span>
+                                <ChevronRight className="h-4 w-4" />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
