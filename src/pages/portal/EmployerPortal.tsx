@@ -4,6 +4,7 @@ import { Building2, Users, DollarSign, Upload, Search, Plus, History, X, Eye, Ed
 
 interface Employee {
   id: number;
+  insuredNo: string;
   name: string;
   idCard: string;
   gender: '男' | '女';
@@ -13,7 +14,9 @@ interface Employee {
   department: string;
   jobType: string;
   insuranceType: string;
+  insuranceLevel: string;
   baseAmount: string;
+  latestBatchNo: string;
 }
 
 interface PaymentRecord {
@@ -48,26 +51,26 @@ const tabs = [
 ];
 
 const initialEmployees: Employee[] = [
-  { id: 1, name: '陈思远', idCard: '320102198903152415', gender: '男', status: '正常参保', enrollDate: '2024-01-01', phone: '13851760011', department: '产品研发部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '12,600.00元' },
-  { id: 2, name: '周语彤', idCard: '320102199407263526', gender: '女', status: '正常参保', enrollDate: '2024-02-01', phone: '13915230027', department: '财务管理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '11,800.00元' },
-  { id: 3, name: '许文博', idCard: '320102198805204517', gender: '男', status: '正常参保', enrollDate: '2024-03-15', phone: '13862750016', department: '运营支持部', jobType: '劳务派遣', insuranceType: '职工基本医疗保险', baseAmount: '8,600.00元' },
-  { id: 4, name: '陆书意', idCard: '320102199912163214', gender: '女', status: '暂停参保', enrollDate: '2024-04-10', phone: '13584820042', department: '市场服务部', jobType: '实习生', insuranceType: '职工基本医疗保险', baseAmount: '6,800.00元' },
-  { id: 5, name: '顾嘉言', idCard: '320302199101084633', gender: '男', status: '正常参保', enrollDate: '2024-04-18', phone: '13775880039', department: '数据治理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '10,200.00元' },
-  { id: 6, name: '沈知夏', idCard: '320412201910215628', gender: '女', status: '正常参保', enrollDate: '2024-05-03', phone: '13685210018', department: '客户成功部', jobType: '实习生', insuranceType: '职工基本医疗保险', baseAmount: '6,500.00元' },
-  { id: 7, name: '韩倩', idCard: '320802199511136247', gender: '女', status: '正常参保', enrollDate: '2024-05-20', phone: '13861350028', department: '产品运营部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '9,800.00元' },
-  { id: 8, name: '唐璐', idCard: '321102199209047523', gender: '女', status: '正常参保', enrollDate: '2024-06-11', phone: '13952970046', department: '行政人事部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '8,900.00元' },
-  { id: 9, name: '彭雪', idCard: '321302199611258944', gender: '女', status: '正常参保', enrollDate: '2024-06-19', phone: '13773990033', department: '运营支持部', jobType: '劳务派遣', insuranceType: '职工基本医疗保险', baseAmount: '7,400.00元' },
-  { id: 10, name: '曹颖', idCard: '320583198810126489', gender: '女', status: '正常参保', enrollDate: '2024-07-08', phone: '13862580019', department: '财务管理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '11,200.00元' },
-  { id: 11, name: '高宁', idCard: '320684198712204018', gender: '男', status: '正常参保', enrollDate: '2024-07-23', phone: '13962780052', department: '商务拓展部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '10,800.00元' },
-  { id: 12, name: '严峰', idCard: '320803198912154218', gender: '男', status: '正常参保', enrollDate: '2024-08-01', phone: '13852340088', department: '技术运维部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '9,600.00元' },
-  { id: 13, name: '孔洁', idCard: '321001199001063821', gender: '女', status: '正常参保', enrollDate: '2024-08-12', phone: '13952760061', department: '法务合规部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '10,300.00元' },
-  { id: 14, name: '陆敏', idCard: '320102198706224128', gender: '女', status: '正常参保', enrollDate: '2024-08-25', phone: '13851430077', department: '项目交付部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '10,600.00元' },
-  { id: 15, name: '钱莉', idCard: '320205199103142246', gender: '女', status: '暂停参保', enrollDate: '2024-09-06', phone: '13961720031', department: '市场服务部', jobType: '劳务派遣', insuranceType: '职工基本医疗保险', baseAmount: '7,200.00元' },
-  { id: 16, name: '赵静', idCard: '320302199406185126', gender: '女', status: '正常参保', enrollDate: '2024-09-18', phone: '13775830024', department: '客户成功部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '8,700.00元' },
-  { id: 17, name: '邵琳', idCard: '321003198911273526', gender: '女', status: '正常参保', enrollDate: '2024-10-10', phone: '13952710084', department: '行政人事部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '8,500.00元' },
-  { id: 18, name: '许诺', idCard: '320412199608117841', gender: '女', status: '正常参保', enrollDate: '2024-10-28', phone: '13685260012', department: '产品研发部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '9,900.00元' },
-  { id: 19, name: '周岚', idCard: '320105198704213624', gender: '女', status: '正常参保', enrollDate: '2024-11-06', phone: '13851490016', department: '财务管理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '11,500.00元' },
-  { id: 20, name: '吴桐', idCard: '320106199202141517', gender: '男', status: '正常参保', enrollDate: '2024-11-22', phone: '13851930062', department: '技术运维部', jobType: '正式职工', insuranceType: '职工基本医疗保险', baseAmount: '9,100.00元' },
+  { id: 1, insuredNo: 'YB32010020240001', name: '陈思远', idCard: '320102198903152415', gender: '男', status: '正常参保', enrollDate: '2024-01-01', phone: '13851760011', department: '产品研发部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '12,600.00元', latestBatchNo: 'DWBG20260412001' },
+  { id: 2, insuredNo: 'YB32010020240002', name: '周语彤', idCard: '320102199407263526', gender: '女', status: '正常参保', enrollDate: '2024-02-01', phone: '13915230027', department: '财务管理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '11,800.00元', latestBatchNo: 'DWBG20260412001' },
+  { id: 3, insuredNo: 'YB32010020240003', name: '许文博', idCard: '320102198805204517', gender: '男', status: '正常参保', enrollDate: '2024-03-15', phone: '13862750016', department: '运营支持部', jobType: '劳务派遣', insuranceType: '职工基本医疗保险', insuranceLevel: '二档', baseAmount: '8,600.00元', latestBatchNo: 'DWBG20260310003' },
+  { id: 4, insuredNo: 'YB32010020240004', name: '陆书意', idCard: '320102199912163214', gender: '女', status: '暂停参保', enrollDate: '2024-04-10', phone: '13584820042', department: '市场服务部', jobType: '实习生', insuranceType: '职工基本医疗保险', insuranceLevel: '二档', baseAmount: '6,800.00元', latestBatchNo: 'DWBG20260418002' },
+  { id: 5, insuredNo: 'YB32010020240005', name: '顾嘉言', idCard: '320302199101084633', gender: '男', status: '正常参保', enrollDate: '2024-04-18', phone: '13775880039', department: '数据治理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '10,200.00元', latestBatchNo: 'DWBG20260412001' },
+  { id: 6, insuredNo: 'YB32010020240006', name: '沈知夏', idCard: '320412200110215628', gender: '女', status: '正常参保', enrollDate: '2024-05-03', phone: '13685210018', department: '客户成功部', jobType: '实习生', insuranceType: '职工基本医疗保险', insuranceLevel: '二档', baseAmount: '6,500.00元', latestBatchNo: 'DWBG20260503001' },
+  { id: 7, insuredNo: 'YB32010020240007', name: '韩倩', idCard: '320802199511136247', gender: '女', status: '正常参保', enrollDate: '2024-05-20', phone: '13861350028', department: '产品运营部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '9,800.00元', latestBatchNo: 'DWBG20260520002' },
+  { id: 8, insuredNo: 'YB32010020240008', name: '唐璐', idCard: '321102199209047523', gender: '女', status: '正常参保', enrollDate: '2024-06-11', phone: '13952970046', department: '行政人事部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '8,900.00元', latestBatchNo: 'DWBG20260611001' },
+  { id: 9, insuredNo: 'YB32010020240009', name: '彭雪', idCard: '321302199611258944', gender: '女', status: '正常参保', enrollDate: '2024-06-19', phone: '13773990033', department: '运营支持部', jobType: '劳务派遣', insuranceType: '职工基本医疗保险', insuranceLevel: '二档', baseAmount: '7,400.00元', latestBatchNo: 'DWBG20260619003' },
+  { id: 10, insuredNo: 'YB32010020240010', name: '曹颖', idCard: '320583198810126489', gender: '女', status: '正常参保', enrollDate: '2024-07-08', phone: '13862580019', department: '财务管理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '11,200.00元', latestBatchNo: 'DWBG20260708002' },
+  { id: 11, insuredNo: 'YB32010020240011', name: '高宁', idCard: '320684198712204018', gender: '男', status: '正常参保', enrollDate: '2024-07-23', phone: '13962780052', department: '商务拓展部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '10,800.00元', latestBatchNo: 'DWBG20260723001' },
+  { id: 12, insuredNo: 'YB32010020240012', name: '严峰', idCard: '320803198912154218', gender: '男', status: '正常参保', enrollDate: '2024-08-01', phone: '13852340088', department: '技术运维部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '9,600.00元', latestBatchNo: 'DWBG20260801001' },
+  { id: 13, insuredNo: 'YB32010020240013', name: '孔洁', idCard: '321001199001063821', gender: '女', status: '正常参保', enrollDate: '2024-08-12', phone: '13952760061', department: '法务合规部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '10,300.00元', latestBatchNo: 'DWBG20260812002' },
+  { id: 14, insuredNo: 'YB32010020240014', name: '陆敏', idCard: '320102198706224128', gender: '女', status: '正常参保', enrollDate: '2024-08-25', phone: '13851430077', department: '项目交付部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '10,600.00元', latestBatchNo: 'DWBG20260825001' },
+  { id: 15, insuredNo: 'YB32010020240015', name: '钱莉', idCard: '320205199103142246', gender: '女', status: '暂停参保', enrollDate: '2024-09-06', phone: '13961720031', department: '市场服务部', jobType: '劳务派遣', insuranceType: '职工基本医疗保险', insuranceLevel: '二档', baseAmount: '7,200.00元', latestBatchNo: 'DWBG20260906004' },
+  { id: 16, insuredNo: 'YB32010020240016', name: '赵静', idCard: '320302199406185126', gender: '女', status: '正常参保', enrollDate: '2024-09-18', phone: '13775830024', department: '客户成功部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '8,700.00元', latestBatchNo: 'DWBG20260918001' },
+  { id: 17, insuredNo: 'YB32010020240017', name: '邵琳', idCard: '321003198911273526', gender: '女', status: '正常参保', enrollDate: '2024-10-10', phone: '13952710084', department: '行政人事部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '8,500.00元', latestBatchNo: 'DWBG20261010002' },
+  { id: 18, insuredNo: 'YB32010020240018', name: '许诺', idCard: '320412199608117841', gender: '女', status: '正常参保', enrollDate: '2024-10-28', phone: '13685260012', department: '产品研发部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '9,900.00元', latestBatchNo: 'DWBG20261028001' },
+  { id: 19, insuredNo: 'YB32010020240019', name: '周岚', idCard: '320105198704213624', gender: '女', status: '正常参保', enrollDate: '2024-11-06', phone: '13851490016', department: '财务管理部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '11,500.00元', latestBatchNo: 'DWBG20261106001' },
+  { id: 20, insuredNo: 'YB32010020240020', name: '吴桐', idCard: '320106199202141517', gender: '男', status: '正常参保', enrollDate: '2024-11-22', phone: '13851930062', department: '技术运维部', jobType: '正式职工', insuranceType: '职工基本医疗保险', insuranceLevel: '一档', baseAmount: '9,100.00元', latestBatchNo: 'DWBG20261122002' },
 ];
 
 const initialPayments: PaymentRecord[] = [
@@ -94,6 +97,7 @@ export default function EmployerPortal() {
   const [modalType, setModalType] = useState<'add' | 'edit' | 'view'>('add');
   const [currentItem, setCurrentItem] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
+    insuredNo: '',
     name: '',
     idCard: '',
     gender: '男',
@@ -102,6 +106,7 @@ export default function EmployerPortal() {
     department: '',
     jobType: '正式职工',
     insuranceType: '职工基本医疗保险',
+    insuranceLevel: '一档',
     baseAmount: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,34 +117,41 @@ export default function EmployerPortal() {
     () =>
       employees.filter(
         (item) =>
+          item.insuredNo.includes(searchQuery) ||
           item.name.includes(searchQuery) ||
           item.idCard.includes(searchQuery) ||
           item.department.includes(searchQuery) ||
-          item.phone.includes(searchQuery)
+          item.phone.includes(searchQuery),
       ),
-    [employees, searchQuery]
+    [employees, searchQuery],
   );
 
   const queriedEmployees = useMemo(() => {
     if (!queryKeyword.trim()) return employees;
     return employees.filter(
       (item) =>
+        item.insuredNo.includes(queryKeyword) ||
         item.name.includes(queryKeyword) ||
         item.idCard.includes(queryKeyword) ||
         item.phone.includes(queryKeyword) ||
-        item.department.includes(queryKeyword)
+        item.department.includes(queryKeyword) ||
+        item.latestBatchNo.includes(queryKeyword),
     );
   }, [employees, queryKeyword]);
 
   const totalBase = useMemo(
-    () => employees.reduce((sum, item) => sum + Number(item.baseAmount.replace(/[^\d.]/g, '')), 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-    [employees]
+    () =>
+      employees
+        .reduce((sum, item) => sum + Number(item.baseAmount.replace(/[^\d.]/g, '')), 0)
+        .toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    [employees],
   );
 
   const handleAddEmployee = () => {
     setModalType('add');
     setCurrentItem(null);
     setFormData({
+      insuredNo: '',
       name: '',
       idCard: '',
       gender: '男',
@@ -148,6 +160,7 @@ export default function EmployerPortal() {
       department: '',
       jobType: '正式职工',
       insuranceType: '职工基本医疗保险',
+      insuranceLevel: '一档',
       baseAmount: '',
     });
     setShowModal(true);
@@ -157,6 +170,7 @@ export default function EmployerPortal() {
     setModalType('edit');
     setCurrentItem(employee);
     setFormData({
+      insuredNo: employee.insuredNo,
       name: employee.name,
       idCard: employee.idCard,
       gender: employee.gender,
@@ -165,6 +179,7 @@ export default function EmployerPortal() {
       department: employee.department,
       jobType: employee.jobType,
       insuranceType: employee.insuranceType,
+      insuranceLevel: employee.insuranceLevel,
       baseAmount: employee.baseAmount,
     });
     setShowModal(true);
@@ -187,8 +202,10 @@ export default function EmployerPortal() {
     }
 
     if (modalType === 'add') {
+      const nextIndex = employees.length + 1;
       const nextEmployee: Employee = {
-        id: employees.length + 1,
+        id: nextIndex,
+        insuredNo: formData.insuredNo.trim() || `YB3201002024${String(nextIndex).padStart(4, '0')}`,
         name: formData.name.trim(),
         idCard: formData.idCard.trim(),
         gender: formData.gender as '男' | '女',
@@ -198,7 +215,9 @@ export default function EmployerPortal() {
         department: formData.department.trim() || '综合管理部',
         jobType: formData.jobType,
         insuranceType: formData.insuranceType,
+        insuranceLevel: formData.insuranceLevel,
         baseAmount: formData.baseAmount.trim() || '8,000.00元',
+        latestBatchNo: `DWBG202604${String(nextIndex).padStart(4, '0')}`,
       };
       setEmployees((current) => [...current, nextEmployee]);
     } else if (currentItem) {
@@ -207,20 +226,23 @@ export default function EmployerPortal() {
           item.id === currentItem.id
             ? {
                 ...item,
+                insuredNo: formData.insuredNo.trim() || item.insuredNo,
                 name: formData.name.trim(),
                 idCard: formData.idCard.trim(),
                 gender: formData.gender as '男' | '女',
                 status: formData.status as '正常参保' | '暂停参保',
                 phone: formData.phone.trim(),
-                department: formData.department.trim(),
+                department: formData.department.trim() || item.department,
                 jobType: formData.jobType,
                 insuranceType: formData.insuranceType,
-                baseAmount: formData.baseAmount.trim(),
+                insuranceLevel: formData.insuranceLevel,
+                baseAmount: formData.baseAmount.trim() || item.baseAmount,
               }
-            : item
-        )
+            : item,
+        ),
       );
     }
+
     setShowModal(false);
   };
 
@@ -249,6 +271,7 @@ export default function EmployerPortal() {
 
   const handleConfirmUpload = () => {
     if (!uploadedFile) return;
+
     const nextRecord: UploadRecord = {
       id: `UP${String(uploadRecords.length + 1).padStart(3, '0')}`,
       fileName: uploadedFile.name,
@@ -257,8 +280,9 @@ export default function EmployerPortal() {
       operator: '周语彤',
       uploadTime: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
+
     setUploadRecords((current) => [nextRecord, ...current]);
-    alert(`文件 "${uploadedFile.name}" 上传成功`);
+    alert(`文件“${uploadedFile.name}”上传成功`);
     setUploadedFile(null);
   };
 
@@ -323,22 +347,24 @@ export default function EmployerPortal() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="搜索姓名、身份证号、部门或电话"
+                  placeholder="搜索医保个人编号、姓名、身份证号、部门或电话"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-72 rounded-lg border py-2 pl-9 pr-4 text-sm"
+                  className="w-80 rounded-lg border py-2 pl-9 pr-4 text-sm"
                 />
               </div>
             </div>
             <table className="w-full rounded-xl border bg-white">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-left text-sm">医保个人编号</th>
                   <th className="px-4 py-3 text-left text-sm">姓名</th>
                   <th className="px-4 py-3 text-left text-sm">身份证号</th>
                   <th className="px-4 py-3 text-left text-sm">部门</th>
-                  <th className="px-4 py-3 text-left text-sm">用工形式</th>
                   <th className="px-4 py-3 text-left text-sm">参保险种</th>
+                  <th className="px-4 py-3 text-left text-sm">档次</th>
                   <th className="px-4 py-3 text-left text-sm">缴费基数</th>
+                  <th className="px-4 py-3 text-left text-sm">最近申报单号</th>
                   <th className="px-4 py-3 text-left text-sm">状态</th>
                   <th className="px-4 py-3 text-left text-sm">操作</th>
                 </tr>
@@ -346,12 +372,14 @@ export default function EmployerPortal() {
               <tbody>
                 {filteredEmployees.map((employee) => (
                   <tr key={employee.id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-800">{employee.insuredNo}</td>
                     <td className="px-4 py-3 text-sm">{employee.name}</td>
                     <td className="px-4 py-3 text-sm">{employee.idCard}</td>
                     <td className="px-4 py-3 text-sm">{employee.department}</td>
-                    <td className="px-4 py-3 text-sm">{employee.jobType}</td>
                     <td className="px-4 py-3 text-sm">{employee.insuranceType}</td>
+                    <td className="px-4 py-3 text-sm">{employee.insuranceLevel}</td>
                     <td className="px-4 py-3 text-sm text-cyan-600">{employee.baseAmount}</td>
+                    <td className="px-4 py-3 text-sm">{employee.latestBatchNo}</td>
                     <td className="px-4 py-3 text-sm">{employee.status}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
@@ -405,9 +433,7 @@ export default function EmployerPortal() {
                   </div>
                 ))}
               </div>
-              <button onClick={handleDeclarePayment} className="mt-5 rounded-lg bg-cyan-600 px-4 py-2 text-white">
-                生成缴费申报
-              </button>
+              <button onClick={handleDeclarePayment} className="mt-5 rounded-lg bg-cyan-600 px-4 py-2 text-white">生成缴费申报</button>
             </div>
           </div>
         );
@@ -473,7 +499,7 @@ export default function EmployerPortal() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="输入姓名、身份证号、手机号或部门"
+                  placeholder="输入医保个人编号、姓名、身份证号、手机号、部门或申报单号"
                   value={queryKeyword}
                   onChange={(e) => setQueryKeyword(e.target.value)}
                   className="w-full rounded-lg border py-2 pl-10 pr-4"
@@ -484,6 +510,7 @@ export default function EmployerPortal() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-4 py-3 text-left text-sm">医保个人编号</th>
                     <th className="px-4 py-3 text-left text-sm">姓名</th>
                     <th className="px-4 py-3 text-left text-sm">身份证号</th>
                     <th className="px-4 py-3 text-left text-sm">联系电话</th>
@@ -491,11 +518,13 @@ export default function EmployerPortal() {
                     <th className="px-4 py-3 text-left text-sm">参保险种</th>
                     <th className="px-4 py-3 text-left text-sm">状态</th>
                     <th className="px-4 py-3 text-left text-sm">参保日期</th>
+                    <th className="px-4 py-3 text-left text-sm">最近申报单号</th>
                   </tr>
                 </thead>
                 <tbody>
                   {queriedEmployees.map((employee) => (
                     <tr key={employee.id} className="border-t">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-800">{employee.insuredNo}</td>
                       <td className="px-4 py-3 text-sm">{employee.name}</td>
                       <td className="px-4 py-3 text-sm">{employee.idCard}</td>
                       <td className="px-4 py-3 text-sm">{employee.phone}</td>
@@ -503,6 +532,7 @@ export default function EmployerPortal() {
                       <td className="px-4 py-3 text-sm">{employee.insuranceType}</td>
                       <td className="px-4 py-3 text-sm">{employee.status}</td>
                       <td className="px-4 py-3 text-sm">{employee.enrollDate}</td>
+                      <td className="px-4 py-3 text-sm">{employee.latestBatchNo}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -574,7 +604,7 @@ export default function EmployerPortal() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg rounded-xl bg-white p-6">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-2xl rounded-xl bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">{modalType === 'add' ? '新增员工' : modalType === 'edit' ? '编辑员工' : '员工详情'}</h3>
               <button onClick={() => setShowModal(false)} className="rounded p-1 hover:bg-gray-100">
@@ -582,8 +612,9 @@ export default function EmployerPortal() {
               </button>
             </div>
             {modalType === 'view' && currentItem ? (
-              <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 {[
+                  ['医保个人编号', currentItem.insuredNo],
                   ['姓名', currentItem.name],
                   ['身份证号', currentItem.idCard],
                   ['性别', currentItem.gender],
@@ -591,13 +622,15 @@ export default function EmployerPortal() {
                   ['所属部门', currentItem.department],
                   ['用工形式', currentItem.jobType],
                   ['参保险种', currentItem.insuranceType],
+                  ['参保档次', currentItem.insuranceLevel],
                   ['缴费基数', currentItem.baseAmount],
                   ['参保日期', currentItem.enrollDate],
                   ['参保状态', currentItem.status],
+                  ['最近申报单号', currentItem.latestBatchNo],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between">
-                    <span className="text-gray-500">{label}</span>
-                    <span>{value}</span>
+                  <div key={label} className="rounded-lg bg-gray-50 p-3">
+                    <p className="text-gray-500">{label}</p>
+                    <p className="mt-1 font-medium text-gray-800">{value}</p>
                   </div>
                 ))}
               </div>
@@ -605,9 +638,15 @@ export default function EmployerPortal() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <label className="mb-1 block text-sm font-medium">医保个人编号</label>
+                    <input type="text" value={formData.insuredNo} onChange={(e) => setFormData({ ...formData, insuredNo: e.target.value })} className="w-full rounded-lg border px-3 py-2" />
+                  </div>
+                  <div>
                     <label className="mb-1 block text-sm font-medium">姓名</label>
                     <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full rounded-lg border px-3 py-2" />
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1 block text-sm font-medium">性别</label>
                     <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })} className="w-full rounded-lg border px-3 py-2">
@@ -615,10 +654,10 @@ export default function EmployerPortal() {
                       <option value="女">女</option>
                     </select>
                   </div>
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">身份证号</label>
-                  <input type="text" value={formData.idCard} onChange={(e) => setFormData({ ...formData, idCard: e.target.value })} className="w-full rounded-lg border px-3 py-2" />
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">身份证号</label>
+                    <input type="text" value={formData.idCard} onChange={(e) => setFormData({ ...formData, idCard: e.target.value })} className="w-full rounded-lg border px-3 py-2" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -647,12 +686,19 @@ export default function EmployerPortal() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="mb-1 block text-sm font-medium">参保险种</label>
                     <select value={formData.insuranceType} onChange={(e) => setFormData({ ...formData, insuranceType: e.target.value })} className="w-full rounded-lg border px-3 py-2">
                       <option value="职工基本医疗保险">职工基本医疗保险</option>
                       <option value="生育保险">生育保险</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">参保档次</label>
+                    <select value={formData.insuranceLevel} onChange={(e) => setFormData({ ...formData, insuranceLevel: e.target.value })} className="w-full rounded-lg border px-3 py-2">
+                      <option value="一档">一档</option>
+                      <option value="二档">二档</option>
                     </select>
                   </div>
                   <div>

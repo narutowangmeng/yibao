@@ -46,6 +46,32 @@ interface SettlementItem {
   date: string;
 }
 
+interface ClaimBatchItem {
+  id: string;
+  institution: string;
+  settlementCount: number;
+  insuranceType: string;
+  totalAmount: number;
+  claimAmount: number;
+  submitter: string;
+  submitTime: string;
+  status: string;
+  returnReason: string;
+}
+
+interface ReconcileItem {
+  id: string;
+  period: string;
+  institution: string;
+  claimAmount: number;
+  confirmedAmount: number;
+  diffAmount: number;
+  diffType: string;
+  confirmer: string;
+  confirmTime: string;
+  status: string;
+}
+
 interface WorkItem {
   id: string;
   patient: string;
@@ -95,6 +121,73 @@ interface PharmacyOrder {
   date: string;
 }
 
+interface PharmacyReviewItem {
+  id: string;
+  prescriptionNo: string;
+  patient: string;
+  idCard: string;
+  drugName: string;
+  reviewRule: string;
+  pharmacist: string;
+  reviewTime: string;
+  status: string;
+  reviewOpinion: string;
+}
+
+interface PharmacyDispenseItem {
+  id: string;
+  pickupNo: string;
+  patient: string;
+  idCard: string;
+  drugName: string;
+  quantity: string;
+  dispenseWindow: string;
+  dispenser: string;
+  pickupMethod: string;
+  status: string;
+  dispenseTime: string;
+}
+
+interface PharmacySettlementItem {
+  id: string;
+  settlementNo: string;
+  patient: string;
+  insuranceType: string;
+  category: string;
+  totalAmount: number;
+  fundAmount: number;
+  personalAmount: number;
+  cashier: string;
+  status: string;
+  settlementTime: string;
+}
+
+interface PharmacySpecialItem {
+  id: string;
+  registerNo: string;
+  patient: string;
+  specialDrug: string;
+  treatmentType: string;
+  hospital: string;
+  approvalStatus: string;
+  materialStatus: string;
+  registrar: string;
+  registerTime: string;
+}
+
+interface PharmacyReconcileItem {
+  id: string;
+  period: string;
+  institution: string;
+  settlementCount: number;
+  settlementAmount: number;
+  returnedAmount: number;
+  diffAmount: number;
+  bankStatus: string;
+  operator: string;
+  status: string;
+}
+
 interface DrugStock {
   id: string;
   drugName: string;
@@ -111,11 +204,8 @@ const hospitalTabs = [
   { id: 'settlement', label: '结算清单', icon: FileText },
   { id: 'claim', label: '费用申报', icon: Upload },
   { id: 'reconcile', label: '对账确认', icon: CheckCircle },
-  { id: 'alerts', label: '智能提醒', icon: Bell },
-  { id: 'physician', label: '医师工作站', icon: Stethoscope },
-  { id: 'nurse', label: '护士工作站', icon: Syringe },
-  { id: 'pharmacist', label: '药师工作站', icon: ShieldCheck },
   { id: 'prescription', label: '处方流转', icon: Pill },
+  { id: 'alerts', label: '智能提醒', icon: Bell },
 ] as const;
 
 const pharmacyTabs = [
@@ -124,8 +214,8 @@ const pharmacyTabs = [
   { id: 'dispense', label: '调剂发药', icon: Pill },
   { id: 'settle', label: '医保结算', icon: Receipt },
   { id: 'special', label: '特药登记', icon: Bell },
-  { id: 'stock', label: '库存与追溯', icon: Package },
-  { id: 'reconcile', label: '对账与回盘', icon: CheckCircle },
+  { id: 'stock', label: '库存追溯', icon: Package },
+  { id: 'reconcile', label: '对账回盘', icon: CheckCircle },
 ] as const;
 
 const patientNames = ['张雨晴', '李书涵', '王思远', '周语桐', '许文博', '陆书怡', '韩宁', '唐悦', '赵静宜', '高宁', '彭雪', '曹颖', '沈知夏', '顾晨曦', '苏子墨', '程若安', '梁嘉禾', '秦以宁', '邵景澄', '蒋安然'];
@@ -161,6 +251,32 @@ const hospitalSettlementsSeed: SettlementItem[] = Array.from({ length: 20 }, (_,
   status: settlementStatuses[index % settlementStatuses.length],
   operator: doctors[index % doctors.length],
   date: formatDate(index),
+}));
+
+const claimBatchSeed: ClaimBatchItem[] = Array.from({ length: 20 }, (_, index) => ({
+  id: `SB${String(index + 1).padStart(3, '0')}`,
+  institution: index % 2 === 0 ? '南京市第一医院' : '江苏省人民医院',
+  settlementCount: 18 + index,
+  insuranceType: insuranceTypes[index % insuranceTypes.length],
+  totalAmount: 86000 + index * 5200,
+  claimAmount: 64200 + index * 4100,
+  submitter: doctors[index % doctors.length],
+  submitTime: formatTime(index),
+  status: ['待提交', '已提交', '退回修改', '医保受理'][index % 4],
+  returnReason: ['无', '缺少护理回传', '门特备案信息缺失', '特药审方说明待补充'][index % 4],
+}));
+
+const reconcileSeed: ReconcileItem[] = Array.from({ length: 20 }, (_, index) => ({
+  id: `DZ${String(index + 1).padStart(3, '0')}`,
+  period: `2026-${String((index % 4) + 1).padStart(2, '0')}月下旬`,
+  institution: index % 2 === 0 ? '南京市第一医院' : '江苏省人民医院',
+  claimAmount: 128000 + index * 6300,
+  confirmedAmount: 126500 + index * 5980,
+  diffAmount: 1500 + (index % 5) * 320,
+  diffType: ['目录外费用剔除', '重复收费核减', '高值耗材限价差异', '门特待遇差异', '无差异'][index % 5],
+  confirmer: doctors[(index + 2) % doctors.length],
+  confirmTime: formatTime(index),
+  status: ['待确认', '差异处理中', '已确认', '已回退'][index % 4],
 }));
 
 const physicianSeed: WorkItem[] = Array.from({ length: 20 }, (_, index) => ({
@@ -240,23 +356,71 @@ const pharmacyReviewSeed: PharmacyOrder[] = Array.from({ length: 20 }, (_, index
   status: ['待审方', '已通过', '已退回'][index % 3],
 }));
 
-const pharmacyDispenseSeed: PharmacyOrder[] = Array.from({ length: 20 }, (_, index) => ({
-  ...pharmacyReceiveSeed[index],
+const pharmacyReviewDetailSeed: PharmacyReviewItem[] = Array.from({ length: 20 }, (_, index) => ({
+  id: `SF${String(index + 1).padStart(3, '0')}`,
+  prescriptionNo: `CF202604${String(100 + index).padStart(3, '0')}`,
+  patient: patientNames[index],
+  idCard: idCards[index],
+  drugName: drugs[index % drugs.length],
+  reviewRule: ['重复用药校验', '双通道资格校验', '门特诊断匹配', '超量给药预警'][index % 4],
+  pharmacist: pharmacists[index % pharmacists.length],
+  reviewTime: formatTime(index),
+  status: ['待审方', '已通过', '已退回'][index % 3],
+  reviewOpinion: ['待审方', '符合处方流转条件', '缺少门特备案', '处方剂量需复核'][index % 4],
+}));
+
+const pharmacyDispenseSeed: PharmacyDispenseItem[] = Array.from({ length: 20 }, (_, index) => ({
   id: `FY${String(index + 1).padStart(3, '0')}`,
+  pickupNo: `QY${String(300 + index).padStart(4, '0')}`,
+  patient: patientNames[index],
+  idCard: idCards[index],
+  drugName: drugs[index % drugs.length],
+  quantity: `${1 + (index % 3)}盒 / ${1 + (index % 2)}支`,
+  dispenseWindow: `发药${(index % 4) + 1}号窗`,
+  dispenser: pharmacists[index % pharmacists.length],
+  pickupMethod: ['窗口自取', '院内配送', '冷链配送'][index % 3],
   status: ['待发药', '已发药', '已取药', '配送中'][index % 4],
+  dispenseTime: formatTime(index),
 }));
 
-const pharmacySpecialSeed: PharmacyOrder[] = Array.from({ length: 20 }, (_, index) => ({
-  ...pharmacyReceiveSeed[index],
+const pharmacySpecialSeed: PharmacySpecialItem[] = Array.from({ length: 20 }, (_, index) => ({
   id: `TY${String(index + 1).padStart(3, '0')}`,
-  category: ['特药首次登记', '续方登记', '门特备案登记', '双通道购药登记'][index % 4],
-  status: ['待登记', '已登记', '待补材料'][index % 3],
+  registerNo: `ZY${String(500 + index).padStart(4, '0')}`,
+  patient: patientNames[index],
+  specialDrug: drugs[(index + 2) % drugs.length],
+  treatmentType: ['双通道特药', '门特续方', '肿瘤靶向治疗', '罕见病用药'][index % 4],
+  hospital: hospitals[index % hospitals.length],
+  approvalStatus: ['待登记', '已登记', '审核退回'][index % 3],
+  materialStatus: ['材料齐全', '缺少处方原件', '缺少备案凭证', '待补患者承诺书'][index % 4],
+  registrar: pharmacists[index % pharmacists.length],
+  registerTime: formatTime(index),
 }));
 
-const pharmacySettlementSeed: PharmacyOrder[] = Array.from({ length: 20 }, (_, index) => ({
-  ...pharmacyReceiveSeed[index],
+const pharmacySettlementSeed: PharmacySettlementItem[] = Array.from({ length: 20 }, (_, index) => ({
   id: `JS${String(index + 1).padStart(3, '0')}`,
+  settlementNo: `YBJS${String(800 + index).padStart(5, '0')}`,
+  patient: patientNames[index],
+  insuranceType: insuranceTypes[index % insuranceTypes.length],
+  category: ['双通道特药结算', '外配处方结算', '门慢处方结算', '门特处方结算'][index % 4],
+  totalAmount: 600 + index * 210,
+  fundAmount: 420 + index * 168,
+  personalAmount: 180 + index * 42,
+  cashier: pharmacists[index % pharmacists.length],
   status: ['已结算', '待回盘', '已回盘', '结算退回'][index % 4],
+  settlementTime: formatTime(index),
+}));
+
+const pharmacyReconcileSeed: PharmacyReconcileItem[] = Array.from({ length: 20 }, (_, index) => ({
+  id: `HP${String(index + 1).padStart(3, '0')}`,
+  period: `2026-${String((index % 4) + 1).padStart(2, '0')}月`,
+  institution: '南京国大双通道药店',
+  settlementCount: 22 + index,
+  settlementAmount: 98000 + index * 4500,
+  returnedAmount: 96500 + index * 4300,
+  diffAmount: 1500 + (index % 5) * 260,
+  bankStatus: ['银行已回盘', '待银行回盘', '回盘失败'][index % 3],
+  operator: pharmacists[index % pharmacists.length],
+  status: ['待核对', '差异处理中', '已确认', '已回退'][index % 4],
 }));
 
 const stockSeed: DrugStock[] = Array.from({ length: 20 }, (_, index) => ({
@@ -276,6 +440,18 @@ const StatCard = ({ title, value, subValue }: { title: string; value: string; su
     <p className="text-sm text-gray-500">{title}</p>
     <p className="mt-3 text-2xl font-bold text-gray-800">{value}</p>
     <p className="mt-2 text-xs text-gray-400">{subValue}</p>
+  </div>
+);
+
+const SectionBlock = ({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) => (
+  <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <h3 className="text-base font-semibold text-gray-800">{title}</h3>
+        <p className="mt-1 text-sm text-gray-500">{desc}</p>
+      </div>
+    </div>
+    {children}
   </div>
 );
 
@@ -311,6 +487,20 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     return settlements.filter((item) => [item.id, item.patient, item.idCard, item.department, item.diagnosis].some((field) => field.includes(searchText)));
   }, [searchText, settlements]);
 
+  const filteredClaimBatches = useMemo(() => {
+    if (!searchText.trim()) return claimBatchSeed;
+    return claimBatchSeed.filter((item) =>
+      [item.id, item.institution, item.insuranceType, item.status, item.submitter, item.returnReason].some((field) => field.includes(searchText)),
+    );
+  }, [searchText]);
+
+  const filteredReconciles = useMemo(() => {
+    if (!searchText.trim()) return reconcileSeed;
+    return reconcileSeed.filter((item) =>
+      [item.id, item.period, item.institution, item.diffType, item.status, item.confirmer].some((field) => field.includes(searchText)),
+    );
+  }, [searchText]);
+
   const filteredPrescriptions = useMemo(() => {
     if (!searchText.trim()) return prescriptions;
     return prescriptions.filter((item) => [item.id, item.patient, item.idCard, item.department, item.diagnosis, item.destination].some((field) => field.includes(searchText)));
@@ -325,6 +515,49 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     if (!searchText.trim()) return rows;
     return rows.filter((item) =>
       [item.id, item.prescriptionNo, item.patient, item.idCard, item.sourceHospital, item.drugName, item.category].some((field) => field.includes(searchText)),
+    );
+  };
+
+  const filterReviews = (rows: PharmacyReviewItem[]) => {
+    if (!searchText.trim()) return rows;
+    return rows.filter((item) =>
+      [item.id, item.prescriptionNo, item.patient, item.idCard, item.drugName, item.reviewRule, item.status, item.reviewOpinion].some((field) =>
+        field.includes(searchText),
+      ),
+    );
+  };
+
+  const filterDispenses = (rows: PharmacyDispenseItem[]) => {
+    if (!searchText.trim()) return rows;
+    return rows.filter((item) =>
+      [item.id, item.pickupNo, item.patient, item.idCard, item.drugName, item.dispenseWindow, item.pickupMethod, item.status].some((field) =>
+        field.includes(searchText),
+      ),
+    );
+  };
+
+  const filterSettlements = (rows: PharmacySettlementItem[]) => {
+    if (!searchText.trim()) return rows;
+    return rows.filter((item) =>
+      [item.id, item.settlementNo, item.patient, item.insuranceType, item.category, item.cashier, item.status].some((field) =>
+        field.includes(searchText),
+      ),
+    );
+  };
+
+  const filterSpecials = (rows: PharmacySpecialItem[]) => {
+    if (!searchText.trim()) return rows;
+    return rows.filter((item) =>
+      [item.id, item.registerNo, item.patient, item.specialDrug, item.treatmentType, item.hospital, item.approvalStatus, item.materialStatus].some(
+        (field) => field.includes(searchText),
+      ),
+    );
+  };
+
+  const filterReconciles = (rows: PharmacyReconcileItem[]) => {
+    if (!searchText.trim()) return rows;
+    return rows.filter((item) =>
+      [item.id, item.period, item.institution, item.bankStatus, item.operator, item.status].some((field) => field.includes(searchText)),
     );
   };
 
@@ -426,6 +659,92 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
                     </button>
                   </div>
                 </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderClaimBatchTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索申报批次号、申报机构、险种、状态', {
+        label: '发起申报',
+        onClick: () => window.alert('已按当前筛选条件生成申报批次'),
+      })}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">申报批次号</th>
+              <th className="px-4 py-3 text-left">申报机构</th>
+              <th className="px-4 py-3 text-left">清单数量</th>
+              <th className="px-4 py-3 text-left">险种类型</th>
+              <th className="px-4 py-3 text-left">清单总金额</th>
+              <th className="px-4 py-3 text-left">申报金额</th>
+              <th className="px-4 py-3 text-left">提交人</th>
+              <th className="px-4 py-3 text-left">提交时间</th>
+              <th className="px-4 py-3 text-left">申报状态</th>
+              <th className="px-4 py-3 text-left">退回原因</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredClaimBatches.map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.institution}</td>
+                <td className="px-4 py-3">{item.settlementCount}</td>
+                <td className="px-4 py-3">{item.insuranceType}</td>
+                <td className="px-4 py-3">¥{item.totalAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-green-700">¥{item.claimAmount.toLocaleString()}</td>
+                <td className="px-4 py-3">{item.submitter}</td>
+                <td className="px-4 py-3">{item.submitTime}</td>
+                <td className="px-4 py-3">{item.status}</td>
+                <td className="px-4 py-3">{item.returnReason}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderReconcileTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索对账批次号、结算周期、差异类型、状态', {
+        label: '确认对账',
+        onClick: () => window.alert('已完成当前批次对账确认'),
+      })}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">对账批次号</th>
+              <th className="px-4 py-3 text-left">结算周期</th>
+              <th className="px-4 py-3 text-left">机构名称</th>
+              <th className="px-4 py-3 text-left">申报金额</th>
+              <th className="px-4 py-3 text-left">医保确认金额</th>
+              <th className="px-4 py-3 text-left">差异金额</th>
+              <th className="px-4 py-3 text-left">差异类型</th>
+              <th className="px-4 py-3 text-left">确认人</th>
+              <th className="px-4 py-3 text-left">确认时间</th>
+              <th className="px-4 py-3 text-left">对账状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredReconciles.map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.period}</td>
+                <td className="px-4 py-3">{item.institution}</td>
+                <td className="px-4 py-3">¥{item.claimAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-green-700">¥{item.confirmedAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-orange-700">¥{item.diffAmount.toLocaleString()}</td>
+                <td className="px-4 py-3">{item.diffType}</td>
+                <td className="px-4 py-3">{item.confirmer}</td>
+                <td className="px-4 py-3">{item.confirmTime}</td>
+                <td className="px-4 py-3">{item.status}</td>
               </tr>
             ))}
           </tbody>
@@ -593,6 +912,206 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     </div>
   );
 
+  const renderReviewTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索审方编号、处方号、药品名称、审方规则')}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">审方编号</th>
+              <th className="px-4 py-3 text-left">处方号</th>
+              <th className="px-4 py-3 text-left">患者姓名</th>
+              <th className="px-4 py-3 text-left">药品名称</th>
+              <th className="px-4 py-3 text-left">审方规则</th>
+              <th className="px-4 py-3 text-left">审方药师</th>
+              <th className="px-4 py-3 text-left">审方时间</th>
+              <th className="px-4 py-3 text-left">状态</th>
+              <th className="px-4 py-3 text-left">审方意见</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterReviews(pharmacyReviewDetailSeed).map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.prescriptionNo}</td>
+                <td className="px-4 py-3">{item.patient}</td>
+                <td className="px-4 py-3">{item.drugName}</td>
+                <td className="px-4 py-3">{item.reviewRule}</td>
+                <td className="px-4 py-3">{item.pharmacist}</td>
+                <td className="px-4 py-3">{item.reviewTime}</td>
+                <td className="px-4 py-3">{item.status}</td>
+                <td className="px-4 py-3">{item.reviewOpinion}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderDispenseTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索发药编号、取药号、发药窗口、取药方式')}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">发药编号</th>
+              <th className="px-4 py-3 text-left">取药号</th>
+              <th className="px-4 py-3 text-left">患者姓名</th>
+              <th className="px-4 py-3 text-left">药品名称</th>
+              <th className="px-4 py-3 text-left">数量</th>
+              <th className="px-4 py-3 text-left">发药窗口</th>
+              <th className="px-4 py-3 text-left">发药员</th>
+              <th className="px-4 py-3 text-left">取药方式</th>
+              <th className="px-4 py-3 text-left">状态</th>
+              <th className="px-4 py-3 text-left">发药时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterDispenses(pharmacyDispenseSeed).map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.pickupNo}</td>
+                <td className="px-4 py-3">{item.patient}</td>
+                <td className="px-4 py-3">{item.drugName}</td>
+                <td className="px-4 py-3">{item.quantity}</td>
+                <td className="px-4 py-3">{item.dispenseWindow}</td>
+                <td className="px-4 py-3">{item.dispenser}</td>
+                <td className="px-4 py-3">{item.pickupMethod}</td>
+                <td className="px-4 py-3">{item.status}</td>
+                <td className="px-4 py-3">{item.dispenseTime}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderPharmacySettlementTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索结算编号、结算单号、险种、结算状态')}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">结算编号</th>
+              <th className="px-4 py-3 text-left">结算单号</th>
+              <th className="px-4 py-3 text-left">患者姓名</th>
+              <th className="px-4 py-3 text-left">险种类型</th>
+              <th className="px-4 py-3 text-left">结算类别</th>
+              <th className="px-4 py-3 text-left">总金额</th>
+              <th className="px-4 py-3 text-left">医保支付</th>
+              <th className="px-4 py-3 text-left">个人自付</th>
+              <th className="px-4 py-3 text-left">收费员</th>
+              <th className="px-4 py-3 text-left">状态</th>
+              <th className="px-4 py-3 text-left">结算时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterSettlements(pharmacySettlementSeed).map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.settlementNo}</td>
+                <td className="px-4 py-3">{item.patient}</td>
+                <td className="px-4 py-3">{item.insuranceType}</td>
+                <td className="px-4 py-3">{item.category}</td>
+                <td className="px-4 py-3">¥{item.totalAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-green-700">¥{item.fundAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-orange-700">¥{item.personalAmount.toLocaleString()}</td>
+                <td className="px-4 py-3">{item.cashier}</td>
+                <td className="px-4 py-3">{item.status}</td>
+                <td className="px-4 py-3">{item.settlementTime}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderSpecialTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索登记编号、特药名称、治疗类型、材料状态')}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">登记编号</th>
+              <th className="px-4 py-3 text-left">登记单号</th>
+              <th className="px-4 py-3 text-left">患者姓名</th>
+              <th className="px-4 py-3 text-left">特药名称</th>
+              <th className="px-4 py-3 text-left">治疗类型</th>
+              <th className="px-4 py-3 text-left">来源医院</th>
+              <th className="px-4 py-3 text-left">审批状态</th>
+              <th className="px-4 py-3 text-left">材料状态</th>
+              <th className="px-4 py-3 text-left">登记人</th>
+              <th className="px-4 py-3 text-left">登记时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterSpecials(pharmacySpecialSeed).map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.registerNo}</td>
+                <td className="px-4 py-3">{item.patient}</td>
+                <td className="px-4 py-3">{item.specialDrug}</td>
+                <td className="px-4 py-3">{item.treatmentType}</td>
+                <td className="px-4 py-3">{item.hospital}</td>
+                <td className="px-4 py-3">{item.approvalStatus}</td>
+                <td className="px-4 py-3">{item.materialStatus}</td>
+                <td className="px-4 py-3">{item.registrar}</td>
+                <td className="px-4 py-3">{item.registerTime}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderPharmacyReconcileTable = () => (
+    <div className="space-y-4">
+      {renderToolbar('搜索回盘批次、周期、银行状态、对账状态')}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-left">回盘批次号</th>
+              <th className="px-4 py-3 text-left">对账周期</th>
+              <th className="px-4 py-3 text-left">机构名称</th>
+              <th className="px-4 py-3 text-left">结算笔数</th>
+              <th className="px-4 py-3 text-left">结算金额</th>
+              <th className="px-4 py-3 text-left">回盘金额</th>
+              <th className="px-4 py-3 text-left">差异金额</th>
+              <th className="px-4 py-3 text-left">银行状态</th>
+              <th className="px-4 py-3 text-left">经办人</th>
+              <th className="px-4 py-3 text-left">对账状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterReconciles(pharmacyReconcileSeed).map((item) => (
+              <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                <td className="px-4 py-3">{item.period}</td>
+                <td className="px-4 py-3">{item.institution}</td>
+                <td className="px-4 py-3">{item.settlementCount}</td>
+                <td className="px-4 py-3">¥{item.settlementAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-green-700">¥{item.returnedAmount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-orange-700">¥{item.diffAmount.toLocaleString()}</td>
+                <td className="px-4 py-3">{item.bankStatus}</td>
+                <td className="px-4 py-3">{item.operator}</td>
+                <td className="px-4 py-3">{item.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const renderStockTable = () => (
     <div className="space-y-4">
       {renderToolbar('搜索药品名称、追溯码、批号、生产企业')}
@@ -631,11 +1150,184 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     </div>
   );
 
+  const renderHospitalClaimPanel = () => (
+    <div className="space-y-4">
+      {renderClaimBatchTable()}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SectionBlock title="医师协同" desc="围绕病历补录、门特外配确认、清单提交等申报前置事项。">
+          <div className="overflow-hidden rounded-xl border border-gray-100">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th className="px-4 py-3 text-left">任务号</th>
+                  <th className="px-4 py-3 text-left">患者姓名</th>
+                  <th className="px-4 py-3 text-left">当前任务</th>
+                  <th className="px-4 py-3 text-left">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {physicianSeed.slice(0, 8).map((item) => (
+                  <tr key={item.id} className="border-t border-gray-100">
+                    <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                    <td className="px-4 py-3">{item.patient}</td>
+                    <td className="px-4 py-3">{item.task}</td>
+                    <td className="px-4 py-3">{item.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="护理补录" desc="围绕护理执行回传、耗材补录、执行单补传等申报支撑事项。">
+          <div className="overflow-hidden rounded-xl border border-gray-100">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th className="px-4 py-3 text-left">任务号</th>
+                  <th className="px-4 py-3 text-left">患者姓名</th>
+                  <th className="px-4 py-3 text-left">当前任务</th>
+                  <th className="px-4 py-3 text-left">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nurseSeed.slice(0, 8).map((item) => (
+                  <tr key={item.id} className="border-t border-gray-100">
+                    <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                    <td className="px-4 py-3">{item.patient}</td>
+                    <td className="px-4 py-3">{item.task}</td>
+                    <td className="px-4 py-3">{item.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionBlock>
+      </div>
+    </div>
+  );
+
+  const renderHospitalReconcilePanel = () => (
+    <div className="space-y-4">
+      {renderReconcileTable()}
+      <SectionBlock title="药学复核" desc="对账前集中查看药学复核、特药审核和目录外用药说明。">
+        <div className="overflow-hidden rounded-xl border border-gray-100">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <th className="px-4 py-3 text-left">任务号</th>
+                <th className="px-4 py-3 text-left">患者姓名</th>
+                <th className="px-4 py-3 text-left">复核事项</th>
+                <th className="px-4 py-3 text-left">状态</th>
+                <th className="px-4 py-3 text-left">更新时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pharmacistSeed.slice(0, 10).map((item) => (
+                <tr key={item.id} className="border-t border-gray-100">
+                  <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                  <td className="px-4 py-3">{item.patient}</td>
+                  <td className="px-4 py-3">{item.task}</td>
+                  <td className="px-4 py-3">{item.status}</td>
+                  <td className="px-4 py-3">{item.time}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionBlock>
+    </div>
+  );
+
+  const renderHospitalPrescriptionPanel = () => (
+    <div className="space-y-4">
+      {renderPrescriptionTable()}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SectionBlock title="医师开方协同" desc="查看待流转处方、门慢门特外配处方和双通道特药处方。">
+          <div className="space-y-3">
+            {prescriptions.slice(0, 6).map((item) => (
+              <div key={item.id} className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-gray-800">{item.id} · {item.patient}</p>
+                    <p className="mt-1 text-sm text-gray-500">{item.department} / {item.diagnosis} / {item.destination}</p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs text-gray-600">{item.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+        <SectionBlock title="药师审方协同" desc="将药师复核结果作为处方流转的协同反馈，不再单独作为一级入口。">
+          <div className="overflow-hidden rounded-xl border border-gray-100">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th className="px-4 py-3 text-left">任务号</th>
+                  <th className="px-4 py-3 text-left">患者姓名</th>
+                  <th className="px-4 py-3 text-left">审方事项</th>
+                  <th className="px-4 py-3 text-left">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pharmacistSeed.slice(0, 8).map((item) => (
+                  <tr key={item.id} className="border-t border-gray-100">
+                    <td className="px-4 py-3 font-medium text-gray-800">{item.id}</td>
+                    <td className="px-4 py-3">{item.patient}</td>
+                    <td className="px-4 py-3">{item.task}</td>
+                    <td className="px-4 py-3">{item.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionBlock>
+      </div>
+    </div>
+  );
+
+  const renderHospitalAlertsPanel = () => (
+    <div className="space-y-4">
+      {renderAlertTable()}
+      <div className="grid gap-4 xl:grid-cols-3">
+        <SectionBlock title="医师提醒" desc="医生需处理的规则拦截、目录外收费、门特合规提醒。">
+          <div className="space-y-2">
+            {physicianSeed.slice(0, 5).map((item) => (
+              <div key={item.id} className="rounded-xl bg-gray-50 px-3 py-3 text-sm">
+                <p className="font-medium text-gray-800">{item.patient}</p>
+                <p className="mt-1 text-gray-500">{item.task}</p>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+        <SectionBlock title="护理提醒" desc="护理执行回传、耗材登记异常、护理记录缺失等提醒。">
+          <div className="space-y-2">
+            {nurseSeed.slice(0, 5).map((item) => (
+              <div key={item.id} className="rounded-xl bg-gray-50 px-3 py-3 text-sm">
+                <p className="font-medium text-gray-800">{item.patient}</p>
+                <p className="mt-1 text-gray-500">{item.task}</p>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+        <SectionBlock title="药学提醒" desc="合理用药、特药审核、审方退回等提醒。">
+          <div className="space-y-2">
+            {pharmacistSeed.slice(0, 5).map((item) => (
+              <div key={item.id} className="rounded-xl bg-gray-50 px-3 py-3 text-sm">
+                <p className="font-medium text-gray-800">{item.patient}</p>
+                <p className="mt-1 text-gray-500">{item.task}</p>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+      </div>
+    </div>
+  );
+
   const hospitalStats = [
     { title: '结算清单', value: '20', subValue: '含住院、门诊慢特病、普通门诊' },
     { title: '待申报', value: '7', subValue: '待上传或待提交医保清单' },
     { title: '智能预警', value: '20', subValue: '药品、项目、耗材规则均已覆盖' },
-    { title: '处方流转', value: '20', subValue: '含双通道特药和门慢外配处方' },
+    { title: '协同事项', value: '60', subValue: '医师、护理、药学协同任务已下沉到业务页' },
   ];
 
   const pharmacyStats = [
@@ -647,23 +1339,20 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
 
   const renderHospitalContent = () => {
     if (hospitalTab === 'settlement') return renderSettlementTable('结算清单');
-    if (hospitalTab === 'claim') return renderSettlementTable('费用申报');
-    if (hospitalTab === 'reconcile') return renderSettlementTable('对账确认');
-    if (hospitalTab === 'alerts') return renderAlertTable();
-    if (hospitalTab === 'physician') return renderWorkTable(physicianSeed, '医师工作站');
-    if (hospitalTab === 'nurse') return renderWorkTable(nurseSeed, '护士工作站');
-    if (hospitalTab === 'pharmacist') return renderWorkTable(pharmacistSeed, '药师工作站');
-    return renderPrescriptionTable();
+    if (hospitalTab === 'claim') return renderHospitalClaimPanel();
+    if (hospitalTab === 'reconcile') return renderHospitalReconcilePanel();
+    if (hospitalTab === 'prescription') return renderHospitalPrescriptionPanel();
+    return renderHospitalAlertsPanel();
   };
 
   const renderPharmacyContent = () => {
     if (pharmacyTab === 'receive') return renderOrderTable(pharmacyReceiveSeed, '接收编号');
-    if (pharmacyTab === 'review') return renderOrderTable(pharmacyReviewSeed, '审方编号');
-    if (pharmacyTab === 'dispense') return renderOrderTable(pharmacyDispenseSeed, '发药编号');
-    if (pharmacyTab === 'settle') return renderOrderTable(pharmacySettlementSeed, '结算编号');
-    if (pharmacyTab === 'special') return renderOrderTable(pharmacySpecialSeed, '登记编号');
+    if (pharmacyTab === 'review') return renderReviewTable();
+    if (pharmacyTab === 'dispense') return renderDispenseTable();
+    if (pharmacyTab === 'settle') return renderPharmacySettlementTable();
+    if (pharmacyTab === 'special') return renderSpecialTable();
     if (pharmacyTab === 'stock') return renderStockTable();
-    return renderOrderTable(pharmacySettlementSeed, '回盘编号');
+    return renderPharmacyReconcileTable();
   };
 
   const tabs = mode === 'hospital' ? hospitalTabs : pharmacyTabs;
