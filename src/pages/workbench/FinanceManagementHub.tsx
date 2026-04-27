@@ -2,8 +2,8 @@ import React, { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
-  ArrowRight,
   BookOpen,
+  Building2,
   CheckCircle2,
   ClipboardCheck,
   Download,
@@ -15,6 +15,7 @@ import {
   Search,
   Send,
   Upload,
+  Wallet,
   X,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -37,7 +38,7 @@ interface ActionButton {
 }
 
 interface TableColumn<T> {
-  key: keyof T | string;
+  key: keyof T;
   title: string;
   align?: 'left' | 'right' | 'center';
 }
@@ -54,6 +55,7 @@ interface FinanceRow extends BaseRow {
   field5: string;
   field6: string;
   field7?: string;
+  field8?: string;
 }
 
 interface SectionConfig<T extends BaseRow> {
@@ -74,6 +76,20 @@ interface PendingAction {
   confirmLabel: string;
 }
 
+interface BillDetailSection {
+  label: string;
+  items?: Array<{ label: string; value: string }>;
+  rows?: Array<Record<string, string>>;
+}
+
+interface BillDetailModalState {
+  type: 'receivable' | 'payable';
+  row: FinanceRow;
+  title: string;
+  tabs: Array<{ key: string; label: string }>;
+  sections: Record<string, BillDetailSection>;
+}
+
 interface ReportPreview {
   id: string;
   reportName: string;
@@ -84,13 +100,7 @@ interface ReportPreview {
   owner: string;
   generatedAt: string;
   summary: Array<{ label: string; value: string }>;
-  cityRows: Array<{
-    city: string;
-    income: string;
-    expense: string;
-    balance: string;
-    remark: string;
-  }>;
+  cityRows: Array<{ city: string; income: string; expense: string; balance: string; remark: string }>;
 }
 
 interface ReportGenerationForm {
@@ -101,20 +111,20 @@ interface ReportGenerationForm {
   targetId?: string;
 }
 
+const financeModules: FinanceModule[] = [
+  { id: 'arrival', title: '到账确认', icon: Landmark, color: 'from-emerald-500 to-emerald-600', description: '按应收账单、到账流水、到账差异三个阶段管理收入资金。' },
+  { id: 'reconcile', title: '对账中心', icon: Scale, color: 'from-cyan-500 to-cyan-600', description: '统一处理日对账、月对账和跨系统核对。' },
+  { id: 'difference', title: '差异处理', icon: AlertTriangle, color: 'from-rose-500 to-rose-600', description: '登记、核查并闭环处理差异问题。' },
+  { id: 'payment', title: '拨付管理', icon: Send, color: 'from-blue-500 to-blue-600', description: '按应付账单、拨付批次、回盘结果三个阶段管理基金拨付。' },
+  { id: 'ledger', title: '基金账务', icon: BookOpen, color: 'from-amber-500 to-amber-600', description: '基金总账、明细账、往来科目和余额跟踪。' },
+  { id: 'report', title: '财务报表', icon: FileText, color: 'from-violet-500 to-violet-600', description: '收支、拨付和专题报表生成、预览、发布。' },
+];
+
 const overviewStats = [
   { label: '本月基金收入', value: '12.68亿元' },
   { label: '本月基金支出', value: '11.94亿元' },
-  { label: '清算在途金额', value: '2,348.62万元' },
-  { label: '财务风险提示', value: '5项' },
-];
-
-const financeModules: FinanceModule[] = [
-  { id: 'arrival', title: '到账确认', icon: Landmark, color: 'from-emerald-500 to-emerald-600', description: '处理银行回单、税务到账和财政补助到账确认。' },
-  { id: 'reconcile', title: '对账中心', icon: Scale, color: 'from-cyan-500 to-cyan-600', description: '统一管理征缴台账、银行流水和清算专户对账。' },
-  { id: 'difference', title: '差异处理', icon: AlertTriangle, color: 'from-rose-500 to-rose-600', description: '登记、核查并办结未对平、挂账和重复入账问题。' },
-  { id: 'payment', title: '拨付管理', icon: Send, color: 'from-blue-500 to-blue-600', description: '覆盖拨付申请、拨付审核、回盘确认和退回重提。' },
-  { id: 'ledger', title: '基金账务', icon: BookOpen, color: 'from-amber-500 to-amber-600', description: '围绕基金科目、往来科目和明细账开展账务管理。' },
-  { id: 'report', title: '财务报表', icon: FileText, color: 'from-violet-500 to-violet-600', description: '统一管理基金收支、拨付分析和专题报表成品。' },
+  { label: '在途拨付金额', value: '2348.62万元' },
+  { label: '财务异常提示', value: '5项' },
 ];
 
 const commonColumns: Array<TableColumn<FinanceRow>> = [
@@ -138,6 +148,72 @@ const reportColumns: Array<TableColumn<FinanceRow>> = [
   { key: 'field6', title: '生成时间' },
 ];
 
+const receivableBillColumns: Array<TableColumn<FinanceRow>> = [
+  { key: 'id', title: '账单号' },
+  { key: 'field1', title: '缴费主体' },
+  { key: 'field2', title: '险种' },
+  { key: 'field3', title: '费款所属期' },
+  { key: 'field4', title: '应收金额' },
+  { key: 'field5', title: '已收金额' },
+  { key: 'field6', title: '未收金额' },
+  { key: 'field7', title: '账单状态' },
+  { key: 'field8', title: '生成时间' },
+];
+
+const payableBillColumns: Array<TableColumn<FinanceRow>> = [
+  { key: 'id', title: '账单号' },
+  { key: 'field1', title: '结算对象' },
+  { key: 'field2', title: '机构类型' },
+  { key: 'field3', title: '结算周期' },
+  { key: 'field4', title: '应付金额' },
+  { key: 'field5', title: '已付金额' },
+  { key: 'field6', title: '未付金额' },
+  { key: 'field7', title: '拨付状态' },
+  { key: 'field8', title: '结算批次' },
+];
+
+const arrivalExceptionColumns: Array<TableColumn<FinanceRow>> = [
+  { key: 'id', title: '异常编号' },
+  { key: 'field1', title: '关联账单/流水' },
+  { key: 'field2', title: '异常类型' },
+  { key: 'field3', title: '异常金额' },
+  { key: 'field4', title: '当前状态' },
+  { key: 'field5', title: '处理人' },
+  { key: 'field6', title: '发现时间' },
+  { key: 'field7', title: '异常说明' },
+];
+
+const arrivalFlowColumns: Array<TableColumn<FinanceRow>> = [
+  { key: 'id', title: '流水号' },
+  { key: 'field1', title: '到账渠道' },
+  { key: 'field2', title: '付款主体/附言' },
+  { key: 'field3', title: '到账金额' },
+  { key: 'field4', title: '关联账单' },
+  { key: 'field5', title: '匹配结果' },
+  { key: 'field6', title: '处理人' },
+  { key: 'field7', title: '到账时间' },
+];
+
+const paymentBatchColumns: Array<TableColumn<FinanceRow>> = [
+  { key: 'id', title: '批次号' },
+  { key: 'field1', title: '拨付类型' },
+  { key: 'field2', title: '结算对象/范围' },
+  { key: 'field3', title: '申请金额' },
+  { key: 'field4', title: '批次状态' },
+  { key: 'field5', title: '提交人' },
+  { key: 'field6', title: '提交时间' },
+];
+
+const paymentBackColumns: Array<TableColumn<FinanceRow>> = [
+  { key: 'id', title: '回盘号' },
+  { key: 'field1', title: '回盘结果' },
+  { key: 'field2', title: '关联机构/批次' },
+  { key: 'field3', title: '回盘金额' },
+  { key: 'field4', title: '处理状态' },
+  { key: 'field5', title: '处理人' },
+  { key: 'field6', title: '回盘时间' },
+];
+
 const buildRows = (rows: Array<Omit<FinanceRow, 'id'>>, prefix: string): FinanceRow[] =>
   rows.map((row, index) => ({ id: `${prefix}${String(index + 1).padStart(3, '0')}`, ...row }));
 
@@ -158,66 +234,11 @@ const reportPreviewMap: Record<string, ReportPreview> = {
       { label: '财政补助到账', value: '0.64亿元' },
     ],
     cityRows: [
-      { city: '南京', income: '5,620万元', expense: '5,180万元', balance: '440万元', remark: '门慢结算支出增长' },
-      { city: '无锡', income: '3,880万元', expense: '3,640万元', balance: '240万元', remark: '职工医保收入稳定' },
-      { city: '徐州', income: '4,320万元', expense: '4,080万元', balance: '240万元', remark: '居民医保支出平稳' },
-      { city: '常州', income: '2,960万元', expense: '2,770万元', balance: '190万元', remark: '双通道药店拨付正常' },
-      { city: '苏州', income: '6,240万元', expense: '5,960万元', balance: '280万元', remark: '异地结算资金回流' },
-      { city: '南通', income: '3,280万元', expense: '3,160万元', balance: '120万元', remark: '财政补助到账完成' },
-      { city: '连云港', income: '2,180万元', expense: '2,060万元', balance: '120万元', remark: '居民参保到账正常' },
-      { city: '淮安', income: '2,460万元', expense: '2,310万元', balance: '150万元', remark: '灵活就业缴费增长' },
-      { city: '盐城', income: '3,420万元', expense: '3,210万元', balance: '210万元', remark: '基金运行平稳' },
-      { city: '扬州', income: '2,540万元', expense: '2,410万元', balance: '130万元', remark: '待遇支付略增' },
-      { city: '镇江', income: '2,210万元', expense: '2,090万元', balance: '120万元', remark: '回款及时' },
-      { city: '泰州', income: '2,360万元', expense: '2,240万元', balance: '120万元', remark: '门诊统筹支出可控' },
-      { city: '宿迁', income: '2,110万元', expense: '1,980万元', balance: '130万元', remark: '财政补助核对完成' },
-    ],
-  },
-  SR002: {
-    id: 'SR002',
-    reportName: '基金月度收入汇总表',
-    reportType: '月报',
-    period: '2026年4月',
-    range: '省本级及各设区市',
-    status: '待上报',
-    owner: '周岚',
-    generatedAt: '2026-04-25 17:10',
-    summary: [
-      { label: '职工医保收入', value: '7.82亿元' },
-      { label: '居民医保收入', value: '3.46亿元' },
-      { label: '灵活就业收入', value: '1.12亿元' },
-      { label: '财政补助收入', value: '2.05亿元' },
-    ],
-    cityRows: [
-      { city: '南京', income: '1.28亿元', expense: '0.98亿元', balance: '0.30亿元', remark: '职工单位缴费占比高' },
-      { city: '无锡', income: '0.86亿元', expense: '0.71亿元', balance: '0.15亿元', remark: '税务共享到账及时' },
-      { city: '徐州', income: '0.92亿元', expense: '0.79亿元', balance: '0.13亿元', remark: '居民筹资集中到账' },
-      { city: '常州', income: '0.71亿元', expense: '0.60亿元', balance: '0.11亿元', remark: '基金运行正常' },
-      { city: '苏州', income: '1.46亿元', expense: '1.18亿元', balance: '0.28亿元', remark: '异地就医结算量大' },
-      { city: '南通', income: '0.74亿元', expense: '0.62亿元', balance: '0.12亿元', remark: '财政补助已确认' },
-    ],
-  },
-  SR003: {
-    id: 'SR003',
-    reportName: '财政补助拨入分析表',
-    reportType: '专题',
-    period: '2026年4月',
-    range: '全省',
-    status: '已发布',
-    owner: '曹颖',
-    generatedAt: '2026-04-24 16:40',
-    summary: [
-      { label: '本月财政补助', value: '2.05亿元' },
-      { label: '已到账金额', value: '1.94亿元' },
-      { label: '待确认金额', value: '0.11亿元' },
-      { label: '差异笔数', value: '5笔' },
-    ],
-    cityRows: [
-      { city: '南京', income: '1,520万元', expense: '1,480万元', balance: '40万元', remark: '月底拨付待核实' },
-      { city: '苏州', income: '1,860万元', expense: '1,810万元', balance: '50万元', remark: '分发完成' },
-      { city: '徐州', income: '1,240万元', expense: '1,210万元', balance: '30万元', remark: '补助清算正常' },
-      { city: '盐城', income: '1,110万元', expense: '1,080万元', balance: '30万元', remark: '异地拨入完成' },
-      { city: '宿迁', income: '920万元', expense: '890万元', balance: '30万元', remark: '待月末复核' },
+      { city: '南京', income: '5620万元', expense: '5180万元', balance: '440万元', remark: '门慢结算支出增长' },
+      { city: '无锡', income: '3880万元', expense: '3640万元', balance: '240万元', remark: '职工医保收入稳定' },
+      { city: '徐州', income: '4320万元', expense: '4080万元', balance: '240万元', remark: '居民医保支出平稳' },
+      { city: '苏州', income: '6240万元', expense: '5960万元', balance: '280万元', remark: '异地清算量较大' },
+      { city: '南通', income: '3280万元', expense: '3160万元', balance: '120万元', remark: '到账确认及时' },
     ],
   },
   BFB001: {
@@ -236,10 +257,10 @@ const reportPreviewMap: Record<string, ReportPreview> = {
       { label: '退回重提批次', value: '7批次' },
     ],
     cityRows: [
-      { city: '南京', income: '4,800万元', expense: '4,300万元', balance: '500万元', remark: '三甲医院批次已回盘' },
-      { city: '苏州', income: '5,600万元', expense: '5,020万元', balance: '580万元', remark: '双通道药店已分发' },
-      { city: '无锡', income: '3,920万元', expense: '3,510万元', balance: '410万元', remark: '待复核1批' },
-      { city: '南通', income: '3,180万元', expense: '2,960万元', balance: '220万元', remark: '回盘正常' },
+      { city: '南京', income: '4800万元', expense: '4300万元', balance: '500万元', remark: '三甲医院批次已回盘' },
+      { city: '苏州', income: '5600万元', expense: '5020万元', balance: '580万元', remark: '双通道药店已分发' },
+      { city: '无锡', income: '3920万元', expense: '3510万元', balance: '410万元', remark: '待复核2批' },
+      { city: '南通', income: '3180万元', expense: '2960万元', balance: '220万元', remark: '回盘正常' },
     ],
   },
 };
@@ -247,57 +268,95 @@ const reportPreviewMap: Record<string, ReportPreview> = {
 const moduleSections: Record<ModuleId, { title: string; desc: string; sections: Array<SectionConfig<FinanceRow>> }> = {
   arrival: {
     title: '到账确认',
-    desc: '围绕银行回单、税务到账和财政补助到账进行确认与留痕。',
+    desc: '先看应收账单，再核对到账流水，最后处理到账差异，流程更顺也更像真实财务业务。',
     sections: [
       {
-        key: 'arrival_bank',
-        label: '银行到账确认',
-        title: '银行到账确认',
-        subtitle: '核对银行回单与医保征缴到账信息。',
+        key: 'arrival_receivable',
+        label: '应收账单',
+        title: '应收账单',
+        subtitle: '统一管理单位缴费、个人缴费、居民征缴和财政补助等应收账单，作为到账核对的源头台账。',
         importable: true,
         toolbar: [
-          { label: '查询', action: '查询银行到账记录' },
-          { label: '导入回单', action: '导入银行回单' },
-          { label: '导出结果', action: '导出银行到账结果' },
+          { label: '查询', action: '查询应收账单' },
+          { label: '导入账单', action: '导入应收账单' },
+          { label: '导出结果', action: '导出应收账单结果' },
         ],
-        columns: commonColumns,
+        columns: receivableBillColumns,
         data: buildRows([
-          { field1: '南京华宁科技有限公司', field2: '职工医保单位缴费', field3: '84.26万元', field4: '已确认', field5: '周岚', field6: '2026-04-26 09:18' },
-          { field1: '苏州恒川精密制造有限公司', field2: '职工医保单位缴费', field3: '126.38万元', field4: '已确认', field5: '陆敏', field6: '2026-04-26 09:42' },
-          { field1: '无锡瑞康药业连锁有限公司', field2: '生育保险缴费', field3: '18.42万元', field4: '待确认', field5: '钱莉', field6: '2026-04-26 10:05' },
-        ], 'DZ'),
+          { field1: '南京华宁科技有限公司', field2: '职工医保', field3: '2026年04月', field4: '84.26万元', field5: '84.26万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 08:30' },
+          { field1: '苏州恒川精密制造有限公司', field2: '职工医保', field3: '2026年04月', field4: '126.38万元', field5: '126.38万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 08:42' },
+          { field1: '无锡瑞康药业连锁有限公司', field2: '生育保险', field3: '2026年04月', field4: '18.42万元', field5: '0.00万元', field6: '18.42万元', field7: '待到账', field8: '2026-04-26 09:05' },
+          { field1: '徐州云龙人力资源服务有限公司', field2: '灵活就业医保', field3: '2026年04月', field4: '42.87万元', field5: '38.11万元', field6: '4.76万元', field7: '部分到账', field8: '2026-04-26 09:16' },
+          { field1: '常州经开区居民医保专户', field2: '城乡居民医保', field3: '2026年04月', field4: '65.30万元', field5: '65.30万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 09:20' },
+          { field1: '苏州工业园区财政局', field2: '财政补助', field3: '2026年第二季度', field4: '320.00万元', field5: '200.00万元', field6: '120.00万元', field7: '部分到账', field8: '2026-04-26 09:28' },
+          { field1: '南通海门区教育局', field2: '学生居民医保', field3: '2026年春季学期', field4: '28.40万元', field5: '28.40万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 09:36' },
+          { field1: '连云港赣榆区退役军人事务局', field2: '退役军人医保补助', field3: '2026年04月', field4: '12.80万元', field5: '0.00万元', field6: '12.80万元', field7: '待到账', field8: '2026-04-26 09:48' },
+          { field1: '淮安清江浦区社区居民专户', field2: '城乡居民医保', field3: '2026年04月', field4: '33.76万元', field5: '33.76万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 09:54' },
+          { field1: '盐城亭湖区灵活就业专户', field2: '灵活就业医保', field3: '2026年04月', field4: '21.95万元', field5: '18.52万元', field6: '3.43万元', field7: '部分到账', field8: '2026-04-26 10:02' },
+          { field1: '扬州江都区医保中心', field2: '大病保险', field3: '2026年04月', field4: '15.68万元', field5: '15.68万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 10:08' },
+          { field1: '镇江丹徒区民政局', field2: '医疗救助配套补助', field3: '2026年第二季度', field4: '46.00万元', field5: '0.00万元', field6: '46.00万元', field7: '待到账', field8: '2026-04-26 10:16' },
+          { field1: '泰州海陵区机关事业单位', field2: '职工医保', field3: '2026年04月', field4: '58.92万元', field5: '58.92万元', field6: '0.00万元', field7: '已收清', field8: '2026-04-26 10:22' },
+          { field1: '宿迁宿豫区居民医保专户', field2: '城乡居民医保', field3: '2026年04月', field4: '25.73万元', field5: '19.73万元', field6: '6.00万元', field7: '部分到账', field8: '2026-04-26 10:30' },
+        ], 'YS'),
         rowActions: (row) => [
-          { label: '查看', action: `查看到账记录 ${row.id}` },
-          { label: '确认到账', action: `确认到账 ${row.id}`, tone: 'primary' },
+          { label: '查看', action: `查看应收账单 ${row.id}` },
+          { label: '关联流水', action: `关联流水 ${row.id}`, tone: 'primary' },
         ],
       },
       {
-        key: 'arrival_tax',
-        label: '税务到账确认',
-        title: '税务到账确认',
-        subtitle: '核对税务共享平台与系统到账信息。',
+        key: 'arrival_confirm',
+        label: '到账流水',
+        title: '到账流水',
+        subtitle: '统一接收银行回单、税务共享流水和财政拨款流水，完成与应收账单的匹配核对。',
         importable: true,
         toolbar: [
-          { label: '查询', action: '查询税务到账记录' },
-          { label: '导入台账', action: '导入税务到账台账' },
-          { label: '导出结果', action: '导出税务到账结果' },
+          { label: '查询', action: '查询到账流水' },
+          { label: '导入流水', action: '导入到账流水' },
+          { label: '导出结果', action: '导出到账流水结果' },
         ],
-        columns: commonColumns,
+        columns: arrivalFlowColumns,
         data: buildRows([
-          { field1: '徐州泉山人力资源服务中心', field2: '灵活就业医保缴费', field3: '42.87万元', field4: '已确认', field5: '赵静', field6: '2026-04-26 10:26' },
-          { field1: '扬州市广陵区医保中心', field2: '居民医保缴费', field3: '35.16万元', field4: '待确认', field5: '邹琳', field6: '2026-04-26 10:56' },
-          { field1: '镇江市京口区医保中心', field2: '居民医保批量缴费', field3: '28.43万元', field4: '已确认', field5: '唐璐', field6: '2026-04-26 11:18' },
-        ], 'SW'),
+          { field1: '建设银行省分行回单', field2: '南京华宁科技有限公司 / 职工医保2026年04月', field3: '84.26万元', field4: 'YS001', field5: '已匹配', field6: '周岚', field7: '2026-04-26 10:18' },
+          { field1: '税务共享缴费流水', field2: '徐州云龙人力资源服务有限公司 / 灵活就业医保', field3: '38.11万元', field4: 'YS004', field5: '部分匹配', field6: '赵静', field7: '2026-04-26 10:26' },
+          { field1: '财政补助拨款通知', field2: '苏州工业园区财政局 / 2026年第二季度补助', field3: '200.00万元', field4: 'YS006', field5: '已匹配', field6: '曹颖', field7: '2026-04-26 10:33' },
+          { field1: '工商银行回单', field2: '连云港赣榆区退役军人事务局 / 退役军人补助', field3: '12.80万元', field4: 'YS008', field5: '待匹配', field6: '韩倩', field7: '2026-04-26 10:45' },
+          { field1: '建设银行灵活就业专户', field2: '盐城亭湖区灵活就业专户 / 4月费款', field3: '18.52万元', field4: 'YS010', field5: '已匹配', field6: '曹颖', field7: '2026-04-26 11:02' },
+          { field1: '民政专项补助流水', field2: '镇江丹徒区民政局 / 医疗救助配套补助', field3: '46.00万元', field4: 'YS012', field5: '待匹配', field6: '唐璐', field7: '2026-04-26 11:16' },
+        ], 'LS'),
         rowActions: (row) => [
-          { label: '查看', action: `查看税务到账 ${row.id}` },
-          { label: '确认到账', action: `确认税务到账 ${row.id}`, tone: 'primary' },
+          { label: '查看', action: `查看到账流水 ${row.id}` },
+          { label: '匹配账单', action: `匹配账单 ${row.id}`, tone: 'primary' },
+        ],
+      },
+      {
+        key: 'arrival_exception',
+        label: '到账差异',
+        title: '到账差异',
+        subtitle: '统一登记少到账、错到账、重复到账和长时间未到账等差异问题，形成处理闭环。',
+        importable: true,
+        toolbar: [
+          { label: '查询', action: '查询到账差异' },
+          { label: '导入差异', action: '导入到账差异清单' },
+          { label: '导出结果', action: '导出到账差异结果' },
+        ],
+        columns: arrivalExceptionColumns,
+        data: buildRows([
+          { field1: 'YS004 / 建行江苏省分行流水2404260018', field2: '少到账', field3: '4.76万元', field4: '处理中', field5: '赵静', field6: '2026-04-26 10:31', field7: '到账金额少于应收账单，待税务侧复核' },
+          { field1: 'YS006 / 财政补助拨款通知2026Q2-12', field2: '到账延期', field3: '120.00万元', field4: '协查中', field5: '曹颖', field6: '2026-04-26 10:52', field7: '财政补助仅到账首笔，剩余未拨入' },
+          { field1: 'YS008 / 工行回单20260426-2231', field2: '未到账', field3: '12.80万元', field4: '待处理', field5: '韩倩', field6: '2026-04-26 11:05', field7: '退役军人补助账单超时未回款' },
+          { field1: 'YS014 / 农行回单20260426-8892', field2: '重复到账', field3: '19.73万元', field4: '待冲退', field5: '彭雪', field6: '2026-04-26 11:18', field7: '银行回单重复入账，需发起冲退处理' },
+          { field1: 'YS012 / 民政专项补助流水20260426-17', field2: '错账', field3: '46.00万元', field4: '处理中', field5: '唐璐', field6: '2026-04-26 11:28', field7: '附言信息缺失，无法自动匹配账单' },
+        ], 'YC'),
+        rowActions: (row) => [
+          { label: '查看', action: `查看到账差异 ${row.id}` },
+          { label: '发起处理', action: `发起到账差异处理 ${row.id}`, tone: 'primary' },
         ],
       },
     ],
   },
   reconcile: {
     title: '对账中心',
-    desc: '统一管理医保征缴、银行流水、税务平台和清算专户之间的批次对账。',
+    desc: '负责系统间对账和批次核对，重点看是否对平，不直接承担差异处置。',
     sections: [
       {
         key: 'reconcile_daily',
@@ -330,7 +389,7 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
         toolbar: [
           { label: '查询', action: '查询月度对账' },
           { label: '导入汇总文件', action: '导入月度汇总文件' },
-          { label: '导出汇总', action: '导出月度对账汇总' },
+          { label: '导出结果', action: '导出月度对账结果' },
         ],
         columns: commonColumns,
         data: buildRows([
@@ -347,7 +406,7 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
   },
   difference: {
     title: '差异处理',
-    desc: '承接未对平、重复入账、挂账等问题，形成差异登记、核查、冲销和办结台账。',
+    desc: '承接到账侧和对账侧抛转的问题，完成登记、核查、协办和办结闭环。',
     sections: [
       {
         key: 'difference_register',
@@ -357,14 +416,14 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
         importable: true,
         toolbar: [
           { label: '查询', action: '查询差异登记' },
-          { label: '批量导入', action: '批量导入差异' },
+          { label: '导入差异', action: '导入差异清单' },
           { label: '导出结果', action: '导出差异清单' },
         ],
         columns: commonColumns,
         data: buildRows([
           { field1: '到账金额不一致', field2: 'DZP20260426-03', field3: '12.00万元', field4: '处理中', field5: '许文博', field6: '2026-04-26 11:20' },
           { field1: '银行回单缺单位编码', field2: 'DZP20260426-04', field3: '3.26万元', field4: '待补录', field5: '陆雨桐', field6: '2026-04-26 11:32' },
-          { field1: '重复入账', field2: 'DZP20260425-11', field3: '5.60万元', field4: '待冲回', field5: '韩嘉钰', field6: '2026-04-26 12:08' },
+          { field1: '重复入账', field2: 'DZP20260425-11', field3: '5.60万元', field4: '待冲回', field5: '韩嘉铭', field6: '2026-04-26 12:08' },
         ], 'CY'),
         rowActions: (row) => [
           { label: '查看', action: `查看差异 ${row.id}` },
@@ -379,14 +438,14 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
         importable: true,
         toolbar: [
           { label: '查询', action: '查询核查协办' },
-          { label: '导入差异台账', action: '导入差异台账' },
+          { label: '导入协查', action: '导入协查清单' },
           { label: '导出结果', action: '导出协查结果' },
         ],
         columns: commonColumns,
         data: buildRows([
-          { field1: '财政补助未到账', field2: 'DZP20260425-08', field3: '18.00万元', field4: '协查中', field5: '陈知夏', field6: '2026-04-26 13:08' },
+          { field1: '财政补助未到账', field2: 'DZP20260425-08', field3: '18.00万元', field4: '协查中', field5: '陈知远', field6: '2026-04-26 13:08' },
           { field1: '银行回盘金额偏差', field2: 'BF20260424015', field3: '600元', field4: '待回复', field5: '陆敏', field6: '2026-04-26 13:20' },
-          { field1: '税务到账日期异常', field2: 'SW20260426002', field3: '35.16万元', field4: '已核实', field5: '邹琳', field6: '2026-04-26 13:48' },
+          { field1: '税务到账日期异常', field2: 'SW20260426002', field3: '35.16万元', field4: '已核实', field5: '邵琳', field6: '2026-04-26 13:48' },
         ], 'HC'),
         rowActions: (row) => [
           { label: '查看', action: `查看核查 ${row.id}` },
@@ -397,53 +456,88 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
   },
   payment: {
     title: '拨付管理',
-    desc: '覆盖拨付申请、拨付审核、回盘确认和退回重提的全流程管理。',
+    desc: '先形成应付账单，再汇总拨付批次，最后核对银行回盘结果，流程和到账侧对应。',
     sections: [
       {
-        key: 'payment_apply',
-        label: '拨付申请',
-        title: '拨付申请',
-        subtitle: '查看待拨付、已提交和退回重提批次。',
+        key: 'payment_payable',
+        label: '应付账单',
+        title: '应付账单',
+        subtitle: '统一管理定点医疗机构、药店、零星报销和异地结算等应付账单。',
         toolbar: [
-          { label: '查询', action: '查询拨付申请' },
-          { label: '导出清单', action: '导出拨付申请清单' },
+          { label: '查询', action: '查询应付账单' },
+          { label: '导出清单', action: '导出应付账单清单' },
         ],
-        columns: commonColumns,
+        columns: payableBillColumns,
         data: buildRows([
-          { field1: 'BF20260426001', field2: '南京市第一医院', field3: '285.00万元', field4: '待审核', field5: '周岚', field6: '2026-04-26 09:30' },
-          { field1: 'BF20260426002', field2: '苏州大学附属第一医院', field3: '420.00万元', field4: '待复核', field5: '陆敏', field6: '2026-04-26 09:52' },
-          { field1: 'BF20260426003', field2: '无锡市人民医院', field3: '198.00万元', field4: '退回重提', field5: '钱莉', field6: '2026-04-26 10:20' },
+          { field1: '南京市第一医院', field2: '三甲医院', field3: '2026年04月上旬', field4: '285.00万元', field5: '0.00万元', field6: '285.00万元', field7: '待拨付', field8: 'JSJF202604-NJ-001' },
+          { field1: '苏州大学附属第一医院', field2: '三甲医院', field3: '2026年04月上旬', field4: '420.00万元', field5: '0.00万元', field6: '420.00万元', field7: '待复核', field8: 'JSJF202604-SZ-003' },
+          { field1: '无锡市人民医院', field2: '三甲医院', field3: '2026年04月上旬', field4: '198.00万元', field5: '0.00万元', field6: '198.00万元', field7: '退回重提', field8: 'JSJF202604-WX-002' },
+          { field1: '徐州广济连锁大药房双通道门店', field2: '双通道药店', field3: '2026年04月第3周', field4: '56.80万元', field5: '56.80万元', field6: '0.00万元', field7: '已拨付', field8: 'JSJF202604-XZ-011' },
+          { field1: '常州市第二人民医院', field2: '三甲医院', field3: '2026年04月上旬', field4: '176.50万元', field5: '80.00万元', field6: '96.50万元', field7: '部分拨付', field8: 'JSJF202604-CZ-004' },
+          { field1: '苏州工业园区星湖医院', field2: '社区医院', field3: '2026年04月门慢结算', field4: '32.40万元', field5: '0.00万元', field6: '32.40万元', field7: '待拨付', field8: 'JSJF202604-SZ-018' },
+          { field1: '南通市第一人民医院', field2: '三甲医院', field3: '2026年04月上旬', field4: '223.00万元', field5: '223.00万元', field6: '0.00万元', field7: '已拨付', field8: 'JSJF202604-NT-006' },
+          { field1: '连云港市第一人民医院', field2: '三甲医院', field3: '2026年04月异地清算', field4: '128.60万元', field5: '0.00万元', field6: '128.60万元', field7: '待审核', field8: 'JSJF202604-LYG-005' },
+          { field1: '淮安市淮阴医院', field2: '三级医院', field3: '2026年04月住院结算', field4: '96.30万元', field5: '96.30万元', field6: '0.00万元', field7: '已拨付', field8: 'JSJF202604-HA-009' },
+          { field1: '盐城华泽大药房双通道门店', field2: '双通道药店', field3: '2026年04月第3周', field4: '41.72万元', field5: '0.00万元', field6: '41.72万元', field7: '待拨付', field8: 'JSJF202604-YC-016' },
+          { field1: '扬州市中医院', field2: '三甲医院', field3: '2026年04月门特结算', field4: '87.65万元', field5: '30.00万元', field6: '57.65万元', field7: '部分拨付', field8: 'JSJF202604-YZ-010' },
+          { field1: '镇江市第一人民医院', field2: '三甲医院', field3: '2026年04月上旬', field4: '164.20万元', field5: '0.00万元', field6: '164.20万元', field7: '待拨付', field8: 'JSJF202604-ZJ-007' },
+          { field1: '泰州人民医院', field2: '三甲医院', field3: '2026年04月零星报销', field4: '24.86万元', field5: '24.86万元', field6: '0.00万元', field7: '已拨付', field8: 'JSJF202604-TZ-013' },
+          { field1: '宿迁市第一人民医院', field2: '三甲医院', field3: '2026年04月异地清算', field4: '78.44万元', field5: '0.00万元', field6: '78.44万元', field7: '待复核', field8: 'JSJF202604-SQ-012' },
+        ], 'YF'),
+        rowActions: (row) => [
+          { label: '查看', action: `查看应付账单 ${row.id}` },
+          { label: '生成批次', action: `生成拨付批次 ${row.id}`, tone: 'primary' },
+        ],
+      },
+      {
+        key: 'payment_apply',
+        label: '拨付批次',
+        title: '拨付批次',
+        subtitle: '查看由应付账单汇总生成的待提交、待审核、退回重提和已发送银行批次。',
+        toolbar: [
+          { label: '查询', action: '查询拨付批次' },
+          { label: '导出清单', action: '导出拨付批次清单' },
+        ],
+        columns: paymentBatchColumns,
+        data: buildRows([
+          { field1: '住院结算拨付', field2: '南京市第一医院等12家机构', field3: '285.00万元', field4: '待审核', field5: '周岚', field6: '2026-04-26 09:30' },
+          { field1: '住院结算拨付', field2: '苏州大学附属第一医院等9家机构', field3: '420.00万元', field4: '待复核', field5: '陆敏', field6: '2026-04-26 09:52' },
+          { field1: '住院结算拨付', field2: '无锡市人民医院等7家机构', field3: '198.00万元', field4: '退回重提', field5: '钱莉', field6: '2026-04-26 10:20' },
+          { field1: '双通道特药拨付', field2: '盐城华泽大药房等18家药店', field3: '41.72万元', field4: '待审核', field5: '曹颖', field6: '2026-04-26 10:42' },
+          { field1: '异地结算拨付', field2: '宿迁市第一人民医院等5家机构', field3: '78.44万元', field4: '待复核', field5: '彭雪', field6: '2026-04-26 11:08' },
         ], 'BF'),
         rowActions: (row) => [
           { label: '查看', action: `查看拨付批次 ${row.id}` },
-          { label: '提交审核', action: `提交审核 ${row.id}`, tone: 'primary' },
+          { label: '发送银行', action: `发送银行 ${row.id}`, tone: 'primary' },
         ],
       },
       {
         key: 'payment_back',
-        label: '回盘确认',
-        title: '回盘确认',
-        subtitle: '查看银行回盘和退回重提情况。',
+        label: '回盘结果',
+        title: '回盘结果',
+        subtitle: '查看银行回盘成功、失败、退回重提等结果，并与拨付批次进行闭环核对。',
         toolbar: [
-          { label: '查询', action: '查询回盘记录' },
-          { label: '导出回盘', action: '导出回盘记录' },
+          { label: '查询', action: '查询回盘结果' },
+          { label: '导出回盘', action: '导出回盘结果' },
         ],
-        columns: commonColumns,
+        columns: paymentBackColumns,
         data: buildRows([
-          { field1: '回盘成功', field2: '南京市第一医院', field3: '285.00万元', field4: '已到账', field5: '周岚', field6: '2026-04-26 14:10' },
-          { field1: '回盘成功', field2: '南通市第一人民医院', field3: '223.00万元', field4: '已到账', field5: '高宁', field6: '2026-04-26 14:18' },
-          { field1: '回盘退回', field2: '苏州市立医院', field3: '209.00万元', field4: '待重提', field5: '陆敏', field6: '2026-04-26 14:26' },
+          { field1: '回盘成功', field2: '南京市第一医院 / BF001', field3: '285.00万元', field4: '已到账', field5: '周岚', field6: '2026-04-26 14:10' },
+          { field1: '回盘成功', field2: '南通市第一人民医院 / BF006', field3: '223.00万元', field4: '已到账', field5: '高宁', field6: '2026-04-26 14:18' },
+          { field1: '回盘退回', field2: '苏州市立医院 / BF002', field3: '209.00万元', field4: '待重提', field5: '陆敏', field6: '2026-04-26 14:26' },
+          { field1: '回盘成功', field2: '徐州广济连锁大药房双通道门店 / BF011', field3: '56.80万元', field4: '已到账', field5: '赵静', field6: '2026-04-26 14:32' },
+          { field1: '回盘退回', field2: '宿迁市第一人民医院 / BF005', field3: '78.44万元', field4: '待重提', field5: '彭雪', field6: '2026-04-26 14:45' },
         ], 'HP'),
         rowActions: (row) => [
-          { label: '查看', action: `查看回盘 ${row.id}` },
-          { label: '重新提交', action: `重新提交 ${row.id}`, tone: 'primary' },
+          { label: '查看', action: `查看回盘结果 ${row.id}` },
+          { label: '发起重提', action: `发起回盘重提 ${row.id}`, tone: 'primary' },
         ],
       },
     ],
   },
   ledger: {
     title: '基金账务',
-    desc: '按基金科目、往来科目和挂账科目进行总账、明细账和余额跟踪。',
+    desc: '聚焦基金入账后的会计视角，查看科目余额、凭证明细和往来挂账情况。',
     sections: [
       {
         key: 'ledger_subject',
@@ -456,7 +550,7 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
         ],
         columns: commonColumns,
         data: buildRows([
-          { field1: '100201', field2: '职工医保基金收入', field3: '本日借方 1,260.00万元', field4: '余额正常', field5: '周岚', field6: '2026-04-26 15:00' },
+          { field1: '100201', field2: '职工医保基金收入', field3: '本日借方 1260.00万元', field4: '余额正常', field5: '周岚', field6: '2026-04-26 15:00' },
           { field1: '100202', field2: '居民医保基金收入', field3: '本日借方 860.00万元', field4: '余额正常', field5: '陆敏', field6: '2026-04-26 15:00' },
           { field1: '220301', field2: '财政补助往来', field3: '余额 188.00万元', field4: '待核销', field5: '曹颖', field6: '2026-04-26 15:00' },
         ], 'KM'),
@@ -489,7 +583,7 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
   },
   report: {
     title: '财务报表',
-    desc: '统一管理报表目录、报表生成、报表预览、单张导出和发布分发。',
+    desc: '统一管理基金收支、拨付进度和专题分析报表，支持生成、预览、导出和发布。',
     sections: [
       {
         key: 'report_income',
@@ -544,26 +638,27 @@ const moduleSections: Record<ModuleId, { title: string; desc: string; sections: 
 function statusBadge(status: string) {
   const styleMap: Record<string, string> = {
     已确认: 'bg-emerald-100 text-emerald-700',
+    已收清: 'bg-emerald-100 text-emerald-700',
     对平: 'bg-emerald-100 text-emerald-700',
-    已办结: 'bg-emerald-100 text-emerald-700',
     已到账: 'bg-emerald-100 text-emerald-700',
+    已拨付: 'bg-emerald-100 text-emerald-700',
     已记账: 'bg-emerald-100 text-emerald-700',
     已生成: 'bg-emerald-100 text-emerald-700',
     已发布: 'bg-blue-100 text-blue-700',
     已核实: 'bg-cyan-100 text-cyan-700',
+    部分到账: 'bg-amber-100 text-amber-700',
+    部分拨付: 'bg-amber-100 text-amber-700',
+    待到账: 'bg-amber-100 text-amber-700',
     待确认: 'bg-amber-100 text-amber-700',
     待复核: 'bg-amber-100 text-amber-700',
-    待补录: 'bg-amber-100 text-amber-700',
-    待重提: 'bg-amber-100 text-amber-700',
-    待上报: 'bg-amber-100 text-amber-700',
     待审核: 'bg-yellow-100 text-yellow-700',
     处理中: 'bg-rose-100 text-rose-700',
     协查中: 'bg-rose-100 text-rose-700',
-    存在差异: 'bg-rose-100 text-rose-700',
     退回重提: 'bg-rose-100 text-rose-700',
     退回修订: 'bg-rose-100 text-rose-700',
-    余额正常: 'bg-slate-100 text-slate-700',
+    待冲退: 'bg-orange-100 text-orange-700',
     待核销: 'bg-orange-100 text-orange-700',
+    余额正常: 'bg-slate-100 text-slate-700',
   };
   return <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${styleMap[status] || 'bg-gray-100 text-gray-700'}`}>{status}</span>;
 }
@@ -603,11 +698,160 @@ function createFallbackReportPreview(row: FinanceRow): ReportPreview {
       { label: '当前状态', value: row.field4 },
     ],
     cityRows: [
-      { city: '南京', income: '4,260万元', expense: '4,020万元', balance: '240万元', remark: '自动汇总生成' },
-      { city: '苏州', income: '5,180万元', expense: '4,860万元', balance: '320万元', remark: '支持单张导出' },
-      { city: '徐州', income: '3,760万元', expense: '3,520万元', balance: '240万元', remark: '待人工复核' },
-      { city: '南通', income: '2,980万元', expense: '2,770万元', balance: '210万元', remark: '可继续发布' },
+      { city: '南京', income: '4260万元', expense: '4020万元', balance: '240万元', remark: '自动汇总生成' },
+      { city: '苏州', income: '5180万元', expense: '4860万元', balance: '320万元', remark: '支持单张导出' },
+      { city: '徐州', income: '3760万元', expense: '3520万元', balance: '240万元', remark: '待人工复核' },
+      { city: '南通', income: '2980万元', expense: '2770万元', balance: '210万元', remark: '可继续发布' },
     ],
+  };
+}
+
+function buildReceivableBillDetail(row: FinanceRow): BillDetailModalState {
+  const payerCodeMap: Record<string, string> = {
+    南京华宁科技有限公司: '91320104759423198K',
+    苏州恒川精密制造有限公司: '91320594682137456Q',
+    无锡瑞康药业连锁有限公司: '91320214681273654M',
+    徐州云龙人力资源服务有限公司: '91320303694527361L',
+    常州经开区居民医保专户: 'CZJKQJMYB202604',
+    苏州工业园区财政局: 'SZGYYQCZJ2026Q2',
+    南通海门区教育局: 'NTHMJYJ2026S1',
+    连云港赣榆区退役军人事务局: 'LYGGYTYJRSW202604',
+    淮安清江浦区社区居民专户: 'HAQJPJM202604',
+    盐城亭湖区灵活就业专户: 'YCTHLHJY202604',
+    扬州江都区医保中心: 'YZJDYBZX202604',
+    镇江丹徒区民政局: 'ZJDTMZJ2026Q2',
+    泰州海陵区机关事业单位: 'TZHLJG202604',
+    宿迁宿豫区居民医保专户: 'SQSYJM202604',
+  };
+
+  const mainItems = [
+    { label: '账单号', value: row.id },
+    { label: '缴费主体', value: row.field1 },
+    { label: '主体编码', value: payerCodeMap[row.field1] || `${row.id}-CODE` },
+    { label: '险种', value: row.field2 },
+    { label: '费款所属期', value: row.field3 },
+    { label: '账单状态', value: row.field7 || '待处理' },
+    { label: '生成时间', value: row.field8 || row.field6 },
+    { label: '经办机构', value: `${row.field1.slice(0, 2)}医保中心` },
+  ];
+
+  const amountItems = [
+    { label: '应收金额', value: row.field4 },
+    { label: '已收金额', value: row.field5 },
+    { label: '未收金额', value: row.field6 },
+    { label: '单位应缴', value: row.field2.includes('职工') ? row.field4 : '0.00万元' },
+    { label: '个人应缴', value: row.field2.includes('职工') || row.field2.includes('灵活') ? '18.26万元' : '0.00万元' },
+    { label: '财政补助', value: row.field2.includes('财政') || row.field2.includes('补助') ? row.field4 : '0.00万元' },
+    { label: '滞纳金', value: '0.00万元' },
+    { label: '减免金额', value: '0.00万元' },
+  ];
+
+  const arrivalItems = [
+    { label: '到账银行', value: '中国建设银行江苏省分行营业部' },
+    { label: '回单号', value: `HD${row.id.slice(-3)}20260426` },
+    { label: '银行流水号', value: `JSYH20260426${row.id.slice(-3)}` },
+    { label: '到账时间', value: row.field7 === '待到账' ? '-' : `${row.field8 || row.field6} 10:28` },
+    { label: '到账方式', value: row.field2.includes('财政') ? '财政专户拨入' : '银行托收到账' },
+    { label: '到账批次', value: `ARR-${row.id}` },
+    { label: '到账结果', value: row.field7 || '待处理' },
+    { label: '备注', value: row.field7 === '部分到账' ? '到账金额与账单金额存在差额，待差异处理。' : '账单到账信息完整。' },
+  ];
+
+  const trackRows = [
+    { 环节: '账单生成', 时间: row.field8 || row.field6, 处理人: '系统自动', 结果: '已生成', 说明: '根据征缴台账自动生成应收账单' },
+    { 环节: '账单推送', 时间: row.field8 || row.field6, 处理人: '周岚', 结果: '已发送', 说明: '已推送到到账确认队列' },
+    { 环节: '到账确认', 时间: row.field7 === '待到账' ? '-' : row.field6, 处理人: row.field1.slice(0, 2) + '财务岗', 结果: row.field7 || '待确认', 说明: row.field7 === '部分到账' ? '存在部分到账差额' : '到账信息已核验' },
+    { 环节: '差异处理', 时间: row.field7 === '部分到账' ? row.field6 : '-', 处理人: row.field7 === '部分到账' ? '赵静' : '-', 结果: row.field7 === '部分到账' ? '处理中' : '无需处理', 说明: row.field7 === '部分到账' ? '待补核对税务侧明细' : '无差异' },
+  ];
+
+  return {
+    type: 'receivable',
+    row,
+    title: `应收账单详情 - ${row.id}`,
+    tabs: [
+      { key: 'basic', label: '基本信息' },
+      { key: 'amount', label: '金额构成' },
+      { key: 'arrival', label: '到账信息' },
+      { key: 'track', label: '处理轨迹' },
+    ],
+    sections: {
+      basic: { label: '基本信息', items: mainItems },
+      amount: { label: '金额构成', items: amountItems },
+      arrival: { label: '到账信息', items: arrivalItems },
+      track: { label: '处理轨迹', rows: trackRows },
+    },
+  };
+}
+
+function buildPayableBillDetail(row: FinanceRow): BillDetailModalState {
+  const instCodeMap: Record<string, string> = {
+    南京市第一医院: 'H3201000001',
+    苏州大学附属第一医院: 'H3205000003',
+    无锡市人民医院: 'H3202000002',
+    徐州广济连锁大药房双通道门店: 'P3203001016',
+    常州市第二人民医院: 'H3204000005',
+    苏州工业园区星湖医院: 'H3205001048',
+    南通市第一人民医院: 'H3206000001',
+    连云港市第一人民医院: 'H3207000001',
+    淮安市淮阴医院: 'H3208000017',
+    盐城华泽大药房双通道门店: 'P3209001022',
+    扬州市中医院: 'H3210000006',
+    镇江市第一人民医院: 'H3211000001',
+    泰州人民医院: 'H3212000001',
+    宿迁市第一人民医院: 'H3213000001',
+  };
+
+  const basicItems = [
+    { label: '账单号', value: row.id },
+    { label: '结算对象', value: row.field1 },
+    { label: '机构类型', value: row.field2 },
+    { label: '医保定点编码', value: instCodeMap[row.field1] || `${row.id}-INST` },
+    { label: '结算周期', value: row.field3 },
+    { label: '结算批次', value: row.field8 || `JSJF-${row.id}` },
+    { label: '开户行', value: '中国银行江苏省分行营业部' },
+    { label: '收款账号', value: `622848******${row.id.slice(-4)}` },
+  ];
+
+  const amountItems = [
+    { label: '应付金额', value: row.field4 },
+    { label: '已付金额', value: row.field5 },
+    { label: '未付金额', value: row.field6 },
+    { label: '统筹基金支付', value: row.field4 },
+    { label: '大病保险支付', value: row.field2.includes('三甲') ? '18.50万元' : '6.80万元' },
+    { label: '医疗救助支付', value: row.field2.includes('社区') ? '2.40万元' : '0.00万元' },
+    { label: '个人账户支付', value: row.field2.includes('药店') ? '4.10万元' : '0.00万元' },
+    { label: '退回金额', value: row.field7 === '退回重提' ? row.field4 : '0.00万元' },
+  ];
+
+  const settlementRows = [
+    { 结算单号: `${row.id}-01`, 业务类型: row.field2.includes('药店') ? '双通道特药结算' : '住院结算', 人次: '126', 费用总额: '312.40万元', 基金支付: '285.00万元', 状态: '已汇总' },
+    { 结算单号: `${row.id}-02`, 业务类型: row.field2.includes('社区') ? '门慢门特结算' : '异地结算', 人次: '84', 费用总额: '108.20万元', 基金支付: '96.30万元', 状态: '已汇总' },
+    { 结算单号: `${row.id}-03`, 业务类型: '零星报销结算', 人次: '23', 费用总额: '26.85万元', 基金支付: '24.86万元', 状态: row.field7 === '待审核' ? '待审核' : '已汇总' },
+  ];
+
+  const trackRows = [
+    { 环节: '账单生成', 时间: '2026-04-26 08:20', 处理人: '系统自动', 结果: '已生成', 说明: '根据结算清单自动汇总应付账单' },
+    { 环节: '拨付申请', 时间: '2026-04-26 09:30', 处理人: '周岚', 结果: '已提交', 说明: '已生成拨付申请批次' },
+    { 环节: '审核复核', 时间: '2026-04-26 10:18', 处理人: '陆敏', 结果: row.field7 || '待审核', 说明: row.field7 === '退回重提' ? '账户信息校验未通过，已退回' : '正在按流程复核' },
+    { 环节: '银行回盘', 时间: row.field7 === '已拨付' ? '2026-04-26 14:32' : '-', 处理人: row.field7 === '已拨付' ? '高宁' : '-', 结果: row.field7 === '已拨付' ? '回盘成功' : '待回盘', 说明: row.field7 === '已拨付' ? '回盘状态正常，资金已到账' : '尚未进入回盘确认环节' },
+  ];
+
+  return {
+    type: 'payable',
+    row,
+    title: `应付账单详情 - ${row.id}`,
+    tabs: [
+      { key: 'basic', label: '基本信息' },
+      { key: 'amount', label: '金额构成' },
+      { key: 'settlement', label: '结算清单' },
+      { key: 'track', label: '拨付轨迹' },
+    ],
+    sections: {
+      basic: { label: '基本信息', items: basicItems },
+      amount: { label: '金额构成', items: amountItems },
+      settlement: { label: '结算清单', rows: settlementRows },
+      track: { label: '拨付轨迹', rows: trackRows },
+    },
   };
 }
 
@@ -633,96 +877,143 @@ function DataTable<T extends BaseRow>({
   onAction: (action: ActionButton, row?: T) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-6 py-4">
-        <div className="flex items-center justify-between gap-4">
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+        <div className="flex items-center justify-between gap-6">
           <div>
-            <h3 className="text-xl font-bold text-gray-800">{title}</h3>
-            <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+            <h4 className="text-2xl font-bold text-gray-800">{title}</h4>
+            <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {toolbar.map((button) => (
+          <div className="flex flex-wrap items-center gap-2">
+            {toolbar.map((action) => (
               <button
-                key={button.label}
-                onClick={() => onAction(button)}
-                className={`rounded-xl px-4 py-2 text-sm transition-colors ${toneButtonClass(button.tone)}`}
+                key={action.label}
+                onClick={() => onAction(action)}
+                className={`rounded-xl px-4 py-2 text-sm font-medium transition ${toneButtonClass(action.tone)}`}
               >
-                {button.label}
+                {action.label}
               </button>
             ))}
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-3">
-          <div className="relative max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
+        <div className="mt-5 flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
               value={keyword}
               onChange={(e) => onKeywordChange(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 text-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100"
               placeholder="输入关键字查询当前页数据"
+              className="w-full rounded-2xl border border-gray-200 py-3 pl-12 pr-4 text-sm text-gray-700 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-100"
             />
           </div>
-          <button onClick={() => onAction({ label: '查询', action: '执行查询' })} className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50">
+          <button
+            onClick={() => onAction({ label: '查询', action: `查询${title}` })}
+            className="rounded-2xl border border-gray-200 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
             查询
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1120px]">
+
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+        <table className="w-full min-w-[1180px]">
           <thead className="bg-gray-50">
             <tr>
               {columns.map((column) => (
                 <th
                   key={String(column.key)}
-                  className={`px-6 py-3 text-sm font-medium text-gray-600 ${
+                  className={`px-6 py-4 text-sm font-medium text-gray-600 ${
                     column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
                   }`}
                 >
                   {column.title}
                 </th>
               ))}
-              <th className="px-6 py-3 text-center text-sm font-medium text-gray-600">操作</th>
+              <th className="sticky right-0 z-10 bg-gray-50 px-6 py-4 text-right text-sm font-medium text-gray-600 shadow-[-10px_0_18px_-16px_rgba(15,23,42,0.28)]">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {data.map((row) => (
               <tr key={row.id} className="hover:bg-gray-50">
-                {columns.map((column) => (
-                  <td
-                    key={String(column.key)}
-                    className={`px-6 py-4 text-sm text-gray-700 ${
-                      column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
-                    }`}
-                  >
-                    {column.key === 'field4' ? statusBadge(String(row[column.key as keyof T] ?? '')) : String(row[column.key as keyof T] ?? '')}
-                  </td>
-                ))}
-                <td className="px-6 py-4 text-center">
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    {rowActions(row).map((button) => (
+                {columns.map((column) => {
+                  const value = row[column.key];
+                  const isStatus = typeof value === 'string' && ['已确认', '已收清', '对平', '已到账', '已拨付', '已记账', '已生成', '已发布', '已核实', '部分到账', '部分拨付', '待到账', '待确认', '待复核', '待审核', '处理中', '协查中', '退回重提', '退回修订', '待冲退', '待核销', '余额正常'].includes(value);
+                  return (
+                    <td
+                      key={String(column.key)}
+                      className={`px-6 py-5 text-sm text-gray-700 ${
+                        column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
+                      }`}
+                    >
+                      {isStatus ? statusBadge(String(value)) : String(value ?? '-')}
+                    </td>
+                  );
+                })}
+                <td className="sticky right-0 bg-white px-6 py-5 text-right shadow-[-10px_0_18px_-16px_rgba(15,23,42,0.28)]">
+                  <div className="flex justify-end gap-2">
+                    {rowActions(row).map((action) => (
                       <button
-                        key={button.label}
-                        onClick={() => onAction(button, row)}
-                        disabled={button.label === '已发布'}
-                        className={`${button.tone === 'primary' ? 'text-cyan-600' : 'text-gray-500'} text-sm hover:underline disabled:cursor-not-allowed disabled:text-gray-300 disabled:no-underline`}
+                        key={action.label}
+                        onClick={() => onAction(action, row)}
+                        className={`rounded-xl px-3 py-2 text-sm font-medium transition ${toneButtonClass(action.tone)}`}
                       >
-                        {button.label}
+                        {action.label}
                       </button>
                     ))}
                   </div>
                 </td>
               </tr>
             ))}
-            {data.length === 0 && (
-              <tr>
-                <td colSpan={columns.length + 1} className="px-6 py-10 text-center text-sm text-gray-500">
-                  未查询到匹配数据
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function DetailInfoGrid({ items }: { items: Array<{ label: string; value: string }> }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {items.map((item) => (
+        <div key={item.label} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+          <div className="text-xs text-gray-500">{item.label}</div>
+          <div className="mt-2 text-sm font-medium text-gray-800 break-all">{item.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DetailRowsTable({ rows }: { rows: Array<Record<string, string>> }) {
+  if (!rows.length) return null;
+  const headers = Object.keys(rows[0]);
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-gray-200">
+      <table className="w-full min-w-[680px]">
+        <thead className="bg-gray-50">
+          <tr>
+            {headers.map((header) => (
+              <th key={header} className="px-4 py-3 text-left text-xs font-medium text-gray-600">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100 bg-white">
+          {rows.map((row, index) => (
+            <tr key={`${index}-${row[headers[0]] || 'row'}`} className="hover:bg-gray-50">
+              {headers.map((header) => (
+                <td key={header} className="px-4 py-3 text-sm text-gray-700">
+                  {row[header]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -735,6 +1026,9 @@ export default function FinanceManagementHub() {
   const [feedback, setFeedback] = useState('');
   const [selectedReport, setSelectedReport] = useState<ReportPreview | null>(null);
   const [generationForm, setGenerationForm] = useState<ReportGenerationForm | null>(null);
+  const [billDetail, setBillDetail] = useState<BillDetailModalState | null>(null);
+  const [billDetailTab, setBillDetailTab] = useState('');
+  const [pendingImportKey, setPendingImportKey] = useState('');
   const importInputRef = useRef<HTMLInputElement>(null);
   const [sectionDataMap, setSectionDataMap] = useState<Record<string, FinanceRow[]>>(() => {
     const map: Record<string, FinanceRow[]> = {};
@@ -745,7 +1039,6 @@ export default function FinanceManagementHub() {
     });
     return map;
   });
-  const [pendingImportKey, setPendingImportKey] = useState<string>('');
 
   const currentModule = selectedModule ? moduleSections[selectedModule] : null;
   const currentSection = currentModule ? currentModule.sections.find((section) => section.key === activeSection) || currentModule.sections[0] : null;
@@ -761,18 +1054,22 @@ export default function FinanceManagementHub() {
     setActiveSection(moduleSections[moduleId].sections[0].key);
     setKeyword('');
     setFeedback('');
+    setBillDetail(null);
+    setBillDetailTab('');
   };
 
   const switchSection = (sectionKey: string) => {
     setActiveSection(sectionKey);
     setKeyword('');
+    setBillDetail(null);
+    setBillDetailTab('');
   };
 
   const exportSectionData = (section: SectionConfig<FinanceRow>, rows: FinanceRow[]) => {
     const exportRows = rows.map((row) => {
       const record: Record<string, string> = {};
       section.columns.forEach((column) => {
-        record[column.title] = String(row[column.key as keyof FinanceRow] ?? '');
+        record[column.title] = String(row[column.key] ?? '');
       });
       return record;
     });
@@ -814,7 +1111,7 @@ export default function FinanceManagementHub() {
     const rows = (sectionDataMap[section.key] || section.data).slice(0, 3).map((row) => {
       const record: Record<string, string> = {};
       section.columns.forEach((column) => {
-        record[column.title] = String(row[column.key as keyof FinanceRow] ?? '');
+        record[column.title] = String(row[column.key] ?? '');
       });
       return record;
     });
@@ -826,20 +1123,6 @@ export default function FinanceManagementHub() {
 
   const getReportByRow = (row: FinanceRow) => reportPreviewMap[row.id] || createFallbackReportPreview(row);
 
-  const openReportPreview = (row: FinanceRow) => {
-    setSelectedReport(getReportByRow(row));
-  };
-
-  const openReportGeneration = (section: SectionConfig<FinanceRow>, row?: FinanceRow) => {
-    setGenerationForm({
-      template: row?.field1 || (section.key === 'report_income' ? '全省医保基金收支日报' : '定点医疗机构拨付进度表'),
-      period: row?.field3 || (section.key === 'report_income' ? '2026-04-26' : '2026年第17周'),
-      range: row?.field7 || '江苏省13个设区市',
-      sectionKey: section.key,
-      targetId: row?.id,
-    });
-  };
-
   const updateReportRow = (sectionKey: string, rowId: string, patch: Partial<FinanceRow>) => {
     setSectionDataMap((prev) => ({
       ...prev,
@@ -849,7 +1132,6 @@ export default function FinanceManagementHub() {
 
   const createGeneratedReport = () => {
     if (!generationForm) return;
-
     const now = getNowString();
     const sectionRows = sectionDataMap[generationForm.sectionKey] || [];
 
@@ -877,6 +1159,7 @@ export default function FinanceManagementHub() {
         field5: '周岚',
         field6: now,
         field7: generationForm.range,
+        field8: '',
       };
       setSectionDataMap((prev) => ({
         ...prev,
@@ -894,45 +1177,58 @@ export default function FinanceManagementHub() {
 
     if (action.label.includes('查询')) {
       setFeedback(`已完成${currentSection.title}查询`);
-      window.setTimeout(() => setFeedback(''), 1800);
+      window.setTimeout(() => setFeedback(''), 1600);
+      return;
+    }
+
+    if (selectedModule === 'arrival' && currentSection.key === 'arrival_receivable' && action.label === '查看' && row) {
+      const nextDetail = buildReceivableBillDetail(row);
+      setBillDetail(nextDetail);
+      setBillDetailTab(nextDetail.tabs[0].key);
+      return;
+    }
+
+    if (selectedModule === 'payment' && currentSection.key === 'payment_payable' && action.label === '查看' && row) {
+      const nextDetail = buildPayableBillDetail(row);
+      setBillDetail(nextDetail);
+      setBillDetailTab(nextDetail.tabs[0].key);
       return;
     }
 
     if (selectedModule === 'report' && action.label === '查看' && row) {
-      openReportPreview(row);
+      setSelectedReport(getReportByRow(row));
       return;
     }
 
     if (selectedModule === 'report' && (action.label === '生成报表' || action.label === '生成' || action.label === '重新生成')) {
-      openReportGeneration(currentSection, row);
+      setGenerationForm({
+        template: row?.field1 || (currentSection.key === 'report_income' ? '全省医保基金收支日报' : '定点医疗机构拨付进度表'),
+        period: row?.field3 || (currentSection.key === 'report_income' ? '2026-04-26' : '2026年第17周'),
+        range: row?.field7 || '江苏省13个设区市',
+        sectionKey: currentSection.key,
+        targetId: row?.id,
+      });
       return;
     }
 
     if (selectedModule === 'report' && action.label === '导出' && row) {
       exportReportFile(getReportByRow(row));
       setFeedback(`${row.field1}已导出`);
-      window.setTimeout(() => setFeedback(''), 1800);
-      return;
-    }
-
-    if (selectedModule === 'report' && action.label === '导出目录') {
-      exportSectionData(currentSection, filteredData);
-      setFeedback(`${currentSection.title}目录已导出`);
-      window.setTimeout(() => setFeedback(''), 1800);
+      window.setTimeout(() => setFeedback(''), 1600);
       return;
     }
 
     if (selectedModule === 'report' && action.label === '发布' && row) {
       updateReportRow(currentSection.key, row.id, { field4: '已发布', field6: getNowString(), field5: '周岚' });
       setFeedback(`${row.field1}已发布`);
-      window.setTimeout(() => setFeedback(''), 1800);
+      window.setTimeout(() => setFeedback(''), 1600);
       return;
     }
 
     if (action.label.includes('导出')) {
       exportSectionData(currentSection, filteredData);
       setFeedback(`${currentSection.title}已导出`);
-      window.setTimeout(() => setFeedback(''), 1800);
+      window.setTimeout(() => setFeedback(''), 1600);
       return;
     }
 
@@ -945,7 +1241,7 @@ export default function FinanceManagementHub() {
     if (action.label.includes('模板')) {
       downloadTemplate(currentSection);
       setFeedback(`${currentSection.title}导入模板已生成`);
-      window.setTimeout(() => setFeedback(''), 1800);
+      window.setTimeout(() => setFeedback(''), 1600);
       return;
     }
 
@@ -975,9 +1271,10 @@ export default function FinanceManagementHub() {
     const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '', raw: false });
-    const importedRows: FinanceRow[] = rows.map((item, index) => {
-      const row: FinanceRow = {
-        id: item['编号'] || `${pendingImportKey.toUpperCase()}IMP${String(index + 1).padStart(4, '0')}`,
+
+    const importedRows: FinanceRow[] = rows.map((row, index) => {
+      const record: FinanceRow = {
+        id: `${pendingImportKey.toUpperCase().slice(0, 3)}${String(index + 1).padStart(3, '0')}`,
         field1: '',
         field2: '',
         field3: '',
@@ -985,77 +1282,59 @@ export default function FinanceManagementHub() {
         field5: '',
         field6: '',
         field7: '',
+        field8: '',
       };
       section.columns.forEach((column) => {
-        const key = String(column.key) as keyof FinanceRow;
-        row[key] = String(item[column.title] || '');
+        const value = row[column.title] || '';
+        record[column.key] = value;
       });
-      return row;
+      return record;
     });
 
-    if (importedRows.length) {
-      setSectionDataMap((prev) => ({
-        ...prev,
-        [pendingImportKey]: [...importedRows, ...(prev[pendingImportKey] || [])],
-      }));
-      setFeedback(`已导入${importedRows.length}条${section.title}记录`);
-      window.setTimeout(() => setFeedback(''), 1800);
-    }
-
-    setPendingImportKey('');
+    setSectionDataMap((prev) => ({
+      ...prev,
+      [pendingImportKey]: [...importedRows, ...(prev[pendingImportKey] || [])],
+    }));
+    setFeedback(`${section.title}已导入${importedRows.length}条记录`);
+    window.setTimeout(() => setFeedback(''), 1600);
     event.target.value = '';
+    setPendingImportKey('');
   };
 
   const confirmAction = () => {
     if (!pendingAction) return;
-    setFeedback(`${pendingAction.title}已提交`);
+    setFeedback(`${pendingAction.title}已办理`);
     setPendingAction(null);
-    window.setTimeout(() => setFeedback(''), 1800);
+    window.setTimeout(() => setFeedback(''), 1600);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">财务管理工作台</h2>
-          <p className="mt-1 text-sm text-gray-500">请选择具体财务业务环节进入办理。</p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-md">
-        <div className="grid grid-cols-4 gap-4">
-          {overviewStats.map((item, index) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08 }}
-              className="rounded-2xl border border-gray-100 bg-gray-50 p-5"
-            >
-              <p className="text-sm text-gray-500">{item.label}</p>
-              <p className="mt-2 text-2xl font-bold text-gray-800">{item.value}</p>
-            </motion.div>
-          ))}
-        </div>
+      <div className="grid grid-cols-4 gap-4">
+        {overviewStats.map((item) => (
+          <div key={item.label} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-gray-500">{item.label}</p>
+            <p className="mt-3 text-3xl font-bold text-gray-800">{item.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-3 gap-6">
-        {financeModules.map((module) => (
-          <button
+        {financeModules.map((module, index) => (
+          <motion.button
             key={module.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
             onClick={() => openModule(module.id)}
-            className="group rounded-2xl border border-gray-200 bg-white p-8 text-left shadow-md transition-all hover:-translate-y-1 hover:border-cyan-400 hover:shadow-xl"
+            className="group rounded-3xl border border-gray-200 bg-white p-8 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-xl"
           >
-            <div className={`mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${module.color} shadow-lg`}>
+            <div className={`mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${module.color}`}>
               <module.icon className="h-8 w-8 text-white" />
             </div>
-            <h3 className="mb-2 text-xl font-bold text-gray-800">{module.title}</h3>
-            <p className="mb-5 text-base text-gray-500">{module.description}</p>
-            <div className="flex items-center text-sm font-medium text-cyan-600 opacity-0 transition-opacity group-hover:opacity-100">
-              <span>点击进入</span>
-              <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </div>
-          </button>
+            <h3 className="text-2xl font-bold text-gray-800">{module.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-gray-500">{module.description}</p>
+          </motion.button>
         ))}
       </div>
 
@@ -1068,24 +1347,24 @@ export default function FinanceManagementHub() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="max-h-[88vh] w-full max-w-7xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="max-h-[88vh] w-full max-w-7xl overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between border-b border-gray-200 px-8 py-6">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">{currentModule.title}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{currentModule.desc}</p>
+                  <h3 className="text-3xl font-bold text-gray-800">{currentModule.title}</h3>
+                  <p className="mt-2 text-sm text-gray-500">{currentModule.desc}</p>
                 </div>
                 <button onClick={() => setSelectedModule(null)} className="rounded-xl p-2 hover:bg-gray-100">
                   <X className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
 
-              <div className="flex flex-wrap gap-2 border-b border-gray-200 px-6 pt-4">
+              <div className="flex flex-wrap gap-2 border-b border-gray-200 px-8 pt-5">
                 {currentModule.sections.map((section) => (
                   <button
                     key={section.key}
                     onClick={() => switchSection(section.key)}
-                    className={`rounded-t-xl border-b-2 px-4 py-2 text-sm ${
+                    className={`rounded-t-2xl border-b-2 px-6 py-3 text-sm font-medium ${
                       activeSection === section.key ? 'border-cyan-500 bg-cyan-50 text-cyan-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -1095,24 +1374,78 @@ export default function FinanceManagementHub() {
               </div>
 
               {feedback && (
-                <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mx-8 mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                   <CheckCircle2 className="h-4 w-4" />
                   {feedback}
                 </div>
               )}
 
-              <div className="max-h-[calc(88vh-136px)] overflow-auto p-6">
-                <DataTable
-                  title={currentSection.title}
-                  subtitle={currentSection.subtitle}
-                  columns={currentSection.columns}
-                  data={filteredData}
-                  toolbar={currentSection.toolbar}
-                  rowActions={currentSection.rowActions}
-                  keyword={keyword}
-                  onKeywordChange={setKeyword}
-                  onAction={openAction}
-                />
+              <div className="max-h-[calc(88vh-148px)] overflow-hidden p-8">
+                <div className="flex h-full gap-6">
+                  <div className={`${billDetail ? 'min-w-0 flex-1' : 'w-full'}`}>
+                    <div className="h-full overflow-auto pr-1">
+                      <DataTable
+                        title={currentSection.title}
+                        subtitle={currentSection.subtitle}
+                        columns={currentSection.columns}
+                        data={filteredData}
+                        toolbar={currentSection.toolbar}
+                        rowActions={currentSection.rowActions}
+                        keyword={keyword}
+                        onKeywordChange={setKeyword}
+                        onAction={openAction}
+                      />
+                    </div>
+                  </div>
+
+                  {billDetail && (
+                    <div className="w-[420px] shrink-0 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+                      <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-gray-800">{billDetail.title}</h4>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {billDetail.type === 'receivable' ? '查看应收账单的主体、金额、到账和轨迹信息。' : '查看应付账单的结算、金额、清单和拨付轨迹。'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setBillDetail(null);
+                            setBillDetailTab('');
+                          }}
+                          className="rounded-xl p-2 hover:bg-gray-100"
+                        >
+                          <X className="h-4 w-4 text-gray-500" />
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 border-b border-gray-100 px-4 pt-4">
+                        {billDetail.tabs.map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setBillDetailTab(tab.key)}
+                            className={`rounded-t-xl border-b-2 px-4 py-2 text-sm ${
+                              billDetailTab === tab.key ? 'border-cyan-500 bg-cyan-50 text-cyan-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="h-[calc(88vh-250px)] overflow-auto p-5">
+                        {billDetailTab && billDetail.sections[billDetailTab] && (
+                          <div className="space-y-4">
+                            <div>
+                              <h5 className="text-base font-bold text-gray-800">{billDetail.sections[billDetailTab].label}</h5>
+                            </div>
+                            {billDetail.sections[billDetailTab].items && <DetailInfoGrid items={billDetail.sections[billDetailTab].items!} />}
+                            {billDetail.sections[billDetailTab].rows && <DetailRowsTable rows={billDetail.sections[billDetailTab].rows!} />}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -1275,7 +1608,6 @@ export default function FinanceManagementHub() {
                     className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100"
                   />
                 </label>
-
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
                     <p className="text-sm text-cyan-700">目录定位</p>
