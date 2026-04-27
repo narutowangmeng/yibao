@@ -116,17 +116,22 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<PaymentStandard | null>(null);
-  const [formData, setFormData] = useState({ name: '', type: '职工', amount: 0 });
+  const [formData, setFormData] = useState<{ name: string; type: string; amount: number; status: 'active' | 'inactive' }>({
+    name: '',
+    type: '职工',
+    amount: 0,
+    status: 'active',
+  });
 
   const handleAdd = () => {
     setEditingItem(null);
-    setFormData({ name: '', type: '职工', amount: 0 });
+    setFormData({ name: '', type: '职工', amount: 0, status: 'active' });
     setShowModal(true);
   };
 
   const handleEdit = (item: PaymentStandard) => {
     setEditingItem(item);
-    setFormData({ name: item.name, type: item.type, amount: item.amount });
+    setFormData({ name: item.name, type: item.type, amount: item.amount, status: item.status });
     setShowModal(true);
   };
 
@@ -134,11 +139,21 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
     setStandards((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleToggleStatus = (id: string) => {
+    setStandards((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, status: item.status === 'active' ? 'inactive' : 'active' }
+          : item,
+      ),
+    );
+  };
+
   const handleSave = () => {
     if (editingItem) {
       setStandards((prev) => prev.map((item) => (item.id === editingItem.id ? { ...item, ...formData } : item)));
     } else {
-      setStandards((prev) => [...prev, { id: String(Date.now()), ...formData, status: 'active' }]);
+      setStandards((prev) => [...prev, { id: String(Date.now()), ...formData }]);
     }
     setShowModal(false);
   };
@@ -204,6 +219,16 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
                       <div className="flex justify-end gap-2">
                         {isProvince && (
                           <>
+                            <button
+                              onClick={() => handleToggleStatus(item.id)}
+                              className={`rounded px-3 py-1.5 text-xs ${
+                                item.status === 'active'
+                                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  : 'bg-green-50 text-green-700 hover:bg-green-100'
+                              }`}
+                            >
+                              {item.status === 'active' ? '停用' : '启用'}
+                            </button>
                             <button onClick={() => handleEdit(item)} className="rounded p-1.5 text-gray-500 hover:bg-cyan-50 hover:text-cyan-600">
                               <Edit2 className="h-4 w-4" />
                             </button>
@@ -324,6 +349,17 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">金额</label>
                   <input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })} className="w-full rounded-lg border border-gray-200 px-3 py-2" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">状态</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  >
+                    <option value="active">启用</option>
+                    <option value="inactive">停用</option>
+                  </select>
                 </div>
               </div>
               <div className="mt-6 flex justify-end gap-3">

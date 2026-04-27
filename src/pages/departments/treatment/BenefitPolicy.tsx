@@ -439,6 +439,16 @@ export default function BenefitPolicy({ userAgency }: BenefitPolicyProps) {
     setRules((prev) => prev.filter((rule) => rule.id !== id));
   };
 
+  const handleToggleStatus = (id: string) => {
+    setRules((prev) =>
+      prev.map((rule) =>
+        rule.id === id
+          ? { ...rule, status: rule.status === 'active' ? 'inactive' : 'active' }
+          : rule,
+      ),
+    );
+  };
+
   const handleSave = () => {
     if (editingRule) {
       setRules((prev) => prev.map((rule) => (rule.id === editingRule.id ? ({ ...rule, ...formData } as BenefitRule) : rule)));
@@ -595,6 +605,16 @@ export default function BenefitPolicy({ userAgency }: BenefitPolicyProps) {
             </AnimatePresence>
             {isProvince && (
               <div className="flex justify-end gap-2 border-t border-gray-100 bg-gray-50 px-4 py-3">
+                <button
+                  onClick={() => handleToggleStatus(rule.id)}
+                  className={`rounded px-3 py-1.5 text-xs ${
+                    rule.status === 'active'
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-green-50 text-green-700 hover:bg-green-100'
+                  }`}
+                >
+                  {rule.status === 'active' ? '停用' : '启用'}
+                </button>
                 <button onClick={() => handleEdit(rule)} className="p-2 text-gray-500 hover:text-cyan-600">
                   <Edit2 className="h-4 w-4" />
                 </button>
