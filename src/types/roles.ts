@@ -7,6 +7,7 @@ export type UserRole =
   | 'office_director'
   | 'operator'
   | 'operator_enrollment'
+  | 'operator_contribution'
   | 'operator_payment'
   | 'operator_reimbursement'
   | 'operator_claims'
@@ -128,6 +129,14 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     level: 2,
     description: '负责参保登记、信息变更和关系转移。',
     permissions: ['dashboard:view', 'insured:view', 'insured:create', 'insured:edit'],
+  },
+  operator_contribution: {
+    code: 'operator_contribution',
+    name: '缴费',
+    department: '缴费科',
+    level: 2,
+    description: '负责单位缴费、个人缴费、缴费单管理、到账状态查询和缴费回执打印。',
+    permissions: ['dashboard:view', 'payment:view', 'payment:create'],
   },
   operator_payment: {
     code: 'operator_payment',

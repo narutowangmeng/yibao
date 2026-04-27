@@ -77,6 +77,7 @@ const SYSTEMS = [
     needAgency: true,
     roles: [
       { code: 'operator_enrollment' as UserRole, name: '参保登记', desc: '参保登记、信息变更、关系转移' },
+      { code: 'operator_contribution' as UserRole, name: '缴费', desc: '单位缴费、个人缴费、缴费单管理、到账状态查询' },
       { code: 'operator_payment' as UserRole, name: '缴费核定', desc: '缴费基数核定、费用计算、催缴管理' },
       { code: 'operator_reimbursement' as UserRole, name: '费用报销', desc: '医疗费用报销申请受理、材料初审' },
       { code: 'operator_claims' as UserRole, name: '理赔管理', desc: '申报受理、人工审核、结算审核、支付指令、机构对账、异常处理' },
@@ -169,6 +170,14 @@ export default function Login({ onLogin }: LoginProps) {
   const currentSystem = SYSTEMS.find(s => s.id === selectedSystem);
   const currentAgency = AGENCIES.find(a => a.code === selectedAgency);
   const visibleAgencies = selectedSystem === 'operation' ? OPERATION_AGENCIES : AGENCIES;
+  const visibleRoles =
+    currentSystem?.id === 'operation'
+      ? currentSystem.roles.filter((role) =>
+          selectedOperatorIdentity === '经办'
+            ? ['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code)
+            : !['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code)
+        )
+      : currentSystem?.roles || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-gray-200 flex items-center justify-center p-8">
@@ -300,8 +309,8 @@ export default function Login({ onLogin }: LoginProps) {
                 )}
               </div>
 
-              <div className={`grid gap-6 ${currentSystem?.roles.length === 3 ? 'grid-cols-3' : currentSystem?.roles.length === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                {currentSystem?.roles.map((role, index) => {
+              <div className={`grid gap-6 ${visibleRoles.length <= 3 ? 'grid-cols-3' : visibleRoles.length === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {visibleRoles.map((role, index) => {
                   const RoleIcon = ROLE_ICONS[role.code] || User;
                   return (
                     <motion.button

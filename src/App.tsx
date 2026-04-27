@@ -19,6 +19,7 @@ import RuleEngine from './pages/admin/RuleEngine';
 import EnterpriseManagement from './pages/workbench/modules/EnterpriseManagement';
 import OperationAdminManagement from './pages/admin/OperationAdminManagement';
 import EnrollmentWorkbench from './pages/workbench/EnrollmentWorkbench';
+import PaymentCollectionWorkbench from './pages/workbench/PaymentCollectionWorkbench';
 import PaymentCalcWorkbench from './pages/workbench/PaymentCalcWorkbench';
 import ReimbursementWorkbench from './pages/workbench/ReimbursementWorkbench';
 import AuditWorkbench from './pages/workbench/AuditWorkbench';
@@ -48,6 +49,7 @@ const pageTitles: Record<string, string> = {
   '/fund-supervision/rule-engine': '规则引擎',
   '/medical-service': '医药服务管理',
   '/workbench/enrollment': '参保登记',
+  '/workbench/payment': '缴费',
   '/workbench/payment-calc': '缴费核定',
   '/workbench/claims': '理赔管理',
   '/workbench/claims/intake': '理赔管理 - 申报受理',
@@ -129,6 +131,7 @@ function AppContent() {
     else if (role === 'employer_admin') defaultPath = '#/employer';
     else if (role === 'insured_person') defaultPath = '#/personal';
     else if (role === 'operator_enrollment') defaultPath = '#/workbench/enrollment';
+    else if (role === 'operator_contribution') defaultPath = '#/workbench/payment';
     else if (role === 'operator_payment') defaultPath = '#/workbench/payment-calc';
     else if (role === 'operator_reimbursement') defaultPath = '#/workbench/reimbursement';
     else if (role === 'operator_claims') defaultPath = '#/workbench/claims';
@@ -150,6 +153,7 @@ function AppContent() {
       medical_service_director: 'management',
       system_admin: 'management',
       operator_enrollment: 'operation',
+      operator_contribution: 'operation',
       operator_payment: 'operation',
       operator_reimbursement: 'operation',
       operator_claims: 'operation',
@@ -217,6 +221,7 @@ function AppContent() {
             />
 
             <Route path="/workbench/enrollment" element={<EnrollmentWorkbench />} />
+            <Route path="/workbench/payment" element={<PaymentCollectionWorkbench />} />
             <Route path="/workbench/payment-calc" element={<PaymentCalcWorkbench />} />
             <Route path="/workbench/claims" element={<ClaimsManagementWorkbench />} />
             <Route path="/workbench/claims/intake" element={<ClaimsIntakePage />} />

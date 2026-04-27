@@ -21,6 +21,7 @@ const ROLE_NAMES: Record<string, string> = {
   office_director: '办公室',
   operator: '经办人员',
   operator_enrollment: '参保登记',
+  operator_contribution: '缴费',
   operator_payment: '缴费核定',
   operator_reimbursement: '费用报销',
   operator_claims: '理赔管理',
@@ -56,6 +57,7 @@ const AGENCY_NAMES: Record<string, string> = {
 
 const OPERATION_ROLES: UserRole[] = [
   'operator_enrollment',
+  'operator_contribution',
   'operator_payment',
   'operator_reimbursement',
   'operator_claims',
