@@ -226,6 +226,17 @@ const commonBasicFields: FormField[] = [
   { key: 'agency', label: '参保地', required: true, type: 'select', options: ['南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁'] },
 ];
 
+const newbornCommonBasicFields: FormField[] = [
+  { key: 'motherName', label: '母亲姓名', required: true, placeholder: '请输入母亲姓名' },
+  { key: 'motherIdCard', label: '母亲身份证号', required: true, placeholder: '请输入母亲身份证号' },
+  { key: 'gender', label: '性别', required: true, type: 'select', options: ['男', '女'] },
+  { key: 'birthDate', label: '出生日期', required: true, type: 'date' },
+  { key: 'phone', label: '联系电话', required: true, placeholder: '请输入联系电话' },
+  { key: 'householdAddress', label: '户籍地址', required: true, placeholder: '请输入户籍地址' },
+  { key: 'residenceAddress', label: '居住地址', required: true, placeholder: '请输入居住地址' },
+  { key: 'agency', label: '参保地', required: true, type: 'select', options: ['南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁'] },
+];
+
 const commonInsuranceFields: FormField[] = [
   { key: 'insuranceType', label: '险种', required: true, type: 'select', options: ['职工基本医疗保险', '城乡居民基本医疗保险', '城乡居民大病保险', '长期护理保险', '医疗救助待遇保障'] },
   { key: 'enrollmentDate', label: '参保生效日期', required: true, type: 'date' },
@@ -286,14 +297,12 @@ const categoryFields: Record<EnrollmentCategory, { basic: FormField[]; insurance
     basic: [
       { key: 'birthCertNo', label: '出生医学证明编号', required: true, placeholder: '请输入出生医学证明编号' },
       { key: 'guardianName', label: '监护人姓名', required: true, placeholder: '请输入监护人姓名' },
-      { key: 'guardianRelation', label: '监护人关系', required: true, type: 'select', options: ['父亲', '母亲', '祖父母', '其他监护人'] },
+      { key: 'guardianRelation', label: '监护人关系', required: true, type: 'select', options: ['母亲', '父亲', '祖父母', '其他监护人'] },
       { key: 'guardianPhone', label: '监护人电话', required: true, placeholder: '请输入监护人电话' },
     ],
     insurance: [
-      { key: 'fatherName', label: '父亲姓名', required: true, placeholder: '请输入父亲姓名' },
-      { key: 'fatherIdCard', label: '父亲身份证号', required: true, placeholder: '请输入父亲身份证号' },
-      { key: 'motherName', label: '母亲姓名', required: true, placeholder: '请输入母亲姓名' },
-      { key: 'motherIdCard', label: '母亲身份证号', required: true, placeholder: '请输入母亲身份证号' },
+      { key: 'fatherName', label: '父亲姓名', placeholder: '请输入父亲姓名' },
+      { key: 'fatherIdCard', label: '父亲身份证号', placeholder: '请输入父亲身份证号' },
       { key: 'followInsured', label: '拟随父母参保', required: true, type: 'select', options: ['随父参保', '随母参保'] },
       { key: 'settlementStatus', label: '落户状态', required: true, type: 'select', options: ['已落户', '待落户'] },
     ],
@@ -510,7 +519,9 @@ function buildInitialForm(category: EnrollmentCategory): EnrollmentFormState {
   const basic: Record<string, string> = {};
   const insurance: Record<string, string> = {};
 
-  [...commonBasicFields, ...categoryFields[category].basic].forEach((field) => {
+  const categoryCommonBasicFields = category === 'newborn' ? newbornCommonBasicFields : commonBasicFields;
+
+  [...categoryCommonBasicFields, ...categoryFields[category].basic].forEach((field) => {
     basic[field.key] = field.type === 'select' && field.options?.length ? field.options[0] : '';
   });
   [...commonInsuranceFields, ...categoryFields[category].insurance].forEach((field) => {
@@ -593,7 +604,8 @@ export default function EnrollmentWorkbench() {
     return selectedCategory;
   }, [selectedModule, selectedCategory]);
 
-  const basicFields = [...commonBasicFields, ...categoryFields[activeCategory].basic];
+  const categoryCommonBasicFields = activeCategory === 'newborn' ? newbornCommonBasicFields : commonBasicFields;
+  const basicFields = [...categoryCommonBasicFields, ...categoryFields[activeCategory].basic];
   const insuranceFields = [...commonInsuranceFields, ...categoryFields[activeCategory].insurance];
   const photoFields = categoryFields[activeCategory].photos;
 
@@ -807,8 +819,9 @@ export default function EnrollmentWorkbench() {
           const idCard = String(row.身份证号 || '').trim().toUpperCase();
           const insuranceType = String(row.险种 || '').trim() || '城乡居民基本医疗保险';
           const submitDate = String(row.提交日期 || '').trim() || new Date().toISOString().slice(0, 10);
+          const importCommonBasicFields = category === 'newborn' ? newbornCommonBasicFields : commonBasicFields;
           const basicKeys = new Set([
-            ...commonBasicFields.map((field) => field.key),
+            ...importCommonBasicFields.map((field) => field.key),
             ...categoryFields[category].basic.map((field) => field.key),
           ]);
           const extraKeys = new Set([
@@ -918,8 +931,8 @@ export default function EnrollmentWorkbench() {
     const newRecord: RecordItem = {
       id: `EB${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(records.length + 1).padStart(3, '0')}`,
       category: activeCategory,
-      name: formState.basic.name || '未命名',
-      idCard: formState.basic.idCard || '',
+      name: activeCategory === 'newborn' ? `新生儿（母亲：${formState.basic.motherName || '未填写'}）` : formState.basic.name || '未命名',
+      idCard: activeCategory === 'newborn' ? '未赋码' : formState.basic.idCard || '',
       insuranceType: formState.insurance.insuranceType || '',
       status: '待审核',
       agency: formState.basic.agency || '',
@@ -1531,7 +1544,9 @@ export default function EnrollmentWorkbench() {
   const getRecordFieldLabel = (category: EnrollmentCategory, key: string) => {
     const fieldMap = new Map<string, string>();
 
-    [...commonBasicFields, ...categoryFields[category].basic, ...commonInsuranceFields, ...categoryFields[category].insurance].forEach((field) => {
+    const recordCommonBasicFields = category === 'newborn' ? newbornCommonBasicFields : commonBasicFields;
+
+    [...recordCommonBasicFields, ...categoryFields[category].basic, ...commonInsuranceFields, ...categoryFields[category].insurance].forEach((field) => {
       fieldMap.set(field.key, field.label);
     });
 

@@ -273,7 +273,7 @@ export default function OperatorWorkbench() {
 
     switch (feature.component) {
       case 'NewEnrollment':
-        return <NewEnrollment onBack={handleBack} />;
+        return <NewEnrollment onBack={handleBack} initialFeatureId={selectedFeature || undefined} />;
       case 'RenewalEnrollment':
         return <RenewalEnrollment onBack={handleBack} />;
       case 'BatchImport':

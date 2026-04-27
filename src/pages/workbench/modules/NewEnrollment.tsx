@@ -10,6 +10,8 @@ import {
 interface FormData {
   name: string;
   idCard: string;
+  motherName: string;
+  motherIdCard: string;
   gender: 'male' | 'female';
   birthDate: string;
   phone: string;
@@ -28,16 +30,28 @@ interface FormData {
   irisScan: boolean;
 }
 
-export default function NewEnrollment({ onBack }: { onBack: () => void }) {
+const featureToEnrollmentType: Record<string, string> = {
+  urban_rural: 'urban_rural',
+  employee: 'employee',
+  flexible: 'flexible',
+  newborn: 'newborn',
+  student: 'student',
+  veteran: 'veteran',
+};
+
+export default function NewEnrollment({ onBack, initialFeatureId }: { onBack: () => void; initialFeatureId?: string }) {
+  const defaultEnrollmentType = initialFeatureId && featureToEnrollmentType[initialFeatureId] ? featureToEnrollmentType[initialFeatureId] : 'urban_rural';
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     idCard: '',
+    motherName: '',
+    motherIdCard: '',
     gender: 'male',
     birthDate: '',
     phone: '',
     address: '',
-    enrollmentType: 'urban_rural',
+    enrollmentType: defaultEnrollmentType,
     workUnit: '',
     emergencyContact: '',
     emergencyPhone: '',
@@ -90,7 +104,10 @@ export default function NewEnrollment({ onBack }: { onBack: () => void }) {
     }, 2000);
   };
 
-  const isStep1Valid = formData.name && formData.idCard && formData.phone && formData.birthDate;
+  const isNewborn = formData.enrollmentType === 'newborn';
+  const isStep1Valid = isNewborn
+    ? formData.motherName && formData.motherIdCard && formData.phone && formData.birthDate
+    : formData.name && formData.idCard && formData.phone && formData.birthDate;
   const isStep2Valid = formData.address && formData.enrollmentType && formData.nationality;
   const isStep3Valid = formData.fingerprint || formData.faceScan;
 
@@ -101,30 +118,60 @@ export default function NewEnrollment({ onBack }: { onBack: () => void }) {
           <UserPlus className="w-5 h-5" />
           第一步：填写基础信息
         </h4>
-        <p className="text-sm text-blue-600 mt-1">请填写参保人员的基本身份信息</p>
+        <p className="text-sm text-blue-600 mt-1">
+          {isNewborn ? '新生儿按出生后28天内口径办理，不采集本人姓名和身份证号，请填写母亲身份信息。' : '请填写参保人员的基本身份信息'}
+        </p>
       </div>
       <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">姓名 <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="请输入姓名"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">身份证号 <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            value={formData.idCard}
-            onChange={(e) => handleInputChange('idCard', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="请输入18位身份证号"
-            maxLength={18}
-          />
-        </div>
+        {isNewborn ? (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">母亲姓名 <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.motherName}
+                onChange={(e) => handleInputChange('motherName', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="请输入母亲姓名"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">母亲身份证号 <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.motherIdCard}
+                onChange={(e) => handleInputChange('motherIdCard', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="请输入母亲18位身份证号"
+                maxLength={18}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">姓名 <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="请输入姓名"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">身份证号 <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.idCard}
+                onChange={(e) => handleInputChange('idCard', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="请输入18位身份证号"
+                maxLength={18}
+              />
+            </div>
+          </>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">性别 <span className="text-red-500">*</span></label>
           <div className="flex gap-4">
@@ -440,14 +487,29 @@ export default function NewEnrollment({ onBack }: { onBack: () => void }) {
       <div className="bg-gray-50 rounded-xl p-6">
         <h3 className="font-semibold text-gray-800 mb-4">基础信息</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="text-gray-500">姓名</span>
-            <span className="font-medium text-gray-800">{formData.name}</span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="text-gray-500">身份证号</span>
-            <span className="font-medium text-gray-800">{formData.idCard}</span>
-          </div>
+          {isNewborn ? (
+            <>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-500">母亲姓名</span>
+                <span className="font-medium text-gray-800">{formData.motherName}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-500">母亲身份证号</span>
+                <span className="font-medium text-gray-800">{formData.motherIdCard}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-500">姓名</span>
+                <span className="font-medium text-gray-800">{formData.name}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-500">身份证号</span>
+                <span className="font-medium text-gray-800">{formData.idCard}</span>
+              </div>
+            </>
+          )}
           <div className="flex justify-between py-2 border-b border-gray-200">
             <span className="text-gray-500">性别</span>
             <span className="font-medium text-gray-800">{formData.gender === 'male' ? '男' : '女'}</span>

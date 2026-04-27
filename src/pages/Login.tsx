@@ -176,8 +176,8 @@ export default function Login({ onLogin }: LoginProps) {
     currentSystem?.id === 'operation'
       ? currentSystem.roles.filter((role) =>
           selectedOperatorIdentity === '经办'
-            ? ['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code)
-            : !['operator_enrollment', 'operator_contribution', 'operator_reimbursement'].includes(role.code),
+            ? ['operator_enrollment', 'operator_contribution', 'operator_reimbursement', 'employer_management'].includes(role.code)
+            : !['operator_enrollment', 'operator_contribution', 'operator_reimbursement', 'employer_management'].includes(role.code),
         )
       : currentSystem?.roles || [];
 
@@ -326,7 +326,7 @@ export default function Login({ onLogin }: LoginProps) {
                 )}
               </div>
 
-              <div className={`grid gap-6 ${visibleRoles.length <= 3 ? 'grid-cols-3' : visibleRoles.length === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              <div className={`grid gap-4 ${selectedSystem === 'operation' ? 'grid-cols-4' : visibleRoles.length <= 3 ? 'grid-cols-3' : 'grid-cols-3'}`}>
                 {visibleRoles.map((role, index) => {
                   const RoleIcon = ROLE_ICONS[role.code] || User;
                   return (
@@ -337,17 +337,17 @@ export default function Login({ onLogin }: LoginProps) {
                       transition={{ delay: index * 0.08 }}
                       onClick={() => handleRoleLogin(role.code)}
                       disabled={isLoading}
-                      className={`group relative bg-white rounded-2xl p-8 border-2 ${currentSystem?.borderColor} ${currentSystem?.hoverBorder} hover:shadow-xl transition-all duration-300 text-left`}
+                      className={`group relative bg-white rounded-2xl p-5 border-2 ${currentSystem?.borderColor} ${currentSystem?.hoverBorder} hover:shadow-xl transition-all duration-300 text-left`}
                     >
-                      <div className={`w-16 h-16 rounded-2xl ${currentSystem?.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${currentSystem?.color} flex items-center justify-center`}>
-                          <RoleIcon className="w-6 h-6 text-white" />
+                      <div className={`w-12 h-12 rounded-2xl ${currentSystem?.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                        <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${currentSystem?.color} flex items-center justify-center`}>
+                          <RoleIcon className="w-4 h-4 text-white" />
                         </div>
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-gray-900">{role.name}</h3>
+                      <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-gray-900">{role.name}</h3>
                       <p className="text-gray-500 text-sm">{role.desc}</p>
-                      <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ChevronRight className="w-6 h-6 text-cyan-500" />
+                      <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ChevronRight className="w-5 h-5 text-cyan-500" />
                       </div>
                     </motion.button>
                   );
