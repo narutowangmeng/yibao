@@ -65,6 +65,7 @@ const OPERATION_ROLES: UserRole[] = [
   'operator_claims',
   'auditor_audit',
   'auditor_settlement',
+  'finance_manager',
   'auditor_inspection',
   'employer_management',
   'operation_admin',
@@ -89,6 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const agencyName = userAgency && AGENCY_NAMES[userAgency] ? AGENCY_NAMES[userAgency] : '省局';
   const roleName = userRole && ROLE_NAMES[userRole] ? ROLE_NAMES[userRole] : '管理员';
+  const operationTitle = title.replace(/\s*-\s*/g, '');
 
   const displayName =
     userRole && ['institution_admin', 'institution_hospital', 'institution_pharmacy', 'employer_admin', 'insured_person'].includes(userRole)
@@ -100,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
             ? '张雨晴'
             : '南京市第一医院'
       : userRole && OPERATION_ROLES.includes(userRole)
-        ? `${agencyName}${userOperatorIdentity || '经办'}${roleName}`
+        ? `${agencyName}${userOperatorIdentity || '经办'}${operationTitle}`
         : `${agencyName} · ${roleName}`;
 
   return (

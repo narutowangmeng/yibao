@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, CheckCircle, XCircle, AlertTriangle, FileText, BarChart3, Search, Filter, Users, Settings, ClipboardCheck, RotateCcw, ArrowRight, Wallet, Scale, BookOpen, TrendingUp } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, AlertTriangle, FileText, BarChart3, Search, Filter, Users, Settings, ClipboardCheck, RotateCcw, ArrowRight } from 'lucide-react';
 import FirstAudit from './modules/FirstAudit';
 import SecondAudit from './modules/SecondAudit';
 import FinalAudit from './modules/FinalAudit';
@@ -19,7 +19,6 @@ const modules = [
   { id: 'exception', title: '异常处理', icon: AlertTriangle, desc: '异常单据处理', color: 'from-red-500 to-red-600', component: ExceptionHandle },
   { id: 'query', title: '审核查询', icon: Search, desc: '历史审核查询', color: 'from-indigo-500 to-indigo-600', component: AuditQuery },
   { id: 'report', title: '统计报表', icon: BarChart3, desc: '审核数据统计', color: 'from-teal-500 to-teal-600', component: AuditReport },
-  { id: 'finance', title: '财务管理', icon: Wallet, desc: '自动对账、总账管理', color: 'from-amber-500 to-amber-600', component: null },
 ];
 
 export default function AuditWorkbench() {
@@ -29,41 +28,6 @@ export default function AuditWorkbench() {
     if (!selectedModule) return null;
     const module = modules.find(m => m.id === selectedModule);
     if (!module) return null;
-    if (module.id === 'finance') {
-      return (
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <button onClick={() => setSelectedModule(null)} className="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowRight className="w-5 h-5 rotate-180" />
-            </button>
-            <h3 className="text-xl font-bold">财务管理</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl p-6 border border-amber-200 hover:shadow-lg cursor-pointer" onClick={() => alert('自动对账功能')}>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mb-4">
-                <Scale className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-lg mb-2">自动对账</h4>
-              <p className="text-sm text-gray-500">对账规则配置与执行</p>
-            </div>
-            <div className="bg-white rounded-xl p-6 border border-amber-200 hover:shadow-lg cursor-pointer" onClick={() => alert('总账管理功能')}>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mb-4">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-lg mb-2">总账管理</h4>
-              <p className="text-sm text-gray-500">科目管理与明细查询</p>
-            </div>
-            <div className="bg-white rounded-xl p-6 border border-amber-200 hover:shadow-lg cursor-pointer" onClick={() => alert('基金报表功能')}>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-lg mb-2">基金报表</h4>
-              <p className="text-sm text-gray-500">财务报表生成与分析</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
     if (!module.component) return null;
     const Component = module.component;
     return <Component onClose={() => setSelectedModule(null)} onBack={() => setSelectedModule(null)} />;
