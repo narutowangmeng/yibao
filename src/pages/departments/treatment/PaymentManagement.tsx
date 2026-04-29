@@ -113,6 +113,7 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
   const [standards, setStandards] = useState<PaymentStandard[]>(initialStandards);
   const [audits, setAudits] = useState<PaymentAudit[]>(initialAudits);
   const [overdues, setOverdues] = useState<OverduePayment[]>(initialOverdues);
+  const [remindedIds, setRemindedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<PaymentStandard | null>(null);
@@ -163,8 +164,7 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
   };
 
   const handleRemind = (id: string) => {
-    setOverdues((prev) => prev.filter((item) => item.id !== id));
-    window.alert('催缴通知已发送');
+    setRemindedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
   };
 
   return (
@@ -311,7 +311,7 @@ export default function PaymentManagement({ userAgency }: PaymentManagementProps
                       {isProvince && (
                         <button onClick={() => handleRemind(item.id)} className="flex items-center gap-1 rounded bg-orange-600 px-3 py-1.5 text-xs text-white hover:bg-orange-700">
                           <Bell className="h-3 w-3" />
-                          发送催缴
+                          {remindedIds.includes(item.id) ? '已催缴' : '发送催缴'}
                         </button>
                       )}
                     </div>

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ArrowRight, Download, Filter, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { publishedReports, reportGroups, topSummaryCards } from './reportData';
+import { exportJsonToWorkbook } from '../../utils/exportHelpers';
 
 export default function StatisticalReports() {
   const [keyword, setKeyword] = useState('');
@@ -23,6 +24,36 @@ export default function StatisticalReports() {
     });
   }, [activeGroupId, cycle, keyword]);
 
+  const handleExportGroupSummary = () => {
+    if (!activeGroup) return;
+    exportJsonToWorkbook(
+      activeGroup.reports.map((report) => ({
+        分类: activeGroup.name,
+        报表名称: report.name,
+        周期: report.cycle,
+        归属处室: report.owner,
+        摘要: report.summary,
+      })),
+      '报表分类',
+      `${activeGroup.name}_报表分类汇编.xlsx`,
+    );
+  };
+
+  const handleExportPublished = () => {
+    exportJsonToWorkbook(
+      filteredPublishedReports.map((item) => ({
+        报表名称: item.name,
+        分类: reportGroups.find((group) => group.id === item.groupId)?.name || item.groupId,
+        周期: item.cycle,
+        归属处室: item.department,
+        状态: item.status,
+        更新时间: item.updatedAt,
+      })),
+      '已生成报表',
+      `已生成报表_${activeGroup?.name || '全部'}.xlsx`,
+    );
+  };
+
   return (
     <div className="space-y-6">
       <section className="rounded-[32px] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.18),_transparent_32%),linear-gradient(135deg,_#0f766e,_#155e75_46%,_#1d4ed8)] px-8 py-8 text-white shadow-xl">
@@ -35,7 +66,7 @@ export default function StatisticalReports() {
             </p>
           </div>
           <button
-            onClick={() => window.alert('已预留报表汇编导出接口。')}
+            onClick={handleExportGroupSummary}
             className="rounded-2xl bg-white px-5 py-3 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
           >
             导出报表汇编
@@ -174,7 +205,7 @@ export default function StatisticalReports() {
               <p className="mt-1 text-sm text-slate-500">当前只展示所选分类下的已生成报表，点名称即可进入单独报表界面。</p>
             </div>
             <button
-              onClick={() => window.alert('批量导出接口已预留。')}
+              onClick={handleExportPublished}
               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             >
               <Download className="h-4 w-4" />

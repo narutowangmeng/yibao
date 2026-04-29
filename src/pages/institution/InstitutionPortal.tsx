@@ -461,6 +461,8 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
   const [pharmacyTab, setPharmacyTab] = useState<(typeof pharmacyTabs)[number]['id']>('receive');
   const [searchText, setSearchText] = useState('');
   const [settlements, setSettlements] = useState<SettlementItem[]>(hospitalSettlementsSeed);
+  const [claimBatches, setClaimBatches] = useState<ClaimBatchItem[]>(claimBatchSeed);
+  const [reconciles, setReconciles] = useState<ReconcileItem[]>(reconcileSeed);
   const [prescriptions, setPrescriptions] = useState<PrescriptionItem[]>(prescriptionSeed);
   const [alerts, setAlerts] = useState<AlertItem[]>(alertSeed);
   const [showModal, setShowModal] = useState(false);
@@ -488,18 +490,18 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
   }, [searchText, settlements]);
 
   const filteredClaimBatches = useMemo(() => {
-    if (!searchText.trim()) return claimBatchSeed;
-    return claimBatchSeed.filter((item) =>
+    if (!searchText.trim()) return claimBatches;
+    return claimBatches.filter((item) =>
       [item.id, item.institution, item.insuranceType, item.status, item.submitter, item.returnReason].some((field) => field.includes(searchText)),
     );
-  }, [searchText]);
+  }, [claimBatches, searchText]);
 
   const filteredReconciles = useMemo(() => {
-    if (!searchText.trim()) return reconcileSeed;
-    return reconcileSeed.filter((item) =>
+    if (!searchText.trim()) return reconciles;
+    return reconciles.filter((item) =>
       [item.id, item.period, item.institution, item.diffType, item.status, item.confirmer].some((field) => field.includes(searchText)),
     );
-  }, [searchText]);
+  }, [reconciles, searchText]);
 
   const filteredPrescriptions = useMemo(() => {
     if (!searchText.trim()) return prescriptions;
@@ -591,6 +593,37 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     setPrescriptions((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
   };
 
+  const handleCreateClaimBatch = () => {
+    const pendingSettlements = settlements.filter((item) => item.status !== '待上传');
+    const submitTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const totalAmount = pendingSettlements.reduce((sum, item) => sum + item.totalAmount, 0);
+    const claimAmount = pendingSettlements.reduce((sum, item) => sum + item.fundAmount, 0);
+    const newBatch: ClaimBatchItem = {
+      id: `SB${String(claimBatches.length + 1).padStart(3, '0')}`,
+      institution: '南京市第一医院',
+      settlementCount: pendingSettlements.length || settlements.length,
+      insuranceType: '职工医保',
+      totalAmount,
+      claimAmount,
+      submitter: '王哲',
+      submitTime,
+      status: '已提交',
+      returnReason: '无',
+    };
+    setClaimBatches((prev) => [newBatch, ...prev]);
+  };
+
+  const handleConfirmReconcile = () => {
+    const latestTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    setReconciles((prev) =>
+      prev.map((item, index) =>
+        index === 0 || item.status === '待确认'
+          ? { ...item, status: '已确认', confirmer: '周琛', confirmTime: latestTime, diffAmount: 0, diffType: '无差异' }
+          : item,
+      ),
+    );
+  };
+
   const renderToolbar = (placeholder: string, primaryAction?: { label: string; onClick: () => void }) => (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">
       <div className="relative w-full max-w-md">
@@ -671,7 +704,7 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     <div className="space-y-4">
       {renderToolbar('搜索申报批次号、申报机构、险种、状态', {
         label: '发起申报',
-        onClick: () => window.alert('已按当前筛选条件生成申报批次'),
+        onClick: handleCreateClaimBatch,
       })}
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="min-w-full text-sm">
@@ -714,7 +747,7 @@ export default function InstitutionPortal({ portalRole = 'institution_hospital' 
     <div className="space-y-4">
       {renderToolbar('搜索对账批次号、结算周期、差异类型、状态', {
         label: '确认对账',
-        onClick: () => window.alert('已完成当前批次对账确认'),
+        onClick: handleConfirmReconcile,
       })}
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="min-w-full text-sm">

@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Download, Eye, Search, Upload, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { getStoredSettlementSubmissions } from '../../../utils/settlementStorage';
 
 interface SettlementItem {
   id: string;
@@ -43,7 +44,7 @@ const seed: SettlementItem[] = [
 ];
 
 export default function SettlementQuery({ onBack }: { onBack: () => void }) {
-  const [rows, setRows] = useState<SettlementItem[]>(seed);
+  const [rows, setRows] = useState<SettlementItem[]>([...getStoredSettlementSubmissions(), ...seed]);
   const [keyword, setKeyword] = useState('');
   const [selectedItem, setSelectedItem] = useState<SettlementItem | null>(null);
   const importRef = useRef<HTMLInputElement>(null);

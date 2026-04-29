@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Download, FileText, Calendar, MapPin, Building2, TrendingUp, CheckCircle, Clock, DollarSign, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { downloadTextFile, exportJsonToWorkbook } from '../../../utils/exportHelpers';
 
 interface AuditReportProps {
   onClose: () => void;
@@ -45,6 +46,32 @@ export default function AuditReport({ onBack }: AuditReportProps) {
     { title: '审核金额', value: '1,256.8', unit: '万元', icon: DollarSign, color: 'bg-purple-500', trend: '+8.7%' },
   ];
 
+  const handleExportExcel = () => {
+    exportJsonToWorkbook(
+      performerData.map((item) => ({
+        审核员: item.name,
+        审核量: item.count,
+        通过率: `${item.passRate}%`,
+        平均时长: item.avgTime,
+      })),
+      '审核统计',
+      '费用审核统计报表.xlsx',
+    );
+  };
+
+  const handleExportPdf = () => {
+    downloadTextFile(
+      '费用审核统计报表.txt',
+      [
+        `时间范围：${timeRange}`,
+        `地区范围：${region}`,
+        `机构类型：${institution}`,
+        '',
+        ...stats.map((item) => `${item.title}：${item.value}${item.unit}`),
+      ].join('\n'),
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -58,10 +85,10 @@ export default function AuditReport({ onBack }: AuditReportProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => alert('报表导出成功！')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             <Download className="w-4 h-4" />导出Excel
           </button>
-          <button onClick={() => alert('PDF导出成功！')} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <button onClick={handleExportPdf} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             <FileText className="w-4 h-4" />导出PDF
           </button>
         </div>

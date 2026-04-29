@@ -21,6 +21,7 @@ import {
   type ReportDetail,
   type ReportGroupId
 } from './reportData';
+import { downloadTextFile, exportJsonToWorkbook } from '../../utils/exportHelpers';
 import {
   Bar,
   BarChart,
@@ -244,6 +245,33 @@ export default function ReportDetailPage() {
   const PrimaryIcon = modeIcon(detail.primaryChartMode);
   const SecondaryIcon = modeIcon(detail.secondaryChartMode);
   const { rankingData, compareData, trendData, structureData, statusData } = buildExtraCharts(detail);
+  const handleExportCurrentReport = () => {
+    exportJsonToWorkbook(
+      detail.tableRows.map((row) =>
+        detail.tableColumns.reduce<Record<string, string>>((accumulator, column) => {
+          accumulator[column.label] = String(row[column.key] ?? '');
+          return accumulator;
+        }, {}),
+      ),
+      '报表明细',
+      `${report.name}_明细数据.xlsx`,
+    );
+
+    downloadTextFile(
+      `${report.name}_分析摘要.txt`,
+      [
+        detail.heroTitle,
+        `统计期间：${detail.period}`,
+        `统计口径：${detail.scope}`,
+        '',
+        '核心指标：',
+        ...detail.metrics.map((metric) => `- ${metric.label}：${metric.value}（${metric.sub}）`),
+        '',
+        '分析结论：',
+        ...detail.insights.map((insight, index) => `${index + 1}. ${insight}`),
+      ].join('\n'),
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -269,7 +297,7 @@ export default function ReportDetailPage() {
               <p className="mt-2 text-sm font-medium">{detail.scope}</p>
             </div>
             <button
-              onClick={() => window.alert(`已预留“${report.name}”导出接口。`)}
+              onClick={handleExportCurrentReport}
               className="rounded-2xl bg-white px-4 py-3 text-left text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
             >
               <Download className="mb-2 h-4 w-4" />

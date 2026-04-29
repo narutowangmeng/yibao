@@ -18,6 +18,7 @@ import {
   PowerOff,
 } from 'lucide-react';
 import { getAgencyLevel } from '../../../config/managementPermissions';
+import { downloadTextFile } from '../../../utils/exportHelpers';
 
 type ProvinceTab = 'strategy' | 'rules' | 'models' | 'release' | 'monitor';
 type CityTab = 'alerts' | 'clues' | 'cases' | 'rectification' | 'analysis';
@@ -381,6 +382,58 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
     notify('模型状态已更新');
   };
 
+  const handleAddStrategy = () => {
+    setStrategyRows((prev) => [
+      {
+        id: `CL${String(prev.length + 1).padStart(3, '0')}`,
+        name: '门诊慢特病超限支付新增治理策略',
+        scope: '全省统一',
+        scene: '门诊慢特病',
+        cycle: '按周监测',
+        owner: '省基金监管处',
+        status: '待发布',
+        updatedAt: '2026-04-30 10:00',
+      },
+      ...prev,
+    ]);
+    notify('已新增策略');
+  };
+
+  const handleEditStrategy = (id: string) => {
+    setStrategyRows((prev) => prev.map((item) => (item.id === id ? { ...item, updatedAt: '2026-04-30 10:30' } : item)));
+    notify('策略已更新');
+  };
+
+  const handleAddModel = () => {
+    setModelRows((prev) => [
+      {
+        id: `MX${String(prev.length + 1).padStart(3, '0')}`,
+        name: '零售药店串换结算识别模型',
+        type: '规则模型',
+        scene: '零售药店',
+        threshold: '规则命中2项',
+        accuracy: '92.4%',
+        status: '运行中',
+        owner: '省信息中心',
+      },
+      ...prev,
+    ]);
+    notify('已新增模型');
+  };
+
+  const handleEditModel = (id: string) => {
+    setModelRows((prev) => prev.map((item) => (item.id === id ? { ...item, accuracy: '95.0%' } : item)));
+    notify('模型参数已更新');
+  };
+
+  const handleReleaseSubmit = (id?: string) => {
+    notify(id ? '发布批次已重新提交审批' : '已生成新的发布批次');
+  };
+
+  const handleMonitorRemind = (city: string) => {
+    notify(`已向${city}下发核查提醒`);
+  };
+
   const handleCityAlertReceive = (id: string) => {
     setAlertRows((prev) => prev.map((item) => (item.id === id ? { ...item, status: '核查中' } : item)));
     notify('预警已签收');
@@ -401,24 +454,50 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
     notify('整改已复核销号');
   };
 
+  const handleCaseProcess = (id: string) => {
+    setCaseRows((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, status: item.status === '拟移交' ? '处理中' : item.status === '处理中' ? '已结案' : item.status, time: '2026-04-30 11:00' }
+          : item,
+      ),
+    );
+    notify('案件处理进度已更新');
+  };
+
+  const handleGenerateAnalysisReport = (item: CityAnalysis) => {
+    downloadTextFile(
+      `${item.subject}_专项分析报告.txt`,
+      [
+        `分析对象：${item.subject}`,
+        `分析维度：${item.dimension}`,
+        `指标值：${item.value}`,
+        `排序：${item.rank}`,
+        `分析结论：${item.conclusion}`,
+        `更新时间：${item.updatedAt}`,
+      ].join('\n'),
+    );
+    notify('分析报告已导出');
+  };
+
   const renderProvinceActions = () => {
     if (provinceTab === 'strategy') {
       return (
-        <button onClick={() => notify('策略新增弹窗可下一步补充')} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg">
+        <button onClick={handleAddStrategy} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg">
           <Plus className="w-4 h-4" />新增策略
         </button>
       );
     }
     if (provinceTab === 'models') {
       return (
-        <button onClick={() => notify('模型新增弹窗可下一步补充')} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg">
+        <button onClick={handleAddModel} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg">
           <Plus className="w-4 h-4" />新增模型
         </button>
       );
     }
     if (provinceTab === 'release') {
       return (
-        <button onClick={() => notify('发布流程已触发')} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg">
+        <button onClick={() => handleReleaseSubmit()} className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg">
           <Send className="w-4 h-4" />发起发布
         </button>
       );
@@ -454,7 +533,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                      <button onClick={() => notify(`已进入${item.name}编辑态`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleEditStrategy(item.id)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Edit2 className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -494,7 +573,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                      <button onClick={() => notify(`已进入${item.name}编辑态`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => notify(`${item.name}规则已转入维护`) } className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Edit2 className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -534,7 +613,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                      <button onClick={() => notify(`已进入${item.name}编辑态`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleEditModel(item.id)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Edit2 className="w-4 h-4" /></button>
                       <button onClick={() => handleProvinceModelToggle(item.id)} className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded">
                         {item.status === '运行中' ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
                       </button>
@@ -577,7 +656,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                      <button onClick={() => notify(`${item.packageName}已重新提交审批`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Send className="w-4 h-4" /></button>
+                      <button onClick={() => handleReleaseSubmit(item.id)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Send className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -614,7 +693,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => notify(`已向${item.city}下发核查提醒`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Send className="w-4 h-4" /></button>
+                    <button onClick={() => handleMonitorRemind(item.city)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Send className="w-4 h-4" /></button>
                   </div>
                 </td>
               </tr>
@@ -736,7 +815,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                      <button onClick={() => notify(`已打开${item.id}转办处理流`)} className="px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100">处理</button>
+                      <button onClick={() => handleCaseProcess(item.id)} className="px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100">处理</button>
                     </div>
                   </td>
                 </tr>
@@ -813,7 +892,7 @@ export default function SmartSupervision({ userAgency }: { userAgency: string })
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <button onClick={() => setDetailItem(item)} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded"><Eye className="w-4 h-4" /></button>
-                    <button onClick={() => notify(`已生成${item.subject}专项分析报告`)} className="px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100">生成报告</button>
+                    <button onClick={() => handleGenerateAnalysisReport(item)} className="px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100">生成报告</button>
                   </div>
                 </td>
               </tr>

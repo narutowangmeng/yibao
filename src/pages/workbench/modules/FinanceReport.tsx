@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FileText, Download, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { exportJsonToWorkbook } from '../../../utils/exportHelpers';
 
 interface FinanceReportProps {
   onBack: () => void;
@@ -35,7 +36,17 @@ export default function FinanceReport({ onBack }: FinanceReportProps) {
   };
 
   const handleDownload = (report: typeof reports[0]) => {
-    alert(`正在下载: ${report.name}`);
+    exportJsonToWorkbook(
+      reports.map((item) => ({
+        报表名称: item.name,
+        报表类型: item.type,
+        生成日期: item.date,
+        文件大小: item.size,
+        状态: item.status,
+      })),
+      '财务报表',
+      `${report.name}.xlsx`,
+    );
   };
 
   const handleDelete = (id: number) => {

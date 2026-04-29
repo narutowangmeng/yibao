@@ -184,7 +184,7 @@ export default function PriceManagement({ userAgency }: { userAgency: string }) 
           </div>
         );
       default:
-        return <div className="bg-white rounded-xl border p-8 text-center text-gray-500">功能开发中</div>;
+        return <div className="bg-white rounded-xl border p-8 text-center text-gray-500">暂无更多内容，请从上方标签切换到已配置页面。</div>;
     }
   };
 
