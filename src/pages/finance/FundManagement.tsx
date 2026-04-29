@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, TrendingUp, TrendingDown, Building, FileText, Calendar, Download, Search, Filter, ChevronDown, AlertCircle, Plus, Eye, Edit, Trash2, X, CheckCircle, RefreshCw, BookOpen, Scale, Settings, AlertTriangle, CheckSquare, FileSearch } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { exportJsonToWorkbook } from '../../utils/exportHelpers';
 
 interface Account { id: number; name: string; type: string; balance: string; status: '正常' | '冻结' | '注销'; description?: string; }
 interface Report { id: number; name: string; type: string; date: string; status: string; size?: string; }
@@ -101,7 +102,19 @@ export default function FundManagement() {
   const handleDeleteAccount = (id: number) => { setAccounts(accounts.filter(a => a.id !== id)); };
   const handleToggleStatus = (id: number) => { setAccounts(accounts.map(a => { if (a.id === id) { const statuses: ('正常' | '冻结' | '注销')[] = ['正常', '冻结', '注销']; const currentIndex = statuses.indexOf(a.status); return { ...a, status: statuses[(currentIndex + 1) % statuses.length] }; } return a; })); };
   const handleGenerateReport = () => { setModalType('generate'); setFormData({ ...formData, reportType: '月报', reportPeriod: new Date().toISOString().split('T')[0].slice(0, 7) }); setShowModal(true); };
-  const handleDownloadReport = (report: Report) => { alert(`正在下载: ${report.name}`); };
+  const handleDownloadReport = (report: Report) => {
+    exportJsonToWorkbook(
+      reports.map((item) => ({
+        报表名称: item.name,
+        报表类型: item.type,
+        生成日期: item.date,
+        状态: item.status,
+        文件大小: item.size || '-',
+      })),
+      '基金报表',
+      `${report.name}.xlsx`,
+    );
+  };
   const handleDeleteReport = (id: number) => { setReports(reports.filter(r => r.id !== id)); };
 
   const handleRunReconcile = () => {

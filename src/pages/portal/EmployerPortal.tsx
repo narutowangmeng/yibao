@@ -112,6 +112,7 @@ export default function EmployerPortal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [queryKeyword, setQueryKeyword] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [message, setMessage] = useState('');
 
   const filteredEmployees = useMemo(
     () =>
@@ -197,7 +198,7 @@ export default function EmployerPortal() {
 
   const handleSubmitEmployee = () => {
     if (!formData.name.trim() || !formData.idCard.trim()) {
-      alert('姓名和身份证号不能为空');
+      setMessage('姓名和身份证号不能为空');
       return;
     }
 
@@ -260,7 +261,7 @@ export default function EmployerPortal() {
       voucherNo: `JSYB202606${String(payments.length + 1).padStart(4, '0')}`,
     };
     setPayments((current) => [nextPayment, ...current]);
-    alert('缴费申报已生成，可在缴费记录中查看');
+    setMessage('缴费申报已生成，可在缴费记录中查看');
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,7 +283,7 @@ export default function EmployerPortal() {
     };
 
     setUploadRecords((current) => [nextRecord, ...current]);
-    alert(`文件“${uploadedFile.name}”上传成功`);
+    setMessage(`文件“${uploadedFile.name}”上传成功`);
     setUploadedFile(null);
   };
 
@@ -580,6 +581,7 @@ export default function EmployerPortal() {
 
   return (
     <div className="space-y-6">
+      {message && <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-700">{message}</div>}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-800">参保单位门户</h2>
         <span className="text-sm text-gray-500">南京华宁科技有限公司</span>

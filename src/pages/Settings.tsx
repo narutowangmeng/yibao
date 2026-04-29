@@ -30,6 +30,7 @@ export default function Settings() {
   });
   const [passwordForm, setPasswordForm] = useState({ old: '', new: '', confirm: '' });
   const [showModal, setShowModal] = useState(false);
+  const [message, setMessage] = useState('');
   const [modalType, setModalType] = useState<'add' | 'edit'>('add');
   const [currentItem, setCurrentItem] = useState<SystemParam | null>(null);
   const [formData, setFormData] = useState({ name: '', key: '', value: '', description: '' });
@@ -61,15 +62,15 @@ export default function Settings() {
   };
 
   const handleSaveNotifications = () => {
-    alert('通知设置已保存');
+    setMessage('通知设置已保存');
   };
 
   const handleChangePassword = () => {
     if (passwordForm.new !== passwordForm.confirm) {
-      alert('两次输入的密码不一致');
+      setMessage('两次输入的密码不一致');
       return;
     }
-    alert('密码修改成功');
+    setMessage('密码修改成功');
     setPasswordForm({ old: '', new: '', confirm: '' });
   };
 
@@ -171,6 +172,7 @@ export default function Settings() {
           {activeTab === 'security' && renderSecurity()}
         </motion.div>
       </AnimatePresence>
+      {message && <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-700">{message}</div>}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

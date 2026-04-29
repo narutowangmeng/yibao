@@ -157,6 +157,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [selectedAgency, setSelectedAgency] = useState<string>('headquarters');
   const [selectedOperatorIdentity, setSelectedOperatorIdentity] = useState<'经办' | '审核'>('经办');
   const [showInstitutionSelector, setShowInstitutionSelector] = useState(false);
+  const [message, setMessage] = useState('');
 
   React.useEffect(() => {
     const hash = window.location.hash;
@@ -199,7 +200,7 @@ export default function Login({ onLogin }: LoginProps) {
 
   const commitLogin = (role: UserRole) => {
     if (selectedSystem === 'management' && role === 'bureau_leader' && selectedAgency !== 'headquarters') {
-      window.alert('地市账号无权限进入报表中心');
+      setMessage('地市账号无权限进入报表中心');
       return;
     }
 
@@ -268,6 +269,7 @@ export default function Login({ onLogin }: LoginProps) {
             </motion.div>
           ) : (
             <motion.div key="roles" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white rounded-3xl shadow-2xl p-12 max-w-5xl mx-auto relative">
+              {message && <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">{message}</div>}
               <div className="text-center mb-10">
                 <div className="flex items-center justify-between mb-6">
                   <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors">

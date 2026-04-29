@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Download, Eye, FileText, User, Calendar, X } from 'lucide-react';
+import { exportJsonToWorkbook } from '../../utils/exportHelpers';
 
 interface QueryResult {
   id: string;
@@ -42,7 +43,19 @@ export default function QuerySystem() {
   };
 
   const handleExport = () => {
-    alert(`已导出 ${results.length} 条记录`);
+    exportJsonToWorkbook(
+      results.map((item) => ({
+        编号: item.id,
+        姓名: item.name,
+        身份证号: item.idCard,
+        参保类型: item.type,
+        状态: item.status,
+        参保日期: item.enrollDate,
+        最近缴费期: item.lastPayment,
+      })),
+      '综合查询',
+      `综合查询结果_${results.length}条.xlsx`,
+    );
   };
 
   return (

@@ -31,6 +31,7 @@ export default function PaymentManagement() {
     { id: 'O001', name: '王五', month: '2024-02', amount: 680, days: 15 }
   ]);
   const [showModal, setShowModal] = useState(false);
+  const [message, setMessage] = useState('');
   const [modalType, setModalType] = useState<'add' | 'edit' | 'view'>('add');
   const [currentItem, setCurrentItem] = useState<PaymentRecord | null>(null);
   const [formData, setFormData] = useState({ name: '', idCard: '', baseAmount: '' });
@@ -87,7 +88,7 @@ export default function PaymentManagement() {
   };
 
   const handleRemind = (id: string) => {
-    alert('催缴通知已发送');
+    setMessage('催缴通知已发送');
     setOverdues(overdues.filter(o => o.id !== id));
   };
 
@@ -148,6 +149,7 @@ export default function PaymentManagement() {
           )}
         </motion.div>
       </AnimatePresence>
+      {message && <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-700">{message}</div>}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

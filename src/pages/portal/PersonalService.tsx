@@ -227,6 +227,7 @@ export default function PersonalService() {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [currentItem, setCurrentItem] = useState<FamilyMember | ProgressItem | null>(null);
+  const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     idCard: '',
@@ -261,7 +262,7 @@ export default function PersonalService() {
 
   const handleSubmitFamily = () => {
     if (!formData.name.trim() || !formData.idCard.trim()) {
-      alert('姓名和身份证号不能为空');
+      setMessage('姓名和身份证号不能为空');
       return;
     }
 
@@ -308,7 +309,7 @@ export default function PersonalService() {
 
   const handleSubmitFeedback = () => {
     if (!formData.content.trim()) {
-      alert('请输入投诉建议内容');
+      setMessage('请输入投诉建议内容');
       return;
     }
     setFeedbacks((current) => [
@@ -323,7 +324,7 @@ export default function PersonalService() {
       ...current,
     ]);
     setFormData((current) => ({ ...current, content: '' }));
-    alert('建议已提交');
+    setMessage('建议已提交');
   };
 
   const handleViewProgress = (item: ProgressItem) => {
@@ -693,6 +694,7 @@ export default function PersonalService() {
 
   return (
     <div className="space-y-4">
+      {message && <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-700">{message}</div>}
       <h2 className="text-xl font-bold text-gray-800">个人服务大厅</h2>
       <div className="flex gap-2 border-b border-gray-200">
         {tabs.map((tab) => (

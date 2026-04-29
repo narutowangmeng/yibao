@@ -163,6 +163,7 @@ export default function RoleBasedSidebar({
 }: RoleBasedSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const [message, setMessage] = useState('');
 
   const filteredNavItems = navItems.filter((item) => item.roles.includes(userRole));
 
@@ -201,6 +202,7 @@ export default function RoleBasedSidebar({
         )}
 
         <nav className="flex-1 overflow-y-auto px-2 py-4">
+          {message && !collapsed && <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">{message}</div>}
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -223,7 +225,7 @@ export default function RoleBasedSidebar({
                     }
                     if (!canAccessItem) {
                       event.preventDefault();
-                      window.alert('当前账号无权限访问该页面');
+                      setMessage('当前账号无权限访问该页面');
                     }
                   }}
                   className={`mb-1 flex items-center gap-3 rounded-lg px-3 py-3 transition-all duration-200 ${
