@@ -71,9 +71,18 @@ interface SectionConfig<T extends BaseRow> {
 }
 
 interface PendingAction {
+  actionKey: string;
+  sectionKey: string;
   title: string;
   target: string;
   confirmLabel: string;
+  rowId?: string;
+  description?: string;
+  summary?: Array<{ label: string; value: string }>;
+  detailRows?: Array<Record<string, string>>;
+  noteLabel?: string;
+  notePlaceholder?: string;
+  readonly?: boolean;
 }
 
 interface BillDetailSection {
@@ -706,6 +715,16 @@ function createFallbackReportPreview(row: FinanceRow): ReportPreview {
   };
 }
 
+function getSectionMeta(sectionKey: string) {
+  const section = Object.values(moduleSections)
+    .flatMap((module) => module.sections)
+    .find((item) => item.key === sectionKey);
+  return {
+    label: section?.label || sectionKey,
+    title: section?.title || sectionKey,
+  };
+}
+
 function buildReceivableBillDetail(row: FinanceRow): BillDetailModalState {
   const payerCodeMap: Record<string, string> = {
     南京华宁科技有限公司: '91320104759423198K',
@@ -855,6 +874,222 @@ function buildPayableBillDetail(row: FinanceRow): BillDetailModalState {
   };
 }
 
+function buildActionDetail(action: ActionButton, sectionKey: string, row?: FinanceRow): PendingAction {
+  const baseSummary = row
+    ? [
+        { label: '业务编号', value: row.id },
+        { label: '主体/对象', value: row.field1 },
+        { label: '业务类型', value: row.field2 },
+        { label: '金额/范围', value: row.field3 || row.field4 },
+        { label: '当前状态', value: row.field4 || row.field7 || '-' },
+        { label: '经办时间', value: row.field6 || row.field8 || '-' },
+      ]
+    : [];
+
+  if (action.label === '查看' && row) {
+    return {
+      actionKey: `view_${sectionKey}`,
+      sectionKey,
+      rowId: row.id,
+      title: `${action.label} ${row.id}`,
+      target: row.field1,
+      confirmLabel: '关闭',
+      readonly: true,
+      description: '查看当前业务记录的办理信息、处理节点和关联台账。',
+      summary: baseSummary,
+      detailRows: [
+        { 环节: '业务受理', 处理结果: row.field4 || row.field7 || '-', 处理人: row.field5 || '系统', 办理时间: row.field6 || row.field8 || '-' },
+        { 环节: '规则校验', 处理结果: sectionKey.includes('difference') ? '已关联差异台账' : '校验通过', 处理人: '系统自动', 办理时间: row.field6 || row.field8 || '-' },
+        { 环节: '后续动作', 处理结果: sectionKey.includes('payment') ? '待银行回盘' : sectionKey.includes('reconcile') ? '待复核确认' : '待经办处理', 处理人: row.field5 || '当前岗位', 办理时间: getNowString() },
+      ],
+    };
+  }
+
+  if (sectionKey === 'arrival_confirm' && row && action.label === '匹配账单') {
+    return {
+      actionKey: 'arrival_match',
+      sectionKey,
+      rowId: row.id,
+      title: `到账匹配 ${row.id}`,
+      target: row.field2,
+      confirmLabel: '确认匹配',
+      description: '根据付款附言、金额和到账渠道匹配应收账单，确认后写入到账台账。',
+      summary: [
+        { label: '到账流水号', value: row.id },
+        { label: '到账渠道', value: row.field1 },
+        { label: '付款附言', value: row.field2 },
+        { label: '到账金额', value: row.field3 },
+        { label: '当前关联账单', value: row.field4 || '未关联' },
+        { label: '匹配结果', value: row.field5 },
+      ],
+      detailRows: [
+        { 候选账单: row.field4 || 'YS008', 缴费主体: row.field2.split('/')[0].trim(), 应收金额: row.field3, 匹配方式: '金额+付款附言', 结果: '高匹配' },
+        { 候选账单: 'YS012', 缴费主体: '镇江丹徒区民政局', 应收金额: '46.00万元', 匹配方式: '主体名称相似', 结果: '低匹配' },
+      ],
+      noteLabel: '匹配说明',
+      notePlaceholder: '可补充到账附言缺失、补录票据号或人工确认依据。',
+    };
+  }
+
+  if (sectionKey === 'arrival_exception' && row && action.label === '发起处理') {
+    return {
+      actionKey: 'arrival_exception_handle',
+      sectionKey,
+      rowId: row.id,
+      title: `到账差异处理 ${row.id}`,
+      target: row.field1,
+      confirmLabel: '确认受理',
+      description: '受理到账差异后，将转入财务协查队列，跟踪少到账、未到账或重复到账问题。',
+      summary: [
+        { label: '异常编号', value: row.id },
+        { label: '关联单据', value: row.field1 },
+        { label: '异常类型', value: row.field2 },
+        { label: '异常金额', value: row.field3 },
+        { label: '当前状态', value: row.field4 },
+        { label: '发现时间', value: row.field6 },
+      ],
+      detailRows: [
+        { 处置节点: '财务受理', 责任岗位: '到账确认岗', 时限要求: '1个工作日', 处理动作: '核对回单及账单' },
+        { 处置节点: '外部协查', 责任岗位: '税务/银行接口岗', 时限要求: '2个工作日', 处理动作: '补传流水或重发回盘' },
+      ],
+      noteLabel: '处理意见',
+      notePlaceholder: '填写受理意见、协查方向或预计办结时间。',
+    };
+  }
+
+  if (sectionKey.startsWith('reconcile_') && row && (action.label === '重新执行' || action.label === '差异转办')) {
+    return {
+      actionKey: action.label === '重新执行' ? 'reconcile_rerun' : 'reconcile_transfer',
+      sectionKey,
+      rowId: row.id,
+      title: `${action.label} ${row.id}`,
+      target: row.field1,
+      confirmLabel: action.label,
+      description: action.label === '重新执行' ? '按当前批次重新拉取账务数据并执行对账规则。' : '将存在差异的对账批次转入差异处理模块继续闭环。',
+      summary: baseSummary,
+      detailRows: [
+        { 核对来源: row.field2, 核对口径: row.field3, 当前结果: row.field4, 经办人员: row.field5, 批次时间: row.field6 },
+        { 差异说明: row.field4.includes('差异') ? '批次存在金额不平或流水缺失。' : '本次重跑将复核接口数据与到账台账。', 处理去向: action.label === '差异转办' ? '差异处理-协查台账' : '对账中心-待复核', 规则版本: 'V2026.04', 办理要求: '当日完成' },
+      ],
+      noteLabel: '处理备注',
+      notePlaceholder: '填写重跑原因、转办说明或复核依据。',
+    };
+  }
+
+  if (sectionKey.startsWith('difference_') && row && (action.label === '受理' || action.label === '发起协查')) {
+    return {
+      actionKey: action.label === '受理' ? 'difference_accept' : 'difference_check',
+      sectionKey,
+      rowId: row.id,
+      title: `${action.label} ${row.id}`,
+      target: row.field1,
+      confirmLabel: action.label,
+      description: action.label === '受理' ? '将差异登记单纳入正式处理流程。' : '向相关机构发起协查，补齐外部凭证和回盘信息。',
+      summary: baseSummary,
+      detailRows: [
+        { 差异主题: row.field1, 关联批次: row.field2, 涉及金额: row.field3, 当前状态: row.field4, 责任人: row.field5 },
+        { 协查对象: sectionKey === 'difference_check' ? '银行/税务/财政接口单位' : '财务差异处理岗', 协查时限: '2个工作日', 办结要求: '形成闭环结果', 台账流向: '差异处理中心' },
+      ],
+      noteLabel: '办理意见',
+      notePlaceholder: '填写受理原因、协查要点或补证要求。',
+    };
+  }
+
+  if (sectionKey === 'payment_payable' && row && action.label === '生成批次') {
+    return {
+      actionKey: 'payment_batch_create',
+      sectionKey,
+      rowId: row.id,
+      title: `生成拨付批次 ${row.id}`,
+      target: row.field1,
+      confirmLabel: '生成批次',
+      description: '将当前应付账单纳入拨付申请批次，进入复核及银行发送流程。',
+      summary: [
+        { label: '应付账单号', value: row.id },
+        { label: '结算对象', value: row.field1 },
+        { label: '机构类型', value: row.field2 },
+        { label: '结算周期', value: row.field3 },
+        { label: '应付金额', value: row.field4 },
+        { label: '当前状态', value: row.field7 || '-' },
+      ],
+      detailRows: [
+        { 结算清单数: row.field2.includes('药店') ? '48笔' : '126笔', 医保基金支付: row.field4, 个账支付: row.field2.includes('药店') ? '4.10万元' : '0.00万元', 大病保险支付: row.field2.includes('三甲') ? '18.50万元' : '6.80万元' },
+        { 收款户名: row.field1, 开户行: '中国银行江苏省分行营业部', 收款账号: `622848******${row.id.slice(-4)}`, 批次去向: '拨付管理-待复核' },
+      ],
+      noteLabel: '批次说明',
+      notePlaceholder: '填写拨付用途、复核要求或特殊事项。',
+    };
+  }
+
+  if (sectionKey === 'payment_apply' && row && action.label === '发送银行') {
+    return {
+      actionKey: 'payment_send_bank',
+      sectionKey,
+      rowId: row.id,
+      title: `发送银行 ${row.id}`,
+      target: row.field2,
+      confirmLabel: '确认发送',
+      description: '发送拨付批次至银行，后续通过回盘结果确认到账情况。',
+      summary: baseSummary,
+      detailRows: [
+        { 付款银行: '中国银行江苏省分行', 付款账号: '3200****9988', 回盘方式: '银企直联', 指令笔数: row.field2.includes('药店') ? '18笔' : '12笔', 发送状态: row.field4 },
+      ],
+      noteLabel: '发送备注',
+      notePlaceholder: '填写发送批注、回盘要求或失败重提说明。',
+    };
+  }
+
+  if (sectionKey === 'payment_back' && row && action.label === '发起重提') {
+    return {
+      actionKey: 'payment_retry',
+      sectionKey,
+      rowId: row.id,
+      title: `回盘重提 ${row.id}`,
+      target: row.field2,
+      confirmLabel: '确认重提',
+      description: '针对银行退回或失败批次重新发起支付处理。',
+      summary: baseSummary,
+      detailRows: [
+        { 回盘结果: row.field1, 关联批次: row.field2, 金额: row.field3, 当前状态: row.field4, 回盘时间: row.field6 },
+        { 退回原因: '开户信息待复核/银行退票', 修正动作: '更新收款账号后重新发送', 下游去向: '拨付管理-待发送', 时限: '当日完成' },
+      ],
+      noteLabel: '重提说明',
+      notePlaceholder: '填写退回原因、修正动作和重新发送依据。',
+    };
+  }
+
+  if (sectionKey.startsWith('ledger_') && row) {
+    return {
+      actionKey: `ledger_${action.label}`,
+      sectionKey,
+      rowId: row.id,
+      title: `${action.label} ${row.id}`,
+      target: row.field2,
+      confirmLabel: action.label === '导出凭证' ? '确认导出' : '关闭',
+      readonly: action.label === '查看',
+      description: '查看基金账务科目、凭证明细和会计归集情况。',
+      summary: baseSummary,
+      detailRows: [
+        { 会计科目: row.field1, 业务摘要: row.field2, 金额信息: row.field3, 记账结果: row.field4, 记账时间: row.field6 },
+        { 制单人: row.field5, 凭证号: row.id.startsWith('MX') ? row.field1 : `PZ-${row.id}`, 来源模块: '财务管理', 会计期间: '2026-04', 账务口径: '医保基金总账' },
+      ],
+    };
+  }
+
+  return {
+    actionKey: `${sectionKey}_${action.label}`,
+    sectionKey,
+    rowId: row?.id,
+    title: action.action,
+    target: row?.id || sectionKey,
+    confirmLabel: action.label,
+    description: '办理当前业务操作，并记录处理痕迹。',
+    summary: baseSummary,
+    noteLabel: '办理说明',
+    notePlaceholder: '填写本次业务处理意见。',
+  };
+}
+
 function DataTable<T extends BaseRow>({
   title,
   subtitle,
@@ -923,7 +1158,7 @@ function DataTable<T extends BaseRow>({
               {columns.map((column) => (
                 <th
                   key={String(column.key)}
-                  className={`px-6 py-4 text-sm font-medium text-gray-600 ${
+                  className={`whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-600 ${
                     column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
                   }`}
                 >
@@ -944,7 +1179,7 @@ function DataTable<T extends BaseRow>({
                   return (
                     <td
                       key={String(column.key)}
-                      className={`px-6 py-5 text-sm text-gray-700 ${
+                      className={`whitespace-nowrap px-6 py-5 text-sm text-gray-700 ${
                         column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
                       }`}
                     >
@@ -953,12 +1188,12 @@ function DataTable<T extends BaseRow>({
                   );
                 })}
                 <td className="sticky right-0 bg-white px-6 py-5 text-right shadow-[-10px_0_18px_-16px_rgba(15,23,42,0.28)]">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-2 whitespace-nowrap">
                     {rowActions(row).map((action) => (
                       <button
                         key={action.label}
                         onClick={() => onAction(action, row)}
-                        className={`rounded-xl px-3 py-2 text-sm font-medium transition ${toneButtonClass(action.tone)}`}
+                        className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition ${toneButtonClass(action.tone)}`}
                       >
                         {action.label}
                       </button>
@@ -1043,6 +1278,7 @@ export default function FinanceManagementHub() {
   const currentModule = selectedModule ? moduleSections[selectedModule] : null;
   const currentSection = currentModule ? currentModule.sections.find((section) => section.key === activeSection) || currentModule.sections[0] : null;
   const currentRows = currentSection ? sectionDataMap[currentSection.key] || currentSection.data : [];
+  const pendingSectionMeta = pendingAction ? getSectionMeta(pendingAction.sectionKey) : null;
 
   const filteredData = useMemo(() => {
     if (!currentSection) return [];
@@ -1245,11 +1481,7 @@ export default function FinanceManagementHub() {
       return;
     }
 
-    setPendingAction({
-      title: action.action,
-      target: row?.id || currentSection.label,
-      confirmLabel: action.label,
-    });
+    setPendingAction(buildActionDetail(action, currentSection.key, row));
   };
 
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1303,7 +1535,63 @@ export default function FinanceManagementHub() {
 
   const confirmAction = () => {
     if (!pendingAction) return;
-    setFeedback(`${pendingAction.title}已办理`);
+
+    if (!pendingAction.readonly && pendingAction.rowId) {
+      setSectionDataMap((prev) => {
+        const rows = prev[pendingAction.sectionKey] || [];
+        const patch: Partial<FinanceRow> = { field5: '周岚', field6: getNowString() };
+
+        switch (pendingAction.actionKey) {
+          case 'arrival_match':
+            patch.field4 = 'YS008';
+            patch.field5 = '已匹配';
+            patch.field6 = '周岚';
+            patch.field7 = getNowString();
+            break;
+          case 'arrival_exception_handle':
+            patch.field4 = '处理中';
+            patch.field5 = '周岚';
+            break;
+          case 'reconcile_rerun':
+            patch.field4 = '待复核';
+            patch.field5 = '系统重跑';
+            break;
+          case 'reconcile_transfer':
+            patch.field4 = '存在差异';
+            patch.field5 = '已转办';
+            break;
+          case 'difference_accept':
+            patch.field4 = '处理中';
+            patch.field5 = '周岚';
+            break;
+          case 'difference_check':
+            patch.field4 = '协查中';
+            patch.field5 = '周岚';
+            break;
+          case 'payment_batch_create':
+            patch.field7 = '待复核';
+            patch.field8 = `BF${pendingAction.rowId.slice(-3)}`;
+            break;
+          case 'payment_send_bank':
+            patch.field4 = '已发送';
+            patch.field5 = '周岚';
+            break;
+          case 'payment_retry':
+            patch.field4 = '待重提';
+            patch.field5 = '周岚';
+            break;
+          default:
+            break;
+        }
+
+        return {
+          ...prev,
+          [pendingAction.sectionKey]: rows.map((item) => (item.id === pendingAction.rowId ? { ...item, ...patch } : item)),
+        };
+      });
+    }
+
+    setFeedback(pendingAction.readonly ? `${pendingAction.title}已打开查看` : `${pendingAction.title}已办理`);
     setPendingAction(null);
     window.setTimeout(() => setFeedback(''), 1600);
   };
@@ -1644,25 +1932,57 @@ export default function FinanceManagementHub() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
-              className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl"
+              className="w-full max-w-4xl rounded-3xl border border-gray-200 bg-white shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
-                <h4 className="text-lg font-bold text-gray-800">业务办理确认</h4>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-800">{pendingAction.title}</h4>
+                  <p className="mt-1 text-sm text-gray-500">{pendingAction.description || '办理当前财务业务并记录处理痕迹。'}</p>
+                </div>
                 <button onClick={() => setPendingAction(null)} className="rounded-xl p-2 hover:bg-gray-100">
                   <X className="h-4 w-4 text-gray-500" />
                 </button>
               </div>
-              <div className="space-y-4 px-6 py-5">
-                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                  <p className="text-sm text-gray-500">操作事项</p>
-                  <p className="mt-1 font-semibold text-gray-800">{pendingAction.title}</p>
-                  <p className="mt-3 text-sm text-gray-500">目标对象</p>
-                  <p className="mt-1 text-gray-700">{pendingAction.target}</p>
+              <div className="max-h-[72vh] space-y-5 overflow-auto px-6 py-5">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <p className="text-sm text-gray-500">目标对象</p>
+                    <p className="mt-2 font-semibold text-gray-800">{pendingAction.target}</p>
+                  </div>
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <p className="text-sm text-gray-500">所属模块</p>
+                    <p className="mt-2 font-semibold text-gray-800">{pendingSectionMeta?.title || pendingAction.sectionKey}</p>
+                  </div>
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <p className="text-sm text-gray-500">当前动作</p>
+                    <p className="mt-2 font-semibold text-gray-800">{pendingAction.confirmLabel}</p>
+                  </div>
                 </div>
+
+                {!!pendingAction.summary?.length && <DetailInfoGrid items={pendingAction.summary} />}
+
+                {!!pendingAction.detailRows?.length && (
+                  <div>
+                    <h5 className="mb-3 text-base font-bold text-gray-800">业务明细</h5>
+                    <DetailRowsTable rows={pendingAction.detailRows} />
+                  </div>
+                )}
+
+                {!pendingAction.readonly && (
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-medium text-gray-700">{pendingAction.noteLabel || '办理说明'}</span>
+                    <textarea
+                      rows={4}
+                      placeholder={pendingAction.notePlaceholder || '填写本次业务处理意见'}
+                      className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-100"
+                    />
+                  </label>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <button className="rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50">
                     <ClipboardCheck className="mr-2 inline h-4 w-4" />
-                    查看详情
+                    查看关联台账
                   </button>
                   <button className="rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50">
                     <Upload className="mr-2 inline h-4 w-4" />
@@ -1672,12 +1992,14 @@ export default function FinanceManagementHub() {
               </div>
               <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-5">
                 <button onClick={() => setPendingAction(null)} className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50">
-                  取消
+                  {pendingAction.readonly ? '关闭' : '取消'}
                 </button>
-                <button onClick={confirmAction} className="rounded-xl bg-cyan-600 px-4 py-2.5 text-sm text-white hover:bg-cyan-700">
-                  <PlayCircle className="mr-2 inline h-4 w-4" />
-                  确认{pendingAction.confirmLabel}
-                </button>
+                {pendingAction.readonly ? null : (
+                  <button onClick={confirmAction} className="rounded-xl bg-cyan-600 px-4 py-2.5 text-sm text-white hover:bg-cyan-700">
+                    <PlayCircle className="mr-2 inline h-4 w-4" />
+                    确认{pendingAction.confirmLabel}
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>

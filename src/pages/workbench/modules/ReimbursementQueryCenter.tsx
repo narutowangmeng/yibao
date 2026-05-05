@@ -167,6 +167,8 @@ export default function ReimbursementQueryCenter({
   const [keyword, setKeyword] = useState(initialKeyword || '');
   const [rows, setRows] = useState<ReimbursementLedgerItem[]>(externalRows || initialReimbursementLedgerData);
   const [selectedItem, setSelectedItem] = useState<ReimbursementLedgerItem | null>(null);
+  const [auditItem, setAuditItem] = useState<ReimbursementLedgerItem | null>(null);
+  const [auditOpinion, setAuditOpinion] = useState('');
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -273,6 +275,31 @@ export default function ReimbursementQueryCenter({
     event.target.value = '';
   };
 
+  const updateRow = (id: string, changes: Partial<ReimbursementLedgerItem>) => {
+    setRows((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...changes } : item));
+      onRowsChange?.(next);
+      return next;
+    });
+    setSelectedItem((prev) => (prev && prev.id === id ? { ...prev, ...changes } : prev));
+  };
+
+  const openAudit = (item: ReimbursementLedgerItem) => {
+    setAuditItem(item);
+    setAuditOpinion(item.auditOpinion || '');
+  };
+
+  const submitAudit = (status: string) => {
+    if (!auditItem) return;
+    updateRow(auditItem.id, {
+      status,
+      auditOpinion: auditOpinion || (status === '已办结' ? '材料齐全，审核通过。' : '退回补充病案首页及费用明细。'),
+      reviewerName: '审核岗-许晴',
+      settleDate: status === '已办结' ? '2026-05-05' : auditItem.settleDate,
+    });
+    setAuditItem(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
@@ -368,9 +395,14 @@ export default function ReimbursementQueryCenter({
                   <td className="px-4 py-3">{item.reviewerName}</td>
                   <td className="px-4 py-3">{item.settleDate || '-'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setSelectedItem(item)} className="rounded p-2 text-cyan-600 hover:bg-cyan-50">
-                      <Eye className="h-4 w-4" />
-                    </button>
+                    <div className="flex justify-end gap-2 whitespace-nowrap">
+                      <button onClick={() => setSelectedItem(item)} className="rounded-lg border border-cyan-200 px-3 py-1.5 text-xs text-cyan-700 hover:bg-cyan-50">
+                        查看
+                      </button>
+                      <button onClick={() => openAudit(item)} className="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50">
+                        审核
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -450,6 +482,49 @@ export default function ReimbursementQueryCenter({
                     </table>
                   </div>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {auditItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setAuditItem(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-2xl rounded-2xl bg-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b p-6">
+                <h3 className="text-lg font-bold text-gray-800">报销审核 - {auditItem.id}</h3>
+                <button onClick={() => setAuditItem(null)} className="rounded p-2 hover:bg-gray-100">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-4 p-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="rounded-lg bg-gray-50 px-4 py-3"><span className="text-gray-500">姓名：</span>{auditItem.personName}</div>
+                  <div className="rounded-lg bg-gray-50 px-4 py-3"><span className="text-gray-500">报销类型：</span>{auditItem.reimbursementType}</div>
+                  <div className="rounded-lg bg-gray-50 px-4 py-3"><span className="text-gray-500">就诊医院：</span>{auditItem.hospital}</div>
+                  <div className="rounded-lg bg-gray-50 px-4 py-3"><span className="text-gray-500">报销金额：</span>{auditItem.reimbursementAmount}</div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">审核意见</label>
+                  <textarea value={auditOpinion} onChange={(e) => setAuditOpinion(e.target.value)} rows={4} className="w-full rounded-lg border px-3 py-2" placeholder="请输入审核意见、退回原因或支付说明" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 border-t p-6">
+                <button onClick={() => setAuditItem(null)} className="rounded-lg px-4 py-2 text-gray-600 hover:bg-gray-100">取消</button>
+                <button onClick={() => submitAudit('退回补件')} className="rounded-lg border border-red-200 px-4 py-2 text-red-700 hover:bg-red-50">退回补件</button>
+                <button onClick={() => submitAudit('已办结')} className="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">审核通过</button>
               </div>
             </motion.div>
           </motion.div>

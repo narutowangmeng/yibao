@@ -1915,12 +1915,12 @@ export default function PaymentCollectionWorkbench() {
               </div>
             )}
             <SearchBar value={searchTerm} onChange={(value) => { setSearchTerm(value); if (!value) setFocusedArrivalId(null); }} placeholder="搜索缴费人、交易流水、批次号、通道或状态" />
-            <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200">
-              <table className="w-full">
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-gray-200">
+              <table className="w-full min-w-[1320px]">
                 <thead className="bg-gray-50">
                   <tr>
                     {['缴费人', '业务类型', '交易流水', '批次号', '通道', '金额', '银行流水', '到账时间', '状态', '操作'].map((header) => (
-                      <th key={header} className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                      <th key={header} className="whitespace-nowrap px-4 py-3 text-left text-sm font-medium text-gray-600">
                         {header}
                       </th>
                     ))}
@@ -1929,16 +1929,16 @@ export default function PaymentCollectionWorkbench() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredArrivals.map((item) => (
                     <tr key={item.id} className={`${focusedArrivalId === item.id ? 'bg-cyan-50/60' : 'hover:bg-gray-50'}`}>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-800">{item.payer}</td>
-                      <td className="px-4 py-3 text-sm">{item.business}</td>
-                      <td className="px-4 py-3 text-sm">{item.transactionRef}</td>
-                      <td className="px-4 py-3 text-sm">{item.batch}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-800">{item.channel}</td>
-                      <td className="px-4 py-3 text-sm text-cyan-700">{formatCurrency(parseAmount(item.amount))}</td>
-                      <td className="px-4 py-3 text-sm">{item.bankSerial}</td>
-                      <td className="px-4 py-3 text-sm">{item.receiveTime}</td>
-                      <td className="px-4 py-3"><StatusPill text={item.status} /></td>
-                      <td className="px-4 py-3">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-800">{item.payer}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">{item.business}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">{item.transactionRef}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">{item.batch}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-800">{item.channel}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-cyan-700">{formatCurrency(parseAmount(item.amount))}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">{item.bankSerial}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">{item.receiveTime}</td>
+                      <td className="whitespace-nowrap px-4 py-3"><StatusPill text={item.status} /></td>
+                      <td className="whitespace-nowrap px-4 py-3">
                         {item.status !== '已到账' && (
                           <button onClick={() => handleArrivalConfirm(item.id)} className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs text-white hover:bg-cyan-700">
                             确认到账
@@ -1966,12 +1966,12 @@ export default function PaymentCollectionWorkbench() {
 
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="搜索回执号、缴费人或支付方式" />
-          <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200">
-            <table className="w-full">
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-gray-200">
+            <table className="w-full min-w-[1180px]">
               <thead className="bg-gray-50">
                 <tr>
                   {['回执号', '缴费人', '业务类型', '凭证类型', '支付方式', '交易流水', '状态', '操作'].map((header) => (
-                    <th key={header} className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    <th key={header} className="whitespace-nowrap px-4 py-3 text-left text-sm font-medium text-gray-600">
                       {header}
                     </th>
                   ))}
@@ -1980,14 +1980,14 @@ export default function PaymentCollectionWorkbench() {
               <tbody className="divide-y divide-gray-200">
                 {filteredReceipts.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{item.id}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-800">{item.payer}</td>
-                    <td className="px-4 py-3 text-sm">{item.businessType}</td>
-                    <td className="px-4 py-3 text-sm">{item.voucher}</td>
-                    <td className="px-4 py-3 text-sm">{item.method}</td>
-                    <td className="px-4 py-3 text-sm">{item.transactionRef}</td>
-                    <td className="px-4 py-3"><StatusPill text={item.status} /></td>
-                    <td className="px-4 py-3">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">{item.id}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-800">{item.payer}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">{item.businessType}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">{item.voucher}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">{item.method}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">{item.transactionRef}</td>
+                    <td className="whitespace-nowrap px-4 py-3"><StatusPill text={item.status} /></td>
+                    <td className="whitespace-nowrap px-4 py-3">
                       <button onClick={() => openReceiptPreview(item)} className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs text-white hover:bg-cyan-700">
                         打印
                       </button>
